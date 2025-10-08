@@ -24,6 +24,7 @@
 #include <QMouseEvent>
 #include <QDebug>
 #include <QtMath>
+#include <cmath>
 
 class TestPainterWindow : public QWidget {
     Q_OBJECT
@@ -155,7 +156,7 @@ private:
         auto *noFlyBtn = new QPushButton("放置禁飞区域", buttonContainer);
         auto *polygonBtn = new QPushButton("绘制多边形", buttonContainer);
         auto *uavBtn = new QPushButton("放置无人机", buttonContainer);
-        auto *clearBtn = new QPushButton("清除全部", buttonContainer);
+        auto *clearBtn = new QPushButton("清除当前任务标记", buttonContainer);
 
         // 创建 UAV 颜色选择下拉框
         m_uavColorCombo = new QComboBox(buttonContainer);
@@ -298,6 +299,12 @@ private:
 
 private slots:
     void startPlaceLoiter() {
+        // 检查是否选中了任务
+        if (!m_taskManager->currentTask()) {
+            QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
+            return;
+        }
+
         // 开始单次放置盘旋点
         m_currentMode = MODE_LOITER;
         m_mapWidget->setClickEnabled(true);
@@ -307,6 +314,12 @@ private slots:
     }
 
     void startPlaceNoFly() {
+        // 检查是否选中了任务
+        if (!m_taskManager->currentTask()) {
+            QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
+            return;
+        }
+
         // 开始单次放置禁飞区域
         m_currentMode = MODE_NOFLY;
         m_mapWidget->setClickEnabled(true);
@@ -316,6 +329,12 @@ private slots:
     }
 
     void startPlaceUAV() {
+        // 检查是否选中了任务
+        if (!m_taskManager->currentTask()) {
+            QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
+            return;
+        }
+
         // 开始单次放置无人机
         m_currentMode = MODE_UAV;
         m_isInNoFlyZone = false;  // 重置禁飞区状态
@@ -347,7 +366,9 @@ private slots:
         // 如果在普通浏览模式，检查是否点击到元素
         if (m_currentMode == MODE_NORMAL) {
             // 使用 TaskManager 的方法，只查找可见任务中的元素
-            const ElementInfo* element = m_taskManager->findVisibleElementNear(coord, 100.0);
+            // 使用缩放相关的阈值（基准阈值100米）
+            double threshold = getZoomDependentThreshold(100.0);
+            const ElementInfo* element = m_taskManager->findVisibleElementNear(coord, threshold);
             if (element) {
                 // 找到元素，显示详情
                 QPoint screenPos = QCursor::pos();
@@ -442,12 +463,6 @@ private slots:
     }
 
     void addLoiterPointAt(double lat, double lon) {
-        if (!m_taskManager->currentTask()) {
-            QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-            returnToNormalMode();
-            return;
-        }
-
         auto id = m_taskManager->addLoiterPoint(lat, lon);
         qDebug() << QString("在 (%1, %2) 添加盘旋点到任务 #%3，ID: %4")
                     .arg(lat).arg(lon).arg(m_taskManager->currentTaskId()).arg(id);
@@ -457,12 +472,6 @@ private slots:
     }
 
     void addUAVAt(double lat, double lon) {
-        if (!m_taskManager->currentTask()) {
-            QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-            returnToNormalMode();
-            return;
-        }
-
         // 检查是否在禁飞区内
         QMapLibre::Coordinate coord(lat, lon);
         if (m_painter->isInNoFlyZone(coord)) {
@@ -500,12 +509,6 @@ private slots:
                                        .arg(lat, 0, 'f', 5).arg(lon, 0, 'f', 5),
                                        "rgba(255, 243, 205, 220)");
         } else {
-            if (!m_taskManager->currentTask()) {
-                QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-                returnToNormalMode();
-                return;
-            }
-
             // 第二次点击：确定半径并创建禁飞区
             double radius = calculateDistance(m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, lat, lon);
 
@@ -564,6 +567,32 @@ private slots:
         return EARTH_RADIUS * c;
     }
 
+    /**
+     * @brief 根据地图缩放级别计算交互阈值（米）
+     * @param baseThreshold 基准阈值（在zoom=12时的阈值，单位：米）
+     * @return 根据当前缩放级别调整后的阈值（米）
+     *
+     * 缩放级别越大（越近），阈值越小；缩放级别越小（越远），阈值越大
+     * 公式：threshold = baseThreshold * 2^(12 - zoom)
+     *
+     * 示例（baseThreshold=50米）：
+     * - zoom 8  -> 800米   (超大视角)
+     * - zoom 10 -> 200米   (大视角)
+     * - zoom 12 -> 50米    (中等视角，基准)
+     * - zoom 14 -> 12.5米  (近距离)
+     * - zoom 16 -> 3.125米 (精细操作)
+     */
+    double getZoomDependentThreshold(double baseThreshold = 50.0) {
+        if (!m_mapWidget || !m_mapWidget->map()) {
+            return baseThreshold; // 如果无法获取缩放级别，返回基准值
+        }
+
+        double zoom = m_mapWidget->map()->zoom();
+        double threshold = baseThreshold * pow(2.0, 12.0 - zoom);
+
+        return threshold;
+    }
+
     void clearAll() {
         if (!m_taskManager) {
             qWarning() << "任务管理器未初始化";
@@ -595,6 +624,12 @@ private slots:
 
     // 多边形绘制相关方法
     void startDrawPolygon() {
+        // 检查是否选中了任务
+        if (!m_taskManager->currentTask()) {
+            QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
+            return;
+        }
+
         m_currentMode = MODE_POLYGON;
         m_mapWidget->setClickEnabled(true);
         resetPolygonDrawing();
@@ -612,8 +647,16 @@ private slots:
                 m_polygonPoints.first().first, m_polygonPoints.first().second
             );
 
-            // 如果距离起点小于50米，则闭合多边形
-            if (distanceToStart < 50.0) {
+            // 根据缩放级别计算闭合阈值（基准阈值50米）
+            double threshold = getZoomDependentThreshold(50.0);
+
+            qDebug() << QString("多边形闭合检测: 距离起点 %1 米, 阈值 %2 米 (缩放级别 %3)")
+                        .arg(distanceToStart, 0, 'f', 2)
+                        .arg(threshold, 0, 'f', 2)
+                        .arg(m_mapWidget->map()->zoom(), 0, 'f', 2);
+
+            // 如果距离起点小于动态阈值，则闭合多边形
+            if (distanceToStart < threshold) {
                 qDebug() << "点击起点，闭合多边形";
                 finishPolygon();
                 return;
@@ -678,14 +721,6 @@ private slots:
     void finishPolygon() {
         if (m_polygonPoints.size() < 3) {
             qWarning() << "多边形至少需要3个顶点";
-            return;
-        }
-
-        if (!m_taskManager->currentTask()) {
-            QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-            m_painter->clearPolygonPreview();
-            m_polygonPoints.clear();
-            returnToNormalMode();
             return;
         }
 

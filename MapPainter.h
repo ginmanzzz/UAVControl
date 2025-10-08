@@ -31,6 +31,8 @@ struct ElementInfo {
     QString color;                     // 对于 UAV：颜色
     QMapLibre::AnnotationID annotationId;  // 标注ID
     const MapElement *element;         // 指向原始MapElement的指针（用于访问地形等信息）
+    int taskId;                        // 所属任务ID
+    QString taskName;                  // 所属任务名称
 };
 
 /**

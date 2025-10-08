@@ -252,10 +252,12 @@ const ElementInfo* TaskManager::findVisibleElementNear(const QMapLibre::Coordina
         for (MapElement &element : task->elements()) {
             // 通过annotationId匹配（更可靠）
             if (element.annotationId == nearestElement->annotationId) {
-                // 创建一个增强的ElementInfo副本
+                // 创建一个增强的ElementInfo副本，包含任务信息
                 static ElementInfo enhancedInfo;
                 enhancedInfo = *nearestElement;
                 enhancedInfo.element = &element;
+                enhancedInfo.taskId = task->id();
+                enhancedInfo.taskName = task->name();
                 return &enhancedInfo;
             }
         }

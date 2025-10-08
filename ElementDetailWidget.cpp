@@ -67,6 +67,10 @@ void ElementDetailWidget::showElement(const ElementInfo *info, const QPoint &scr
 
     addTitle(title);
 
+    // 显示任务信息
+    addInfoLine("任务ID", QString("#%1").arg(info->taskId));
+    addInfoLine("任务名称", info->taskName);
+
     // 根据类型显示不同内容
     switch (info->type) {
         case ElementType::LoiterPoint:

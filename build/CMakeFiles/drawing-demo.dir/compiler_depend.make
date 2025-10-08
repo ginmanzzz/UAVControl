@@ -18,6 +18,7 @@ CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o: /home/user00/projects/dra
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q20memory.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q20type_traits.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q23utility.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qabstractitemmodel.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qalgorithms.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qanystringview.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qarraydata.h \
@@ -65,6 +66,7 @@ CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o: /home/user00/projects/dra
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlatin1stringview.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qline.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlist.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlocale.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlogging.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qmalloc.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qmap.h \
@@ -85,6 +87,7 @@ CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o: /home/user00/projects/dra
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qprocessordetection.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qrect.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qrefcount.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qregularexpression.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qscopedpointer.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qscopeguard.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qset.h \
@@ -161,21 +164,33 @@ CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o: /home/user00/projects/dra
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtguiexports.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtguiglobal.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtransform.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qvalidator.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qwindowdefs.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QComboBox \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QHBoxLayout \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QLabel \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QPushButton \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QVBoxLayout \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QWidget \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractbutton.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractitemdelegate.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractslider.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractspinbox.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qboxlayout.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qcombobox.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qframe.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qgridlayout.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlabel.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlayout.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlayoutitem.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qpushbutton.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qrubberband.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qsizepolicy.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qslider.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyle.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyleoption.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabbar.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabwidget.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtwidgets-config.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtwidgetsexports.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
@@ -3994,26 +4009,6 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /home/user00/projects/drawing-demo/TaskManager.h:
 
-/usr/include/c++/13/bits/stl_algobase.h:
-
-/usr/include/c++/13/bits/shared_ptr_base.h:
-
-/usr/include/c++/13/bits/requires_hosted.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QPointF:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qhash.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtpreprocessorsupport.h:
-
-/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qscreen_platform.h:
-
-/usr/include/c++/13/bits/range_access.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QtGlobal:
-
 /usr/include/c++/13/bits/postypes.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qatomic.h:
@@ -4056,15 +4051,11 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /usr/include/c++/13/bits/stl_uninitialized.h:
 
-/usr/include/c++/13/bits/stl_bvector.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qelapsedtimer.h:
-
 /usr/include/c++/13/bits/allocator.h:
 
-/usr/include/c++/13/unordered_map:
-
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qabstractitemmodel.h:
+
+/usr/include/c++/13/unordered_map:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpolygon.h:
 
@@ -4086,25 +4077,17 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /usr/include/c++/13/backward/auto_ptr.h:
 
-/usr/include/c++/13/array:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QComboBox:
-
 /usr/include/c++/13/algorithm:
 
 /usr/include/asm-generic/errno.h:
 
-/usr/include/c++/13/bits/uses_allocator.h:
-
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyleoption.h:
+
+/usr/include/c++/13/bits/uses_allocator.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qnativeinterface.h:
 
 /home/user00/projects/drawing-demo/Task.h:
-
-/usr/include/c++/13/bits/refwrap.h:
-
-/home/user00/projects/drawing-demo/MapPainter.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qwidget.h:
 
@@ -4120,7 +4103,9 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qevent.h:
 
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qsizepolicy.h:
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qslider.h:
+
+/usr/include/ctype.h:
 
 /usr/include/c++/13/tr1/gamma.tcc:
 
@@ -4132,9 +4117,29 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs.h:
 
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qsizepolicy.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractspinbox.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabbar.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qgridlayout.h:
+
+/usr/include/c++/13/limits:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractslider.h:
+
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractbutton.h:
 
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QComboBox:
+
+/usr/include/c++/13/array:
+
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qwindowdefs.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qvalidator.h:
+
+/usr/include/c++/13/pstl/glue_numeric_defs.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtransform.h:
 
@@ -4202,6 +4207,18 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qarraydatapointer.h:
 
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qhash.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QPointF:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtpreprocessorsupport.h:
+
+/usr/include/c++/13/bits/requires_hosted.h:
+
+/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qscreen_platform.h:
+
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qbitmap.h:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/c++locale.h:
@@ -4222,6 +4239,10 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qeventloop.h:
 
+/usr/include/c++/13/bits/stl_raw_storage_iter.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextformat.h:
+
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qiodevice.h:
 
 /usr/include/c++/13/bits/hashtable_policy.h:
@@ -4231,10 +4252,6 @@ drawing-demo_autogen/mocs_compilation.cpp:
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qxptype_traits.h:
 
 /usr/include/c++/13/bits/stl_algo.h:
-
-/usr/include/ctype.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qslider.h:
 
 /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Export:
 
@@ -4250,10 +4267,6 @@ drawing-demo_autogen/mocs_compilation.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractitemdelegate.h:
 
-/usr/include/c++/13/bits/shared_ptr.h:
-
-/home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/GLWidget:
-
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qsize.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QString:
@@ -4263,6 +4276,12 @@ drawing-demo_autogen/mocs_compilation.cpp:
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qsysinfo.h:
 
 /usr/include/c++/13/atomic:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabwidget.h:
+
+/usr/include/c++/13/bits/parse_numbers.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QtGlobal:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qconstructormacros.h:
 
@@ -4298,6 +4317,18 @@ drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp:
 
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qforeach.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qexceptionhandling.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qbytearrayalgorithms.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qutf8stringview.h:
+
+/usr/include/c++/13/bits/std_function.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q20type_traits.h:
+
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QtMath:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qdarwinhelpers.h:
@@ -4318,8 +4349,6 @@ drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp:
 
 /usr/include/c++/13/compare:
 
-/usr/include/c++/13/bits/stl_construct.h:
-
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qcontainerfwd.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtguiglobal.h:
@@ -4336,35 +4365,9 @@ drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp:
 
 /usr/include/c++/13/bits/memoryfwd.h:
 
-/usr/include/c++/13/bits/shared_ptr_atomic.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qfunctionaltools_impl.h:
-
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QStringList:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qopenglwidget.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qgridlayout.h:
-
-/usr/include/c++/13/limits:
-
-/usr/include/c++/13/tr1/hypergeometric.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/types/wint_t.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractspinbox.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabbar.h:
-
-/usr/include/c++/13/bits/parse_numbers.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabwidget.h:
-
-/usr/include/x86_64-linux-gnu/c++/13/bits/cpu_defines.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qiodevicebase.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q23utility.h:
 
@@ -4375,6 +4378,16 @@ drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp:
 /usr/include/c++/13/bits/exception.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qfloat16.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qapplication.h:
+
+drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
+
+/usr/include/c++/13/backward/binders.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qversiontagging.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtypes.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QMargins:
 
@@ -4387,10 +4400,6 @@ drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp:
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qobject_impl.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qttranslation.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q20type_traits.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qbytearrayalgorithms.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qregion.h:
 
@@ -4413,16 +4422,6 @@ drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp:
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtypeinfo.h:
 
 /usr/include/assert.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qapplication.h:
-
-drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
-
-/usr/include/c++/13/backward/binders.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qversiontagging.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtypes.h:
 
 /usr/include/c++/13/bits/localefwd.h:
 
@@ -4508,9 +4507,11 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /usr/include/c++/13/bits/stl_relops.h:
 
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qforeach.h:
+/usr/include/x86_64-linux-gnu/c++/13/bits/cpu_defines.h:
 
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qexceptionhandling.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qiodevicebase.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qiterator.h:
 
@@ -4542,6 +4543,8 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qminmax.h:
 
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qregularexpression.h:
+
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtnoop.h:
 
 /usr/include/c++/13/bits/invoke.h:
@@ -4572,6 +4575,12 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h:
 
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyle.h:
+
+/home/user00/projects/maplibre-native-qt/install/include/QMapLibre/settings.hpp:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qcontainerinfo.h:
+
 /usr/include/strings.h:
 
 /usr/include/c++/13/bits/ptr_traits.h:
@@ -4583,6 +4592,8 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 /usr/include/x86_64-linux-gnu/c++/13/bits/error_constants.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qguiapplication_platform.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlocale.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qstringalgorithms.h:
 
@@ -4640,6 +4651,32 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qsystemdetection.h:
 
+/usr/include/c++/13/bits/basic_string.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtversionchecks.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
+
+/usr/include/c++/13/bits/range_access.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/wint_t.h:
+
+/usr/include/c++/13/tr1/hypergeometric.tcc:
+
+/home/user00/projects/drawing-demo/MapPainter.h:
+
+/usr/include/c++/13/bits/refwrap.h:
+
+/usr/include/c++/13/bits/shared_ptr.h:
+
+/home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/GLWidget:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qfunctionaltools_impl.h:
+
+/usr/include/c++/13/bits/shared_ptr_atomic.h:
+
+/usr/include/c++/13/bits/shared_ptr_base.h:
+
 /usr/include/c++/13/bits/specfun.h:
 
 /usr/include/c++/13/bits/streambuf.tcc:
@@ -4650,21 +4687,15 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qeventpoint.h:
 
+/usr/include/c++/13/bits/stl_algobase.h:
+
+/usr/include/c++/13/bits/stl_bvector.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qelapsedtimer.h:
+
+/usr/include/c++/13/bits/stl_construct.h:
+
 /usr/include/c++/13/bits/stl_function.h:
-
-/usr/include/c++/13/bits/basic_string.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtversionchecks.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
-
-/usr/include/c++/13/bits/std_function.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qutf8stringview.h:
-
-/usr/include/c++/13/bits/stl_raw_storage_iter.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextformat.h:
 
 /usr/include/c++/13/bits/atomic_lockfree_defines.h:
 
@@ -4770,6 +4801,12 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /usr/include/c++/13/pstl/glue_memory_defs.h:
 
+/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qrubberband.h:
+
+/usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h:
+
+/usr/include/c++/13/ext/aligned_buffer.h:
+
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtextedit.h:
 
 /usr/include/c++/13/list:
@@ -4799,10 +4836,6 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 /usr/include/c++/13/new:
 
 /usr/include/c++/13/pstl/execution_defs.h:
-
-/usr/include/c++/13/pstl/glue_numeric_defs.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qvalidator.h:
 
 /usr/include/c++/13/pstl/pstl_config.h:
 
@@ -4896,9 +4929,9 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /usr/include/x86_64-linux-gnu/bits/local_lim.h:
 
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q20functional.h:
-
 /usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+
+/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/q20functional.h:
 
 /usr/include/x86_64-linux-gnu/bits/locale.h:
 
@@ -5006,8 +5039,6 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qcoreevent.h:
 
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlocale.h:
-
 /usr/include/x86_64-linux-gnu/c++/13/bits/gthr.h:
 
 /usr/include/c++/13/cstring:
@@ -5046,27 +5077,11 @@ drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp:
 
 /home/user00/projects/drawing-demo/RegionFeatureDialog.cpp:
 
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qregularexpression.h:
-
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QDialog:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractslider.h:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QVBoxLayout:
 
 /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qdialog.h:
-
-/usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h:
-
-/usr/include/c++/13/ext/aligned_buffer.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qrubberband.h:
-
-/home/user00/projects/maplibre-native-qt/install/include/QMapLibre/settings.hpp:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qcontainerinfo.h:
-
-/home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyle.h:
 
 /home/user00/projects/drawing-demo/RegionFeatureDialog.h:
 
