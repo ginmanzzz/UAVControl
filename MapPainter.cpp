@@ -506,10 +506,12 @@ static double distanceToPolygon(const QMapLibre::Coordinate &point, const QMapLi
 
 const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clickCoord, double threshold) const
 {
-    const ElementInfo* nearestElement = nullptr;
-    double minDistance = threshold;
+    const ElementInfo* nearestPointElement = nullptr;   // 最近的点状元素（UAV/盘旋点）
+    const ElementInfo* nearestAreaElement = nullptr;    // 最近的区域元素（多边形/禁飞区）
+    double minPointDistance = threshold;
+    double minAreaDistance = threshold;
 
-    // 遍历所有元素，查找最近的
+    // 遍历所有元素，分别记录点状和区域元素
     for (auto it = m_elementInfo.constBegin(); it != m_elementInfo.constEnd(); ++it) {
         const ElementInfo &info = it.value();
         double distance = 0.0;
@@ -521,11 +523,20 @@ const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clic
             // 我们使用更宽松的阈值来检测
             distance = calculateDistance(clickCoord.first, clickCoord.second,
                                         info.coordinate.first, info.coordinate.second);
+            if (distance < minPointDistance) {
+                minPointDistance = distance;
+                nearestPointElement = &info;
+            }
             break;
+
         case ElementType::UAV:
             // 无人机图标：中心对齐
             distance = calculateDistance(clickCoord.first, clickCoord.second,
                                         info.coordinate.first, info.coordinate.second);
+            if (distance < minPointDistance) {
+                minPointDistance = distance;
+                nearestPointElement = &info;
+            }
             break;
 
         case ElementType::NoFlyZone:
@@ -539,22 +550,30 @@ const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clic
                 // 计算到圆边界的距离
                 distance = distance - info.radius;
             }
+            if (distance < minAreaDistance) {
+                minAreaDistance = distance;
+                nearestAreaElement = &info;
+            }
             break;
 
         case ElementType::Polygon:
             // 计算点到多边形的距离
             distance = distanceToPolygon(clickCoord, info.vertices);
+            if (distance < minAreaDistance) {
+                minAreaDistance = distance;
+                nearestAreaElement = &info;
+            }
             break;
-        }
-
-        // 更新最近的元素
-        if (distance < minDistance) {
-            minDistance = distance;
-            nearestElement = &info;
         }
     }
 
-    return nearestElement;
+    // 优先返回点状元素（如果存在且在阈值内）
+    if (nearestPointElement != nullptr) {
+        return nearestPointElement;
+    }
+
+    // 否则返回区域元素
+    return nearestAreaElement;
 }
 
 bool MapPainter::isInNoFlyZone(const QMapLibre::Coordinate &coord) const
