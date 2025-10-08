@@ -47,6 +47,12 @@ public:
     // 清除当前任务的所有元素
     void clearCurrentTask();
 
+    // 检查坐标是否在当前任务的禁飞区内
+    bool isInCurrentTaskNoFlyZone(const QMapLibre::Coordinate &coord) const;
+
+    // 检查禁飞区是否与当前任务的无人机冲突（返回冲突的无人机列表）
+    QVector<const MapElement*> checkNoFlyZoneConflictWithUAVs(double centerLat, double centerLon, double radius) const;
+
 signals:
     void taskCreated(int taskId);
     void taskRemoved(int taskId);

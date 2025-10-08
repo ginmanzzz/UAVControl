@@ -3,6 +3,8 @@
 
 #include "TaskManager.h"
 #include <QDebug>
+#include <QtMath>
+#include <cmath>
 
 TaskManager::TaskManager(MapPainter *painter, QObject *parent)
     : QObject(parent)
@@ -285,4 +287,68 @@ void TaskManager::clearCurrentTask()
     m_currentTask->clearElements();
 
     qDebug() << QString("任务 #%1 的所有元素已清除").arg(m_currentTask->id());
+}
+
+// 计算两点之间的距离（米）
+static double calculateDistance(double lat1, double lon1, double lat2, double lon2)
+{
+    const double EARTH_RADIUS = 6378137.0; // 地球半径（米）
+
+    double dLat = (lat2 - lat1) * M_PI / 180.0;
+    double dLon = (lon2 - lon1) * M_PI / 180.0;
+
+    double a = qSin(dLat / 2) * qSin(dLat / 2) +
+               qCos(lat1 * M_PI / 180.0) * qCos(lat2 * M_PI / 180.0) *
+               qSin(dLon / 2) * qSin(dLon / 2);
+
+    double c = 2 * qAtan2(qSqrt(a), qSqrt(1 - a));
+    return EARTH_RADIUS * c;
+}
+
+bool TaskManager::isInCurrentTaskNoFlyZone(const QMapLibre::Coordinate &coord) const
+{
+    if (!m_currentTask) {
+        return false;
+    }
+
+    // 只检查当前任务的禁飞区
+    for (const MapElement &element : m_currentTask->elements()) {
+        if (element.type == MapElement::NoFlyZone) {
+            // 计算点到圆心的距离
+            double distance = calculateDistance(coord.first, coord.second,
+                                                element.coordinate.first, element.coordinate.second);
+
+            // 如果距离小于半径，说明在禁飞区内
+            if (distance <= element.radius) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+QVector<const MapElement*> TaskManager::checkNoFlyZoneConflictWithUAVs(double centerLat, double centerLon, double radius) const
+{
+    QVector<const MapElement*> conflictUAVs;
+
+    if (!m_currentTask) {
+        return conflictUAVs;
+    }
+
+    // 检查当前任务的所有无人机
+    for (const MapElement &element : m_currentTask->elements()) {
+        if (element.type == MapElement::UAV) {
+            // 计算无人机到禁飞区中心的距离
+            double distance = calculateDistance(element.coordinate.first, element.coordinate.second,
+                                                centerLat, centerLon);
+
+            // 如果距离小于半径，说明无人机在禁飞区内
+            if (distance <= radius) {
+                conflictUAVs.append(&element);
+            }
+        }
+    }
+
+    return conflictUAVs;
 }

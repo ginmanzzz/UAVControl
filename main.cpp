@@ -405,9 +405,9 @@ private slots:
             return;
         }
 
-        // 无人机模式：检测是否在禁飞区内
+        // 无人机模式：检测是否在当前任务的禁飞区内
         if (m_currentMode == MODE_UAV) {
-            bool inNoFlyZone = m_painter->isInNoFlyZone(coord);
+            bool inNoFlyZone = m_taskManager->isInCurrentTaskNoFlyZone(coord);
 
             // 如果状态变化，更新光标
             if (inNoFlyZone != m_isInNoFlyZone) {
@@ -416,11 +416,11 @@ private slots:
                 if (inNoFlyZone) {
                     // 进入禁飞区，显示禁止光标
                     m_mapWidget->setForbiddenCursor();
-                    qDebug() << "鼠标进入禁飞区";
+                    qDebug() << "鼠标进入当前任务的禁飞区";
                 } else {
                     // 离开禁飞区，恢复无人机光标
                     m_mapWidget->setCustomCursor("image/uav.png", 12, 12);
-                    qDebug() << "鼠标离开禁飞区";
+                    qDebug() << "鼠标离开当前任务的禁飞区";
                 }
             }
         }
@@ -472,19 +472,19 @@ private slots:
     }
 
     void addUAVAt(double lat, double lon) {
-        // 检查是否在禁飞区内
+        // 检查是否在当前任务的禁飞区内
         QMapLibre::Coordinate coord(lat, lon);
-        if (m_painter->isInNoFlyZone(coord)) {
+        if (m_taskManager->isInCurrentTaskNoFlyZone(coord)) {
             // 在禁飞区内，弹出警告对话框
             QMessageBox msgBox(this);
             msgBox.setWindowTitle("无法放置");
             msgBox.setIcon(QMessageBox::Warning);
-            msgBox.setText("无法在禁飞区域内放置无人机！");
+            msgBox.setText("无法在当前任务的禁飞区域内放置无人机！");
             msgBox.setInformativeText("请选择禁飞区域以外的位置。");
             msgBox.setStandardButtons(QMessageBox::Ok);
             msgBox.exec();
 
-            qDebug() << QString("尝试在禁飞区内放置无人机 (%1, %2)，已阻止").arg(lat).arg(lon);
+            qDebug() << QString("尝试在当前任务的禁飞区内放置无人机 (%1, %2)，已阻止").arg(lat).arg(lon);
             // 保持在无人机放置模式，不返回普通模式
             return;
         }
@@ -511,6 +511,30 @@ private slots:
         } else {
             // 第二次点击：确定半径并创建禁飞区
             double radius = calculateDistance(m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, lat, lon);
+
+            // 检查是否与当前任务的无人机冲突
+            QVector<const MapElement*> conflictUAVs = m_taskManager->checkNoFlyZoneConflictWithUAVs(
+                m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, radius);
+
+            if (!conflictUAVs.isEmpty()) {
+                // 有冲突，弹出警告对话框
+                QMessageBox msgBox(this);
+                msgBox.setWindowTitle("无法放置禁飞区");
+                msgBox.setIcon(QMessageBox::Warning);
+                msgBox.setText(QString("该禁飞区域会覆盖 %1 架当前任务的无人机！").arg(conflictUAVs.size()));
+                msgBox.setInformativeText("请调整禁飞区位置或半径，或先移除冲突的无人机。");
+                msgBox.setStandardButtons(QMessageBox::Ok);
+                msgBox.exec();
+
+                qDebug() << QString("尝试放置禁飞区，但与 %1 架无人机冲突，已阻止")
+                            .arg(conflictUAVs.size());
+
+                // 清除预览，但保持在禁飞区放置模式，让用户重新选择
+                m_painter->clearPreview();
+                resetNoFlyZoneDrawing();
+                m_mapWidget->setStatusText("放置禁飞区 - 点击中心点，移动鼠标确定半径（右键取消）", "rgba(255, 243, 205, 220)");
+                return;
+            }
 
             // 清除预览
             m_painter->clearPreview();
