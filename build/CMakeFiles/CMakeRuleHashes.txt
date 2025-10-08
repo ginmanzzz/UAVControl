@@ -1,7 +1,0 @@
-# Hashes of file build rules.
-6dcc0a2a09ffd013de214b955cf8d1c5 CMakeFiles/MapPainter_autogen
-6dcc0a2a09ffd013de214b955cf8d1c5 CMakeFiles/MapPainter_autogen_timestamp_deps
-6dcc0a2a09ffd013de214b955cf8d1c5 CMakeFiles/drawing-demo_autogen
-6dcc0a2a09ffd013de214b955cf8d1c5 CMakeFiles/drawing-demo_autogen_timestamp_deps
-5af903632f471763a590009a9e0e3c56 MapPainter_autogen/timestamp
-30f599c7c7d2c744f61181a54a0e8b8c drawing-demo_autogen/timestamp
