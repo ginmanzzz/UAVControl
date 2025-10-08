@@ -18,7 +18,7 @@ ElementDetailWidget::ElementDetailWidget(QWidget *parent)
     m_contentWidget->setStyleSheet(
         "QWidget {"
         "  background-color: rgba(255, 255, 255, 245);"
-        "  border: 1px solid #4a90e2;"
+        "  border: 1px solid #ccc;"
         "  border-radius: 6px;"
         "}"
     );
@@ -121,36 +121,53 @@ void ElementDetailWidget::showElement(const ElementInfo *info, const QPoint &scr
 
 void ElementDetailWidget::addTitle(const QString &text)
 {
-    auto *titleLabel = new QLabel(text, m_contentWidget);
+    // 标题容器（带蓝色边框）
+    auto *titleContainer = new QWidget(m_contentWidget);
+    titleContainer->setStyleSheet(
+        "QWidget {"
+        "  background-color: #e3f2fd;"
+        "  border: 1px solid #4a90e2;"
+        "  border-radius: 4px;"
+        "  padding: 6px 8px;"
+        "}"
+    );
+
+    auto *titleLayout = new QVBoxLayout(titleContainer);
+    titleLayout->setContentsMargins(0, 0, 0, 0);
+
+    auto *titleLabel = new QLabel(text, titleContainer);
     titleLabel->setStyleSheet(
         "font-weight: bold; "
         "font-size: 13px; "
         "color: #2c3e50; "
-        "padding: 4px 0px 6px 0px;"
+        "background-color: transparent;"
+        "border: none;"
     );
-    m_contentLayout->addWidget(titleLabel);
+    titleLayout->addWidget(titleLabel);
+
+    m_contentLayout->addWidget(titleContainer);
+    m_contentLayout->addSpacing(8);
 }
 
 void ElementDetailWidget::addInfoLine(const QString &label, const QString &value)
 {
     auto *lineWidget = new QWidget(m_contentWidget);
     auto *lineLayout = new QHBoxLayout(lineWidget);
-    lineLayout->setContentsMargins(0, 1, 0, 1);
+    lineLayout->setContentsMargins(0, 2, 0, 2);
     lineLayout->setSpacing(8);
 
     auto *labelWidget = new QLabel(label + ":", lineWidget);
     labelWidget->setStyleSheet(
-        "font-size: 11px; "
-        "color: #7f8c8d; "
+        "font-size: 12px; "
+        "color: #555; "
         "font-weight: normal;"
     );
-    labelWidget->setMinimumWidth(60);
+    labelWidget->setMinimumWidth(70);
 
     auto *valueWidget = new QLabel(value, lineWidget);
     valueWidget->setStyleSheet(
-        "font-size: 11px; "
-        "color: #2c3e50; "
-        "font-family: monospace;"
+        "font-size: 12px; "
+        "color: #333;"
     );
 
     lineLayout->addWidget(labelWidget);
@@ -164,16 +181,16 @@ void ElementDetailWidget::addTerrainLine(const QString &label, MapElement::Terra
 {
     auto *lineWidget = new QWidget(m_contentWidget);
     auto *lineLayout = new QHBoxLayout(lineWidget);
-    lineLayout->setContentsMargins(0, 1, 0, 1);
+    lineLayout->setContentsMargins(0, 2, 0, 2);
     lineLayout->setSpacing(8);
 
     auto *labelWidget = new QLabel(label + ":", lineWidget);
     labelWidget->setStyleSheet(
-        "font-size: 11px; "
-        "color: #7f8c8d; "
+        "font-size: 12px; "
+        "color: #555; "
         "font-weight: normal;"
     );
-    labelWidget->setMinimumWidth(60);
+    labelWidget->setMinimumWidth(70);
 
     // 地形下拉选择框
     auto *terrainCombo = new QComboBox(lineWidget);
@@ -184,15 +201,15 @@ void ElementDetailWidget::addTerrainLine(const QString &label, MapElement::Terra
     terrainCombo->setCurrentIndex(static_cast<int>(currentTerrain));
     terrainCombo->setStyleSheet(
         "QComboBox {"
-        "  font-size: 11px;"
-        "  color: #2c3e50;"
-        "  padding: 2px 4px;"
+        "  font-size: 12px;"
+        "  color: #333;"
+        "  padding: 2px 6px;"
         "  border: 1px solid #ccc;"
         "  border-radius: 3px;"
         "  background-color: white;"
         "}"
         "QComboBox:hover {"
-        "  border: 1px solid #2196F3;"
+        "  border: 1px solid #999;"
         "}"
         "QComboBox::drop-down {"
         "  border: none;"
