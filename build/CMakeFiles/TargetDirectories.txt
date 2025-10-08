@@ -1,0 +1,8 @@
+/home/user00/projects/drawing-demo/build/CMakeFiles/MapPainter.dir
+/home/user00/projects/drawing-demo/build/CMakeFiles/drawing-demo.dir
+/home/user00/projects/drawing-demo/build/CMakeFiles/edit_cache.dir
+/home/user00/projects/drawing-demo/build/CMakeFiles/rebuild_cache.dir
+/home/user00/projects/drawing-demo/build/CMakeFiles/MapPainter_autogen_timestamp_deps.dir
+/home/user00/projects/drawing-demo/build/CMakeFiles/MapPainter_autogen.dir
+/home/user00/projects/drawing-demo/build/CMakeFiles/drawing-demo_autogen_timestamp_deps.dir
+/home/user00/projects/drawing-demo/build/CMakeFiles/drawing-demo_autogen.dir

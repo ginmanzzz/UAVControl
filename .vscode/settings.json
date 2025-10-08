@@ -1,0 +1,11 @@
+{
+    "cmake.configureSettings": {
+        "CMAKE_PREFIX_PATH": "/home/user00/Qt6/6.7.3/gcc_64;/home/user00/projects/maplibre-native-qt/install"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "files.associations": {
+        "map": "cpp",
+        "qapplication": "cpp"
+    }
+}

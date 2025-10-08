@@ -1,0 +1,2 @@
+/usr/bin/ar qc libMapPainter.a CMakeFiles/MapPainter.dir/MapPainter_autogen/mocs_compilation.cpp.o CMakeFiles/MapPainter.dir/MapPainter.cpp.o
+/usr/bin/ranlib libMapPainter.a
