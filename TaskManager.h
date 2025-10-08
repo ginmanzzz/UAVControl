@@ -36,6 +36,12 @@ public:
     QMapLibre::AnnotationID addUAV(double lat, double lon, const QString &color);
     QMapLibre::AnnotationID addPolygon(const QMapLibre::Coordinates &coordinates);
 
+    // 元素操作（添加到指定任务）- 用于导入
+    QMapLibre::AnnotationID addLoiterPointToTask(int taskId, double lat, double lon);
+    QMapLibre::AnnotationID addNoFlyZoneToTask(int taskId, double lat, double lon, double radius);
+    QMapLibre::AnnotationID addUAVToTask(int taskId, double lat, double lon, const QString &color);
+    QMapLibre::AnnotationID addPolygonToTask(int taskId, const QMapLibre::Coordinates &coordinates);
+
     // 可见性控制
     void setTaskVisible(int taskId, bool visible);
     void showAllTasks();

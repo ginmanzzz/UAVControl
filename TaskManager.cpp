@@ -360,3 +360,88 @@ QVector<const MapElement*> TaskManager::checkNoFlyZoneConflictWithUAVs(double ce
 
     return conflictUAVs;
 }
+
+// ========== 导入功能辅助方法 ==========
+
+QMapLibre::AnnotationID TaskManager::addLoiterPointToTask(int taskId, double lat, double lon)
+{
+    Task *task = getTask(taskId);
+    if (!task) {
+        qWarning() << QString("任务 #%1 不存在").arg(taskId);
+        return 0;
+    }
+
+    auto id = m_painter->drawLoiterPoint(lat, lon);
+    if (id > 0) {
+        MapElement element;
+        element.type = MapElement::LoiterPoint;
+        element.annotationId = id;
+        element.coordinate = QMapLibre::Coordinate(lat, lon);
+        task->addElement(element);
+    }
+    return id;
+}
+
+QMapLibre::AnnotationID TaskManager::addNoFlyZoneToTask(int taskId, double lat, double lon, double radius)
+{
+    Task *task = getTask(taskId);
+    if (!task) {
+        qWarning() << QString("任务 #%1 不存在").arg(taskId);
+        return 0;
+    }
+
+    auto id = m_painter->drawNoFlyZone(lat, lon, radius);
+    if (id > 0) {
+        MapElement element;
+        element.type = MapElement::NoFlyZone;
+        element.annotationId = id;
+        element.coordinate = QMapLibre::Coordinate(lat, lon);
+        element.radius = radius;
+        task->addElement(element);
+    }
+    return id;
+}
+
+QMapLibre::AnnotationID TaskManager::addUAVToTask(int taskId, double lat, double lon, const QString &color)
+{
+    Task *task = getTask(taskId);
+    if (!task) {
+        qWarning() << QString("任务 #%1 不存在").arg(taskId);
+        return 0;
+    }
+
+    auto id = m_painter->drawUAV(lat, lon, color);
+    if (id > 0) {
+        MapElement element;
+        element.type = MapElement::UAV;
+        element.annotationId = id;
+        element.coordinate = QMapLibre::Coordinate(lat, lon);
+        element.color = color;
+        task->addElement(element);
+    }
+    return id;
+}
+
+QMapLibre::AnnotationID TaskManager::addPolygonToTask(int taskId, const QMapLibre::Coordinates &coordinates)
+{
+    Task *task = getTask(taskId);
+    if (!task) {
+        qWarning() << QString("任务 #%1 不存在").arg(taskId);
+        return 0;
+    }
+
+    if (coordinates.size() < 3) {
+        qWarning() << "多边形至少需要3个顶点";
+        return 0;
+    }
+
+    auto id = m_painter->drawPolygonArea(coordinates);
+    if (id > 0) {
+        MapElement element;
+        element.type = MapElement::Polygon;
+        element.annotationId = id;
+        element.vertices = coordinates;
+        task->addElement(element);
+    }
+    return id;
+}

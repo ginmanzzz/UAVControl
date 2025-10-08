@@ -27,6 +27,8 @@
 #include <QMenu>
 #include <QIcon>
 #include <QGraphicsDropShadowEffect>
+#include <QStackedWidget>
+#include <QButtonGroup>
 #include <cmath>
 
 // 自定义悬浮提示标签
@@ -203,10 +205,73 @@ public:
 
 private:
     void setupUI() {
-        // 创建主布局（地图占据整个窗口）
+        // 创建主布局
         auto *mainLayout = new QVBoxLayout(this);
         mainLayout->setContentsMargins(0, 0, 0, 0);
         mainLayout->setSpacing(0);
+
+        // 创建顶部标签页切换栏
+        auto *tabBar = new QWidget(this);
+        tabBar->setStyleSheet(
+            "QWidget {"
+            "  background-color: #2196F3;"
+            "  border-bottom: 2px solid #1976D2;"
+            "}"
+        );
+        auto *tabLayout = new QHBoxLayout(tabBar);
+        tabLayout->setContentsMargins(0, 0, 0, 0);
+        tabLayout->setSpacing(0);
+
+        // 标签页按钮样式
+        QString tabButtonStyle =
+            "QPushButton {"
+            "  background-color: transparent;"
+            "  color: white;"
+            "  border: none;"
+            "  padding: 12px 30px;"
+            "  font-size: 14px;"
+            "  font-weight: bold;"
+            "  border-bottom: 3px solid transparent;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: rgba(255, 255, 255, 0.1);"
+            "}"
+            "QPushButton:checked {"
+            "  background-color: rgba(255, 255, 255, 0.2);"
+            "  border-bottom: 3px solid white;"
+            "}";
+
+        // 创建标签页按钮
+        m_taskManageBtn = new QPushButton("任务管理", tabBar);
+        m_taskManageBtn->setCheckable(true);
+        m_taskManageBtn->setChecked(true);
+        m_taskManageBtn->setStyleSheet(tabButtonStyle);
+
+        m_launchManageBtn = new QPushButton("发射管理", tabBar);
+        m_launchManageBtn->setCheckable(true);
+        m_launchManageBtn->setStyleSheet(tabButtonStyle);
+
+        // 按钮组，确保只有一个被选中
+        auto *tabButtonGroup = new QButtonGroup(this);
+        tabButtonGroup->addButton(m_taskManageBtn, 0);
+        tabButtonGroup->addButton(m_launchManageBtn, 1);
+        tabButtonGroup->setExclusive(true);
+
+        tabLayout->addWidget(m_taskManageBtn);
+        tabLayout->addWidget(m_launchManageBtn);
+        tabLayout->addStretch();
+
+        mainLayout->addWidget(tabBar);
+
+        // 创建堆叠窗口容器
+        m_stackedWidget = new QStackedWidget(this);
+        mainLayout->addWidget(m_stackedWidget);
+
+        // ========== 任务管理页面 ==========
+        auto *taskManagePage = new QWidget();
+        auto *taskPageLayout = new QVBoxLayout(taskManagePage);
+        taskPageLayout->setContentsMargins(0, 0, 0, 0);
+        taskPageLayout->setSpacing(0);
 
         // 创建交互式地图 Widget
         QMapLibre::Settings settings;
@@ -214,9 +279,7 @@ private:
         settings.setDefaultCoordinate(QMapLibre::Coordinate(39.9, 116.4)); // 北京
 
         m_mapWidget = new InteractiveMapWidget(settings);
-
-        // 添加到主布局
-        mainLayout->addWidget(m_mapWidget);
+        taskPageLayout->addWidget(m_mapWidget);
 
         // 创建浮动在地图右侧的按钮容器
         auto *buttonContainer = new QWidget(m_mapWidget);
@@ -403,8 +466,65 @@ private:
         // 初始隐藏按钮容器（未选中任务时）
         m_buttonContainer->hide();
 
-        setWindowTitle("MapPainter");
+        // 将任务管理页面添加到堆叠窗口
+        m_stackedWidget->addWidget(taskManagePage);
+
+        // ========== 发射管理页面 ==========
+        auto *launchManagePage = new QWidget();
+        auto *launchPageLayout = new QVBoxLayout(launchManagePage);
+        launchPageLayout->setContentsMargins(20, 20, 20, 20);
+        launchPageLayout->setSpacing(10);
+
+        // 临时占位内容
+        auto *placeholderLabel = new QLabel("发射管理页面", launchManagePage);
+        placeholderLabel->setAlignment(Qt::AlignCenter);
+        placeholderLabel->setStyleSheet(
+            "QLabel {"
+            "  font-size: 24px;"
+            "  font-weight: bold;"
+            "  color: #666;"
+            "}"
+        );
+
+        auto *descLabel = new QLabel("此页面功能开发中...", launchManagePage);
+        descLabel->setAlignment(Qt::AlignCenter);
+        descLabel->setStyleSheet(
+            "QLabel {"
+            "  font-size: 14px;"
+            "  color: #999;"
+            "  margin-top: 10px;"
+            "}"
+        );
+
+        launchPageLayout->addStretch();
+        launchPageLayout->addWidget(placeholderLabel);
+        launchPageLayout->addWidget(descLabel);
+        launchPageLayout->addStretch();
+
+        launchManagePage->setStyleSheet("background-color: #f5f5f5;");
+
+        // 将发射管理页面添加到堆叠窗口
+        m_stackedWidget->addWidget(launchManagePage);
+
+        // 连接标签页切换信号
+        connect(tabButtonGroup, QOverload<int>::of(&QButtonGroup::idClicked),
+                this, &TestPainterWindow::onTabChanged);
+
+        // 默认显示任务管理页面
+        m_stackedWidget->setCurrentIndex(0);
+
+        setWindowTitle("无人机任务管理系统");
         resize(1000, 700);
+    }
+
+    void onTabChanged(int index) {
+        m_stackedWidget->setCurrentIndex(index);
+        qDebug() << QString("切换到页面: %1").arg(index == 0 ? "任务管理" : "发射管理");
+
+        // 任务管理页面需要更新浮动组件位置
+        if (index == 0) {
+            QTimer::singleShot(50, this, &TestPainterWindow::updateOverlayPositions);
+        }
     }
 
     void resizeEvent(QResizeEvent *event) override {
@@ -1027,6 +1147,11 @@ private:
         MODE_POLYGON = 3,
         MODE_UAV = 4
     };
+
+    // UI 组件
+    QStackedWidget *m_stackedWidget = nullptr;
+    QPushButton *m_taskManageBtn = nullptr;
+    QPushButton *m_launchManageBtn = nullptr;
 
     InteractiveMapWidget *m_mapWidget = nullptr;
     MapPainter *m_painter = nullptr;

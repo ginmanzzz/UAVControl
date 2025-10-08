@@ -82,6 +82,8 @@ private slots:
     void onTaskDeleteRequested(int taskId);
     void onTaskEditRequested(int taskId);
     void onPinToggled();
+    void onExportTasks();
+    void onImportTasks();
 
 protected:
     void enterEvent(QEnterEvent *event) override;
@@ -100,6 +102,8 @@ private:
     QVBoxLayout *m_taskListLayout;
     QPushButton *m_createButton;
     QPushButton *m_pinButton;
+    QPushButton *m_exportButton;
+    QPushButton *m_importButton;
     QMap<int, TaskItemWidget*> m_taskWidgets;
     int m_currentTaskId;
 

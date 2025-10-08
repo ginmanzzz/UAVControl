@@ -7,6 +7,15 @@
 #include <QTimer>
 #include <QApplication>
 #include <QGraphicsOpacityEffect>
+#include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFile>
+#include <QMessageBox>
+#include <QInputDialog>
+#include <QDateTime>
+#include <QDir>
 
 // ============ TaskItemWidget 实现 ============
 
@@ -220,6 +229,39 @@ void TaskListWidget::setupUI()
     connect(m_createButton, &QPushButton::clicked, this, &TaskListWidget::onCreateTask);
 
     contentLayout->addWidget(m_createButton);
+
+    // 导入导出按钮容器
+    auto *ioButtonContainer = new QWidget(contentWidget);
+    auto *ioButtonLayout = new QHBoxLayout(ioButtonContainer);
+    ioButtonLayout->setContentsMargins(0, 0, 0, 0);
+    ioButtonLayout->setSpacing(8);
+
+    QString ioButtonStyle =
+        "QPushButton {"
+        "  background-color: #2196F3;"
+        "  color: white;"
+        "  border: none;"
+        "  border-radius: 4px;"
+        "  padding: 8px 12px;"
+        "  font-size: 12px;"
+        "  font-weight: bold;"
+        "}"
+        "QPushButton:hover {"
+        "  background-color: #1976D2;"
+        "}";
+
+    m_exportButton = new QPushButton("导出任务", ioButtonContainer);
+    m_exportButton->setStyleSheet(ioButtonStyle);
+    connect(m_exportButton, &QPushButton::clicked, this, &TaskListWidget::onExportTasks);
+
+    m_importButton = new QPushButton("导入任务", ioButtonContainer);
+    m_importButton->setStyleSheet(ioButtonStyle);
+    connect(m_importButton, &QPushButton::clicked, this, &TaskListWidget::onImportTasks);
+
+    ioButtonLayout->addWidget(m_exportButton);
+    ioButtonLayout->addWidget(m_importButton);
+
+    contentLayout->addWidget(ioButtonContainer);
 
     // 列标题
     auto *headerFrame = new QFrame(contentWidget);
@@ -683,4 +725,348 @@ void TaskListWidget::updatePinButtonIcon()
             "}"
         );
     }
+}
+
+void TaskListWidget::onExportTasks()
+{
+    // 获取所有任务
+    QList<Task*> allTasks = m_taskManager->getAllTasks();
+    if (allTasks.isEmpty()) {
+        QMessageBox::information(this, "导出任务", "当前没有任务可导出！");
+        return;
+    }
+
+    // 打开文件保存对话框
+    QString fileName = QFileDialog::getSaveFileName(
+        this,
+        "导出任务",
+        QDir::homePath() + "/tasks.json",
+        "JSON 文件 (*.json)"
+    );
+
+    if (fileName.isEmpty()) {
+        return;  // 用户取消
+    }
+
+    // 创建 JSON 对象
+    QJsonObject rootObj;
+    rootObj["version"] = "1.0";
+    rootObj["export_time"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+
+    QJsonArray tasksArray;
+    for (Task *task : allTasks) {
+        QJsonObject taskObj;
+        taskObj["id"] = task->id();
+        taskObj["name"] = task->name();
+        taskObj["description"] = task->description();
+        taskObj["visible"] = task->isVisible();
+
+        // 序列化任务中的所有元素
+        QJsonArray elementsArray;
+        for (const MapElement &element : task->elements()) {
+            QJsonObject elemObj;
+            elemObj["type"] = static_cast<int>(element.type);
+            elemObj["annotationId"] = static_cast<qint64>(element.annotationId);
+            elemObj["terrainType"] = static_cast<int>(element.terrainType);
+
+            // 根据类型保存坐标数据
+            switch (element.type) {
+            case MapElement::LoiterPoint:
+            case MapElement::UAV:
+                {
+                    QJsonObject coordObj;
+                    coordObj["lat"] = element.coordinate.first;
+                    coordObj["lon"] = element.coordinate.second;
+                    elemObj["coordinate"] = coordObj;
+                }
+                if (element.type == MapElement::UAV) {
+                    elemObj["color"] = element.color;
+                }
+                break;
+
+            case MapElement::NoFlyZone:
+                {
+                    QJsonObject centerObj;
+                    centerObj["lat"] = element.coordinate.first;
+                    centerObj["lon"] = element.coordinate.second;
+                    elemObj["center"] = centerObj;
+                    elemObj["radius"] = element.radius;
+                }
+                break;
+
+            case MapElement::Polygon:
+                {
+                    QJsonArray coordsArray;
+                    for (const auto &coord : element.vertices) {
+                        QJsonObject coordObj;
+                        coordObj["lat"] = coord.first;
+                        coordObj["lon"] = coord.second;
+                        coordsArray.append(coordObj);
+                    }
+                    elemObj["coordinates"] = coordsArray;
+                }
+                break;
+            }
+
+            elementsArray.append(elemObj);
+        }
+        taskObj["elements"] = elementsArray;
+
+        tasksArray.append(taskObj);
+    }
+    rootObj["tasks"] = tasksArray;
+
+    // 写入文件
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, "导出失败", QString("无法写入文件: %1").arg(file.errorString()));
+        return;
+    }
+
+    QJsonDocument doc(rootObj);
+    file.write(doc.toJson(QJsonDocument::Indented));
+    file.close();
+
+    QMessageBox::information(this, "导出成功", QString("成功导出 %1 个任务到:\n%2")
+                             .arg(allTasks.size()).arg(fileName));
+    qDebug() << QString("导出 %1 个任务到: %2").arg(allTasks.size()).arg(fileName);
+}
+
+void TaskListWidget::onImportTasks()
+{
+    // 打开文件选择对话框
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "导入任务",
+        QDir::homePath(),
+        "JSON 文件 (*.json)"
+    );
+
+    if (fileName.isEmpty()) {
+        return;  // 用户取消
+    }
+
+    // 读取文件
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, "导入失败", QString("无法读取文件: %1").arg(file.errorString()));
+        return;
+    }
+
+    QByteArray data = file.readAll();
+    file.close();
+
+    // 解析 JSON
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if (doc.isNull() || !doc.isObject()) {
+        QMessageBox::critical(this, "导入失败", "文件格式错误，不是有效的 JSON 文件！");
+        return;
+    }
+
+    QJsonObject rootObj = doc.object();
+    if (!rootObj.contains("tasks") || !rootObj["tasks"].isArray()) {
+        QMessageBox::critical(this, "导入失败", "文件格式错误，缺少任务数据！");
+        return;
+    }
+
+    QJsonArray tasksArray = rootObj["tasks"].toArray();
+    int importedCount = 0;
+    int skippedCount = 0;
+
+    for (const QJsonValue &taskValue : tasksArray) {
+        if (!taskValue.isObject()) continue;
+
+        {  // 使用大括号避免 goto 跨越初始化
+        QJsonObject taskObj = taskValue.toObject();
+        int taskId = taskObj["id"].toInt();
+        QString taskName = taskObj["name"].toString();
+        QString taskDescription = taskObj["description"].toString();
+        bool taskVisible = taskObj["visible"].toBool(true);
+
+        // 检查冲突
+        Task *existingTask = m_taskManager->getTask(taskId);
+        bool hasConflict = false;
+
+        if (existingTask) {
+            // ID 冲突
+            hasConflict = true;
+        } else {
+            // 检查名称冲突
+            for (Task *task : m_taskManager->getAllTasks()) {
+                if (task->name() == taskName) {
+                    hasConflict = true;
+                    break;
+                }
+            }
+        }
+
+        if (hasConflict) {
+            // 弹出对话框让用户选择
+            QMessageBox msgBox(this);
+            msgBox.setWindowTitle("任务冲突");
+            msgBox.setIcon(QMessageBox::Warning);
+            msgBox.setText(QString("任务冲突: ID=%1, 名称=%2").arg(taskId).arg(taskName));
+            msgBox.setInformativeText("请选择如何处理:");
+
+            QPushButton *skipBtn = msgBox.addButton("跳过此任务", QMessageBox::RejectRole);
+            QPushButton *renameBtn = msgBox.addButton("修改ID和名称", QMessageBox::AcceptRole);
+            msgBox.setDefaultButton(renameBtn);
+
+            msgBox.exec();
+
+            if (msgBox.clickedButton() == skipBtn) {
+                skippedCount++;
+                qDebug() << QString("跳过冲突任务: ID=%1, 名称=%2").arg(taskId).arg(taskName);
+                continue;
+            } else {
+                // 让用户输入新的 ID
+                bool ok;
+                int newId = QInputDialog::getInt(this, "修改任务ID",
+                                                  QString("原ID: %1\n请输入新的任务ID:").arg(taskId),
+                                                  taskId, 1, 999999, 1, &ok);
+                if (!ok) {
+                    skippedCount++;
+                    continue;
+                }
+
+                // 检查新ID是否也冲突
+                while (m_taskManager->getTask(newId)) {
+                    newId = QInputDialog::getInt(this, "ID仍然冲突",
+                                                  QString("ID %1 已存在，请输入其他ID:").arg(newId),
+                                                  newId + 1, 1, 999999, 1, &ok);
+                    if (!ok) {
+                        skippedCount++;
+                        continue;
+                    }
+                }
+
+                if (!ok) continue;
+
+                // 让用户输入新的名称
+                QString newName = QInputDialog::getText(this, "修改任务名称",
+                                                         QString("原名称: %1\n请输入新的任务名称:").arg(taskName),
+                                                         QLineEdit::Normal, taskName, &ok);
+                if (!ok || newName.isEmpty()) {
+                    skippedCount++;
+                    continue;
+                }
+
+                // 检查新名称是否也冲突
+                bool nameConflict = false;
+                do {
+                    nameConflict = false;
+                    for (Task *task : m_taskManager->getAllTasks()) {
+                        if (task->name() == newName) {
+                            nameConflict = true;
+                            break;
+                        }
+                    }
+                    if (nameConflict) {
+                        newName = QInputDialog::getText(this, "名称仍然冲突",
+                                                         QString("名称 '%1' 已存在，请输入其他名称:").arg(newName),
+                                                         QLineEdit::Normal, newName + "_导入", &ok);
+                        if (!ok || newName.isEmpty()) {
+                            skippedCount++;
+                            break;
+                        }
+                    }
+                } while (nameConflict);
+
+                if (!ok || newName.isEmpty()) continue;
+
+                taskId = newId;
+                taskName = newName;
+            }
+        }
+
+        // 创建任务
+        Task *newTask = m_taskManager->createTask(taskId, taskName, taskDescription);
+        if (!newTask) {
+            qWarning() << QString("创建任务失败: ID=%1").arg(taskId);
+            skippedCount++;
+            continue;
+        }
+
+        newTask->setVisible(taskVisible);
+
+        // 导入元素
+        QJsonArray elementsArray = taskObj["elements"].toArray();
+        for (const QJsonValue &elemValue : elementsArray) {
+            if (!elemValue.isObject()) continue;
+
+            QJsonObject elemObj = elemValue.toObject();
+            MapElement::Type type = static_cast<MapElement::Type>(elemObj["type"].toInt());
+            MapElement::TerrainType terrainType = static_cast<MapElement::TerrainType>(elemObj["terrainType"].toInt());
+
+            switch (type) {
+            case MapElement::LoiterPoint: {
+                QJsonObject coordObj = elemObj["coordinate"].toObject();
+                double lat = coordObj["lat"].toDouble();
+                double lon = coordObj["lon"].toDouble();
+                auto id = m_taskManager->addLoiterPointToTask(taskId, lat, lon);
+                if (id > 0) {
+                    MapElement *element = newTask->findElement(id);
+                    if (element) element->terrainType = terrainType;
+                }
+                break;
+            }
+
+            case MapElement::NoFlyZone: {
+                QJsonObject centerObj = elemObj["center"].toObject();
+                double lat = centerObj["lat"].toDouble();
+                double lon = centerObj["lon"].toDouble();
+                double radius = elemObj["radius"].toDouble();
+                auto id = m_taskManager->addNoFlyZoneToTask(taskId, lat, lon, radius);
+                if (id > 0) {
+                    MapElement *element = newTask->findElement(id);
+                    if (element) element->terrainType = terrainType;
+                }
+                break;
+            }
+
+            case MapElement::UAV: {
+                QJsonObject coordObj = elemObj["coordinate"].toObject();
+                double lat = coordObj["lat"].toDouble();
+                double lon = coordObj["lon"].toDouble();
+                QString color = elemObj["color"].toString("black");
+                auto id = m_taskManager->addUAVToTask(taskId, lat, lon, color);
+                if (id > 0) {
+                    MapElement *element = newTask->findElement(id);
+                    if (element) element->terrainType = terrainType;
+                }
+                break;
+            }
+
+            case MapElement::Polygon: {
+                QJsonArray coordsArray = elemObj["coordinates"].toArray();
+                QMapLibre::Coordinates coords;
+                for (const QJsonValue &coordValue : coordsArray) {
+                    QJsonObject coordObj = coordValue.toObject();
+                    double lat = coordObj["lat"].toDouble();
+                    double lon = coordObj["lon"].toDouble();
+                    coords.append(QMapLibre::Coordinate(lat, lon));
+                }
+                if (coords.size() >= 3) {
+                    auto id = m_taskManager->addPolygonToTask(taskId, coords);
+                    if (id > 0) {
+                        MapElement *element = newTask->findElement(id);
+                        if (element) element->terrainType = terrainType;
+                    }
+                }
+                break;
+            }
+            }
+        }
+
+        importedCount++;
+        qDebug() << QString("导入任务: ID=%1, 名称=%2, 元素数=%3")
+                    .arg(taskId).arg(taskName).arg(elementsArray.size());
+        }  // 关闭大括号
+    }
+
+    // 显示导入结果
+    QString resultMsg = QString("导入完成!\n成功: %1 个任务\n跳过: %2 个任务")
+                        .arg(importedCount).arg(skippedCount);
+    QMessageBox::information(this, "导入结果", resultMsg);
+    qDebug() << resultMsg;
 }
