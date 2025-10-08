@@ -24,7 +24,84 @@
 #include <QMouseEvent>
 #include <QDebug>
 #include <QtMath>
+#include <QMenu>
+#include <QIcon>
+#include <QGraphicsDropShadowEffect>
 #include <cmath>
+
+// 自定义悬浮提示标签
+class CustomTooltip : public QLabel {
+public:
+    explicit CustomTooltip(QWidget *parent = nullptr) : QLabel(parent) {
+        setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint);
+        setAttribute(Qt::WA_TranslucentBackground, false);
+        setAttribute(Qt::WA_ShowWithoutActivating);
+        setStyleSheet(
+            "QLabel {"
+            "  background-color: rgb(255, 255, 255);"
+            "  color: rgb(0, 0, 0);"
+            "  border: 1px solid rgb(200, 200, 200);"
+            "  border-radius: 4px;"
+            "  padding: 6px 10px;"
+            "  font-size: 12px;"
+            "}"
+        );
+
+        // 添加阴影效果
+        auto *shadow = new QGraphicsDropShadowEffect(this);
+        shadow->setBlurRadius(8);
+        shadow->setColor(QColor(0, 0, 0, 80));
+        shadow->setOffset(0, 2);
+        setGraphicsEffect(shadow);
+
+        hide();
+    }
+
+    void showTooltip(const QString &text, const QPoint &globalPos) {
+        setText(text);
+        adjustSize();
+        // 显示在鼠标右上角（鼠标右侧15px，上方-5px）
+        move(globalPos.x() + 15, globalPos.y() - height() - 5);
+        show();
+        raise();
+    }
+};
+
+// 自定义按钮，支持自定义 tooltip
+class TooltipButton : public QPushButton {
+    Q_OBJECT
+public:
+    explicit TooltipButton(const QString &tooltipText, QWidget *parent = nullptr)
+        : QPushButton(parent), m_tooltipText(tooltipText) {
+        setMouseTracking(true);
+        m_tooltip = new CustomTooltip(nullptr);
+    }
+
+    ~TooltipButton() {
+        delete m_tooltip;
+    }
+
+    void setTooltipText(const QString &text) {
+        m_tooltipText = text;
+    }
+
+protected:
+    void enterEvent(QEnterEvent *event) override {
+        QPushButton::enterEvent(event);
+        if (!m_tooltipText.isEmpty()) {
+            m_tooltip->showTooltip(m_tooltipText, QCursor::pos());
+        }
+    }
+
+    void leaveEvent(QEvent *event) override {
+        QPushButton::leaveEvent(event);
+        m_tooltip->hide();
+    }
+
+private:
+    QString m_tooltipText;
+    CustomTooltip *m_tooltip;
+};
 
 class TestPainterWindow : public QWidget {
     Q_OBJECT
@@ -145,61 +222,167 @@ private:
         auto *buttonContainer = new QWidget(m_mapWidget);
         auto *buttonLayout = new QVBoxLayout(buttonContainer);
         buttonLayout->setContentsMargins(10, 10, 10, 10);
-        buttonLayout->setSpacing(8);
+        buttonLayout->setSpacing(12);
 
-        auto *loiterBtn = new QPushButton("放置盘旋点", buttonContainer);
-        auto *noFlyBtn = new QPushButton("放置禁飞区域", buttonContainer);
-        auto *polygonBtn = new QPushButton("绘制多边形", buttonContainer);
-        auto *uavBtn = new QPushButton("放置无人机", buttonContainer);
-
-        // 创建 UAV 颜色选择下拉框
-        m_uavColorCombo = new QComboBox(buttonContainer);
-        m_uavColorCombo->addItem("黑色", "black");
-        m_uavColorCombo->addItem("红色", "red");
-        m_uavColorCombo->addItem("蓝色", "blue");
-        m_uavColorCombo->addItem("紫色", "purple");
-        m_uavColorCombo->addItem("绿色", "green");
-        m_uavColorCombo->addItem("黄色", "yellow");
-        m_uavColorCombo->setCurrentIndex(0); // 默认黑色
-
-        auto *clearBtn = new QPushButton("清除当前任务标记", buttonContainer);
-
-        // 设置按钮样式
-        QString buttonStyle =
+        // 图标按钮样式（方形）
+        QString iconButtonStyle =
             "QPushButton {"
             "  background-color: rgba(255, 255, 255, 230);"
-            "  border: 1px solid #ccc;"
-            "  border-radius: 4px;"
-            "  padding: 8px 12px;"
-            "  font-size: 13px;"
-            "  min-width: 140px;"
+            "  border: 2px solid #ccc;"
+            "  border-radius: 8px;"
+            "  padding: 0px;"
+            "  min-width: 50px;"
+            "  max-width: 50px;"
+            "  min-height: 50px;"
+            "  max-height: 50px;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: rgba(33, 150, 243, 230);"
+            "  border: 2px solid #2196F3;"
+            "}"
+            "QPushButton:pressed {"
+            "  background-color: rgba(25, 118, 210, 240);"
+            "}";
+
+        // 创建盘旋点按钮
+        auto *loiterBtn = new TooltipButton("放置盘旋点", buttonContainer);
+        loiterBtn->setStyleSheet(iconButtonStyle);
+        // 尝试加载图标，如果失败则显示文字
+        QIcon loiterIcon("image/pin.png");
+        if (!loiterIcon.isNull()) {
+            loiterBtn->setIcon(loiterIcon);
+            loiterBtn->setIconSize(QSize(32, 32));
+        } else {
+            loiterBtn->setText("📍");
+            loiterBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
+        }
+
+        // 创建禁飞区域按钮
+        auto *noFlyBtn = new TooltipButton("放置禁飞区域", buttonContainer);
+        noFlyBtn->setStyleSheet(iconButtonStyle);
+        // TODO: 替换为禁飞区域图标 image/nofly.png
+        QIcon noFlyIcon("image/nofly.png");
+        if (!noFlyIcon.isNull()) {
+            noFlyBtn->setIcon(noFlyIcon);
+            noFlyBtn->setIconSize(QSize(32, 32));
+        } else {
+            noFlyBtn->setText("🚫");
+            noFlyBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
+        }
+
+        // 创建多边形按钮
+        auto *polygonBtn = new TooltipButton("绘制多边形", buttonContainer);
+        polygonBtn->setStyleSheet(iconButtonStyle);
+        // TODO: 替换为多边形图标 image/polygon.png
+        QIcon polygonIcon("image/polygon.png");
+        if (!polygonIcon.isNull()) {
+            polygonBtn->setIcon(polygonIcon);
+            polygonBtn->setIconSize(QSize(32, 32));
+        } else {
+            polygonBtn->setText("⬡");
+            polygonBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
+        }
+
+        // 创建无人机按钮组（按钮 + 颜色选择）
+        auto *uavContainer = new QWidget(buttonContainer);
+        auto *uavLayout = new QHBoxLayout(uavContainer);
+        uavLayout->setContentsMargins(0, 0, 0, 0);
+        uavLayout->setSpacing(4);
+
+        auto *uavBtn = new TooltipButton("放置无人机", uavContainer);
+        uavBtn->setStyleSheet(iconButtonStyle);
+        QIcon uavIcon("image/uav.png");
+        if (!uavIcon.isNull()) {
+            uavBtn->setIcon(uavIcon);
+            uavBtn->setIconSize(QSize(32, 32));
+        } else {
+            uavBtn->setText("✈");
+            uavBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
+        }
+
+        // 无人机颜色选择小按钮
+        auto *uavColorBtn = new TooltipButton("选择无人机颜色", uavContainer);
+        uavColorBtn->setText("▼");
+        uavColorBtn->setStyleSheet(
+            "QPushButton {"
+            "  background-color: rgba(255, 255, 255, 230);"
+            "  border: 2px solid #ccc;"
+            "  border-radius: 8px;"
+            "  padding: 0px;"
+            "  min-width: 28px;"
+            "  max-width: 28px;"
+            "  min-height: 50px;"
+            "  max-height: 50px;"
+            "  font-size: 12px;"
             "}"
             "QPushButton:hover {"
             "  background-color: rgba(240, 240, 240, 240);"
             "}"
             "QPushButton:pressed {"
             "  background-color: rgba(220, 220, 220, 240);"
-            "}";
-
-        QString comboStyle =
-            "QComboBox {"
-            "  background-color: rgba(255, 255, 255, 230);"
-            "  border: 1px solid #ccc;"
-            "  border-radius: 4px;"
-            "  padding: 6px 12px;"
-            "  font-size: 13px;"
-            "  min-width: 140px;"
             "}"
-            "QComboBox:hover {"
-            "  background-color: rgba(240, 240, 240, 240);"
-            "}";
+        );
 
-        loiterBtn->setStyleSheet(buttonStyle);
-        noFlyBtn->setStyleSheet(buttonStyle);
-        polygonBtn->setStyleSheet(buttonStyle);
-        uavBtn->setStyleSheet(buttonStyle);
-        clearBtn->setStyleSheet(buttonStyle);
-        m_uavColorCombo->setStyleSheet(comboStyle);
+        // 创建颜色选择菜单
+        auto *colorMenu = new QMenu(uavColorBtn);
+        // 设置菜单样式，确保不透明且有正确的背景
+        colorMenu->setStyleSheet(
+            "QMenu {"
+            "  background-color: rgb(255, 255, 255);"
+            "  border: 1px solid rgb(200, 200, 200);"
+            "  border-radius: 4px;"
+            "  padding: 4px;"
+            "}"
+            "QMenu::item {"
+            "  background-color: transparent;"
+            "  color: rgb(0, 0, 0);"
+            "  padding: 6px 20px;"
+            "  border-radius: 2px;"
+            "}"
+            "QMenu::item:selected {"
+            "  background-color: rgb(33, 150, 243);"
+            "  color: white;"
+            "}"
+        );
+
+        QStringList colors = {"黑色", "红色", "蓝色", "紫色", "绿色", "黄色"};
+        QStringList colorValues = {"black", "red", "blue", "purple", "green", "yellow"};
+
+        for (int i = 0; i < colors.size(); ++i) {
+            QAction *action = colorMenu->addAction(colors[i]);
+            action->setData(colorValues[i]);
+            connect(action, &QAction::triggered, this, [this, action, uavColorBtn, colors, i]() {
+                m_currentUAVColor = action->data().toString();
+                uavColorBtn->setTooltipText(QString("当前颜色: %1").arg(colors[i]));
+                qDebug() << "选择无人机颜色:" << m_currentUAVColor;
+            });
+        }
+        uavColorBtn->setMenu(colorMenu);
+
+        uavLayout->addWidget(uavBtn);
+        uavLayout->addWidget(uavColorBtn);
+
+        // 创建清除按钮（保持文字样式，但更小巧）
+        auto *clearBtn = new TooltipButton("清除当前任务的所有标记", buttonContainer);
+        clearBtn->setText("清除");
+        clearBtn->setStyleSheet(
+            "QPushButton {"
+            "  background-color: rgba(244, 67, 54, 230);"
+            "  color: white;"
+            "  border: none;"
+            "  border-radius: 8px;"
+            "  padding: 8px 12px;"
+            "  font-size: 12px;"
+            "  font-weight: bold;"
+            "  min-width: 82px;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: rgba(211, 47, 47, 240);"
+            "}"
+            "QPushButton:pressed {"
+            "  background-color: rgba(198, 40, 40, 240);"
+            "}"
+        );
 
         connect(loiterBtn, &QPushButton::clicked, this, &TestPainterWindow::startPlaceLoiter);
         connect(noFlyBtn, &QPushButton::clicked, this, &TestPainterWindow::startPlaceNoFly);
@@ -210,8 +393,7 @@ private:
         buttonLayout->addWidget(loiterBtn);
         buttonLayout->addWidget(noFlyBtn);
         buttonLayout->addWidget(polygonBtn);
-        buttonLayout->addWidget(uavBtn);
-        buttonLayout->addWidget(m_uavColorCombo);
+        buttonLayout->addWidget(uavContainer);
         buttonLayout->addStretch();
         buttonLayout->addWidget(clearBtn);
 
@@ -232,9 +414,9 @@ private:
 
     void updateOverlayPositions() {
         if (m_buttonContainer && m_mapWidget) {
-            // 按钮容器放在右侧居中位置
-            int containerWidth = 180;  // 按钮容器宽度
-            int containerHeight = 300; // 按钮容器高度（根据按钮数量调整）
+            // 按钮容器放在右侧居中位置（图标按钮更窄）
+            int containerWidth = 100;  // 按钮容器宽度（图标按钮50px + 边距）
+            int containerHeight = 320; // 按钮容器高度（根据按钮数量调整）
             int x = m_mapWidget->width() - containerWidth - 10;  // 距离右边缘10像素
             int y = (m_mapWidget->height() - containerHeight) / 2;  // 垂直居中
             m_buttonContainer->setGeometry(x, y, containerWidth, containerHeight);
@@ -367,9 +549,24 @@ private slots:
         m_isInNoFlyZone = false;  // 重置禁飞区状态
         m_mapWidget->setClickEnabled(true);
         m_mapWidget->setCustomCursor("image/uav.png", 12, 12);  // 设置光标为无人机图标，中心对齐
-        QString colorName = m_uavColorCombo->currentText();
+
+        // 获取当前选择的颜色名称（用于显示）
+        QString colorName = getColorName(m_currentUAVColor);
         m_mapWidget->setStatusText(QString("放置无人机 (%1) - 点击地图任意位置（右键取消）").arg(colorName), "rgba(230, 230, 255, 220)");
-        qDebug() << "开始单次放置无人机 - 颜色:" << colorName;
+        qDebug() << "开始单次放置无人机 - 颜色:" << m_currentUAVColor;
+    }
+
+    // 辅助函数：根据颜色值获取中文名称
+    QString getColorName(const QString &colorValue) {
+        static QMap<QString, QString> colorNames = {
+            {"black", "黑色"},
+            {"red", "红色"},
+            {"blue", "蓝色"},
+            {"purple", "紫色"},
+            {"green", "绿色"},
+            {"yellow", "黄色"}
+        };
+        return colorNames.value(colorValue, "黑色");
     }
 
     void returnToNormalMode() {
@@ -517,10 +714,9 @@ private slots:
         }
 
         // 不在禁飞区，正常放置
-        QString color = m_uavColorCombo->currentData().toString();
-        auto id = m_taskManager->addUAV(lat, lon, color);
+        auto id = m_taskManager->addUAV(lat, lon, m_currentUAVColor);
         qDebug() << QString("在 (%1, %2) 添加无人机 (%3) 到任务 #%4，ID: %5")
-                    .arg(lat).arg(lon).arg(color).arg(m_taskManager->currentTaskId()).arg(id);
+                    .arg(lat).arg(lon).arg(m_currentUAVColor).arg(m_taskManager->currentTaskId()).arg(id);
 
         // 单次放置完成，返回普通模式
         returnToNormalMode();
@@ -838,7 +1034,6 @@ private:
     TaskListWidget *m_taskListWidget = nullptr;
     ElementDetailWidget *m_detailWidget = nullptr;
     QWidget *m_buttonContainer = nullptr;
-    QComboBox *m_uavColorCombo = nullptr;
     InteractionMode m_currentMode = MODE_NORMAL;
     bool m_mapInitialized = false;
 
@@ -851,6 +1046,7 @@ private:
 
     // 无人机模式状态
     bool m_isInNoFlyZone = false;  // 当前鼠标是否在禁飞区内
+    QString m_currentUAVColor = "black";  // 当前选择的无人机颜色
 };
 
 int main(int argc, char *argv[]) {
