@@ -46,8 +46,9 @@ void TaskManager::removeTask(int taskId)
         if (m_tasks[i]->id() == taskId) {
             Task *task = m_tasks[i];
 
-            // 如果是当前任务，清空当前任务指针
-            if (m_currentTask == task) {
+            // 如果是当前任务，需要发射信号通知UI
+            bool wasCurrentTask = (m_currentTask == task);
+            if (wasCurrentTask) {
                 m_currentTask = nullptr;
             }
 
@@ -63,6 +64,13 @@ void TaskManager::removeTask(int taskId)
 
             qDebug() << QString("删除任务 #%1").arg(taskId);
             emit taskRemoved(taskId);
+
+            // 如果删除的是当前任务，发射信号通知当前任务已变为无
+            if (wasCurrentTask) {
+                qDebug() << "当前任务已被删除，发射 currentTaskChanged(-1) 信号";
+                emit currentTaskChanged(-1);
+            }
+
             return;
         }
     }

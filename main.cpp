@@ -126,8 +126,8 @@ public:
 
 private:
     void setupUI() {
-        // 创建主布局（水平布局：左侧任务列表 + 右侧地图）
-        auto *mainLayout = new QHBoxLayout(this);
+        // 创建主布局（地图占据整个窗口）
+        auto *mainLayout = new QVBoxLayout(this);
         mainLayout->setContentsMargins(0, 0, 0, 0);
         mainLayout->setSpacing(0);
 
@@ -138,25 +138,19 @@ private:
 
         m_mapWidget = new InteractiveMapWidget(settings);
 
-        // 任务列表占位符（稍后在 setupMap 中创建实际的 TaskListWidget）
-        m_taskListPlaceholder = new QWidget(this);
-        m_taskListPlaceholder->setMinimumWidth(280);
-        m_taskListPlaceholder->setMaximumWidth(350);
-
         // 添加到主布局
-        mainLayout->addWidget(m_taskListPlaceholder);
-        mainLayout->addWidget(m_mapWidget, 1);
+        mainLayout->addWidget(m_mapWidget);
 
-        // 创建浮动在地图上方的按钮容器
+        // 创建浮动在地图右侧的按钮容器
         auto *buttonContainer = new QWidget(m_mapWidget);
-        auto *buttonLayout = new QHBoxLayout(buttonContainer);
+        auto *buttonLayout = new QVBoxLayout(buttonContainer);
         buttonLayout->setContentsMargins(10, 10, 10, 10);
+        buttonLayout->setSpacing(8);
 
         auto *loiterBtn = new QPushButton("放置盘旋点", buttonContainer);
         auto *noFlyBtn = new QPushButton("放置禁飞区域", buttonContainer);
         auto *polygonBtn = new QPushButton("绘制多边形", buttonContainer);
         auto *uavBtn = new QPushButton("放置无人机", buttonContainer);
-        auto *clearBtn = new QPushButton("清除当前任务标记", buttonContainer);
 
         // 创建 UAV 颜色选择下拉框
         m_uavColorCombo = new QComboBox(buttonContainer);
@@ -168,14 +162,17 @@ private:
         m_uavColorCombo->addItem("黄色", "yellow");
         m_uavColorCombo->setCurrentIndex(0); // 默认黑色
 
+        auto *clearBtn = new QPushButton("清除当前任务标记", buttonContainer);
+
         // 设置按钮样式
         QString buttonStyle =
             "QPushButton {"
             "  background-color: rgba(255, 255, 255, 230);"
             "  border: 1px solid #ccc;"
             "  border-radius: 4px;"
-            "  padding: 8px 16px;"
+            "  padding: 8px 12px;"
             "  font-size: 13px;"
+            "  min-width: 140px;"
             "}"
             "QPushButton:hover {"
             "  background-color: rgba(240, 240, 240, 240);"
@@ -191,6 +188,7 @@ private:
             "  border-radius: 4px;"
             "  padding: 6px 12px;"
             "  font-size: 13px;"
+            "  min-width: 140px;"
             "}"
             "QComboBox:hover {"
             "  background-color: rgba(240, 240, 240, 240);"
@@ -220,20 +218,36 @@ private:
         buttonContainer->setStyleSheet("background: transparent;");
         m_buttonContainer = buttonContainer;
 
+        // 初始隐藏按钮容器（未选中任务时）
+        m_buttonContainer->hide();
+
         setWindowTitle("MapPainter");
         resize(1000, 700);
     }
 
     void resizeEvent(QResizeEvent *event) override {
         QWidget::resizeEvent(event);
-        updateButtonPosition();
+        updateOverlayPositions();
     }
 
-    void updateButtonPosition() {
+    void updateOverlayPositions() {
         if (m_buttonContainer && m_mapWidget) {
-            // 按钮容器放在顶部，横跨整个宽度
-            m_buttonContainer->setGeometry(0, 0, m_mapWidget->width(), 60);
+            // 按钮容器放在右侧居中位置
+            int containerWidth = 180;  // 按钮容器宽度
+            int containerHeight = 300; // 按钮容器高度（根据按钮数量调整）
+            int x = m_mapWidget->width() - containerWidth - 10;  // 距离右边缘10像素
+            int y = (m_mapWidget->height() - containerHeight) / 2;  // 垂直居中
+            m_buttonContainer->setGeometry(x, y, containerWidth, containerHeight);
             m_buttonContainer->raise();  // 确保显示在最上层
+        }
+
+        if (m_taskListWidget && m_mapWidget) {
+            // 任务列表放在左侧，高度为屏幕的55%，垂直居中
+            int width = m_taskListWidget->width();
+            int height = m_mapWidget->height() * 0.55;  // 55%高度
+            int y = (m_mapWidget->height() - height) / 2;  // 垂直居中
+            m_taskListWidget->setGeometry(0, y, width, height);
+            m_taskListWidget->raise();
         }
     }
 
@@ -265,17 +279,13 @@ private:
         // 创建任务管理器
         m_taskManager = new TaskManager(m_painter, this);
 
-        // 创建任务列表 Widget 并替换占位符
-        m_taskListWidget = new TaskListWidget(m_taskManager, this);
+        // 创建任务列表 Widget（浮动在地图左侧）
+        m_taskListWidget = new TaskListWidget(m_taskManager, m_mapWidget);
+        m_taskListWidget->setCollapsible(true);
+        m_taskListWidget->show();  // 确保显示
 
-        // 替换占位符
-        auto *mainLayout = qobject_cast<QHBoxLayout*>(layout());
-        if (mainLayout && m_taskListPlaceholder) {
-            mainLayout->removeWidget(m_taskListPlaceholder);
-            m_taskListPlaceholder->deleteLater();
-            m_taskListPlaceholder = nullptr;
-            mainLayout->insertWidget(0, m_taskListWidget);
-        }
+        // 更新位置
+        updateOverlayPositions();
 
         // 创建详情窗口
         m_detailWidget = new ElementDetailWidget(this);
@@ -294,7 +304,24 @@ private:
         connect(m_mapWidget, &InteractiveMapWidget::mapRightClicked,
                 this, &TestPainterWindow::onMapRightClicked);
 
+        // 连接任务切换信号，控制按钮显示/隐藏
+        connect(m_taskManager, &TaskManager::currentTaskChanged,
+                this, &TestPainterWindow::onCurrentTaskChanged);
+
         qDebug() << "地图初始化完成";
+    }
+
+    void onCurrentTaskChanged(int taskId) {
+        // 当任务切换时，根据是否有选中任务来显示/隐藏按钮
+        if (taskId > 0 && m_taskManager->currentTask()) {
+            // 有选中的任务，显示按钮
+            m_buttonContainer->show();
+            qDebug() << QString("任务 #%1 已选中，显示操作按钮").arg(taskId);
+        } else {
+            // 没有选中任务，隐藏按钮
+            m_buttonContainer->hide();
+            qDebug() << "未选中任务，隐藏操作按钮";
+        }
     }
 
 private slots:
@@ -794,6 +821,8 @@ protected:
         QWidget::keyPressEvent(event);
     }
 
+    // eventFilter 不再需要，因为 TaskListWidget 自己处理 hover 事件
+
 private:
     enum InteractionMode {
         MODE_NORMAL = 0,
@@ -807,7 +836,6 @@ private:
     MapPainter *m_painter = nullptr;
     TaskManager *m_taskManager = nullptr;
     TaskListWidget *m_taskListWidget = nullptr;
-    QWidget *m_taskListPlaceholder = nullptr;
     ElementDetailWidget *m_detailWidget = nullptr;
     QWidget *m_buttonContainer = nullptr;
     QComboBox *m_uavColorCombo = nullptr;

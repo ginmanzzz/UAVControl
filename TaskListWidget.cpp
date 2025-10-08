@@ -4,6 +4,9 @@
 #include "TaskListWidget.h"
 #include "TaskDialog.h"
 #include <QDebug>
+#include <QTimer>
+#include <QApplication>
+#include <QGraphicsOpacityEffect>
 
 // ============ TaskItemWidget 实现 ============
 
@@ -135,76 +138,120 @@ TaskListWidget::TaskListWidget(TaskManager *taskManager, QWidget *parent)
             this, &TaskListWidget::onTaskRemoved);
     connect(m_taskManager, &TaskManager::currentTaskChanged,
             this, &TaskListWidget::onCurrentTaskChanged);
+
+    // 设置默认宽度
+    setMinimumWidth(m_expandedWidth);
+    setMaximumWidth(m_expandedWidth);
 }
 
 void TaskListWidget::setupUI()
 {
     auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(10, 10, 10, 10);
-    mainLayout->setSpacing(10);
+    mainLayout->setContentsMargins(0, 0, 0, 0);  // 去除外边距，让组件填满整个面板
+    mainLayout->setSpacing(0);  // 去除间距，让组件紧密连接
 
-    // 标题
-    auto *titleLabel = new QLabel("任务列表", this);
-    titleLabel->setStyleSheet(
-        "font-size: 16px;"
-        "font-weight: bold;"
-        "color: #333;"
-        "padding: 5px;"
+    // 标题栏（包含标题和Pin按钮）
+    auto *headerWidget = new QWidget(this);
+    headerWidget->setStyleSheet(
+        "QWidget {"
+        "  background-color: #2196F3;"  // 蓝色背景
+        "  border-top-left-radius: 8px;"
+        "  border-top-right-radius: 8px;"
+        "}"
     );
-    mainLayout->addWidget(titleLabel);
+    auto *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(12, 10, 12, 10);
+    headerLayout->setSpacing(8);
+
+    auto *titleLabel = new QLabel("任务列表", headerWidget);
+    titleLabel->setStyleSheet(
+        "font-size: 15px;"
+        "font-weight: bold;"
+        "color: white;"  // 白色文字
+        "background: transparent;"
+    );
+
+    // Pin按钮
+    m_pinButton = new QPushButton("📌", headerWidget);
+    m_pinButton->setFixedSize(32, 32);
+    m_pinButton->setStyleSheet(
+        "QPushButton {"
+        "  background-color: rgba(255, 255, 255, 0.2);"
+        "  border: 1px solid rgba(255, 255, 255, 0.3);"
+        "  border-radius: 4px;"
+        "  font-size: 16px;"
+        "  color: white;"
+        "}"
+        "QPushButton:hover {"
+        "  background-color: rgba(255, 255, 255, 0.3);"
+        "}"
+    );
+    m_pinButton->setToolTip("固定侧边栏");
+    connect(m_pinButton, &QPushButton::clicked, this, &TaskListWidget::onPinToggled);
+
+    headerLayout->addWidget(titleLabel, 1);
+    headerLayout->addWidget(m_pinButton);
+
+    mainLayout->addWidget(headerWidget);
+
+    // 内容容器（包含创建按钮、列表等，带内边距）
+    auto *contentWidget = new QWidget(this);
+    contentWidget->setStyleSheet("background-color: #fafafa;");
+    auto *contentLayout = new QVBoxLayout(contentWidget);
+    contentLayout->setContentsMargins(12, 12, 12, 12);  // 内容区域的内边距
+    contentLayout->setSpacing(8);  // 内容组件之间的间距
 
     // 创建任务按钮
-    m_createButton = new QPushButton("+ 创建新任务", this);
+    m_createButton = new QPushButton("+ 创建新任务", contentWidget);
     m_createButton->setStyleSheet(
         "QPushButton {"
-        "  background-color: #2196F3;"
+        "  background-color: #4CAF50;"
         "  color: white;"
         "  border: none;"
         "  border-radius: 4px;"
         "  padding: 10px;"
-        "  font-size: 14px;"
+        "  font-size: 13px;"
         "  font-weight: bold;"
         "}"
         "QPushButton:hover {"
-        "  background-color: #0b7dda;"
+        "  background-color: #45a049;"
         "}"
     );
     connect(m_createButton, &QPushButton::clicked, this, &TaskListWidget::onCreateTask);
 
-    mainLayout->addWidget(m_createButton);
+    contentLayout->addWidget(m_createButton);
 
     // 列标题
-    auto *headerFrame = new QFrame(this);
+    auto *headerFrame = new QFrame(contentWidget);
     headerFrame->setStyleSheet(
         "QFrame {"
         "  background-color: #e0e0e0;"
         "  border-radius: 4px;"
-        "  padding: 6px 8px;"
         "}"
     );
-    auto *headerLayout = new QHBoxLayout(headerFrame);
-    headerLayout->setContentsMargins(8, 4, 8, 4);
-    headerLayout->setSpacing(8);
+    auto *columnHeaderLayout = new QHBoxLayout(headerFrame);
+    columnHeaderLayout->setContentsMargins(6, 3, 6, 3);
+    columnHeaderLayout->setSpacing(6);
 
     auto *visibilityHeader = new QLabel("显示", headerFrame);
-    visibilityHeader->setStyleSheet("font-weight: bold; font-size: 12px;");
+    visibilityHeader->setStyleSheet("font-weight: bold; font-size: 11px;");
     visibilityHeader->setFixedWidth(50);
 
     auto *descriptionHeader = new QLabel("任务", headerFrame);
-    descriptionHeader->setStyleSheet("font-weight: bold; font-size: 12px;");
+    descriptionHeader->setStyleSheet("font-weight: bold; font-size: 11px;");
 
     auto *actionHeader = new QLabel("操作", headerFrame);
-    actionHeader->setStyleSheet("font-weight: bold; font-size: 12px;");
+    actionHeader->setStyleSheet("font-weight: bold; font-size: 11px;");
     actionHeader->setFixedWidth(60);
 
-    headerLayout->addWidget(visibilityHeader);
-    headerLayout->addWidget(descriptionHeader, 1);
-    headerLayout->addWidget(actionHeader);
+    columnHeaderLayout->addWidget(visibilityHeader);
+    columnHeaderLayout->addWidget(descriptionHeader, 1);
+    columnHeaderLayout->addWidget(actionHeader);
 
-    mainLayout->addWidget(headerFrame);
+    contentLayout->addWidget(headerFrame);
 
     // 任务列表区域（滚动）
-    auto *scrollArea = new QScrollArea(this);
+    auto *scrollArea = new QScrollArea(contentWidget);
     scrollArea->setWidgetResizable(true);
     scrollArea->setStyleSheet(
         "QScrollArea {"
@@ -216,19 +263,28 @@ void TaskListWidget::setupUI()
     auto *scrollWidget = new QWidget();
     m_taskListLayout = new QVBoxLayout(scrollWidget);
     m_taskListLayout->setContentsMargins(0, 0, 0, 0);
-    m_taskListLayout->setSpacing(5);
+    m_taskListLayout->setSpacing(4);  // 减小任务项之间的间距
     m_taskListLayout->addStretch();
 
     scrollArea->setWidget(scrollWidget);
-    mainLayout->addWidget(scrollArea, 1);
+    contentLayout->addWidget(scrollArea, 1);
+
+    // 将内容容器添加到主布局
+    mainLayout->addWidget(contentWidget, 1);
 
     // 设置整体样式
     setStyleSheet(
         "TaskListWidget {"
         "  background-color: #fafafa;"
-        "  border-right: 2px solid #ddd;"
+        "  border-radius: 8px;"
+        "  border: 1px solid #ccc;"
         "}"
     );
+
+    // 创建透明度效果
+    m_opacityEffect = new QGraphicsOpacityEffect(this);
+    m_opacityEffect->setOpacity(1.0);  // 初始完全不透明
+    setGraphicsEffect(m_opacityEffect);
 }
 
 void TaskListWidget::refreshTaskList()
@@ -393,5 +449,238 @@ void TaskListWidget::highlightCurrentTask(int taskId)
                 "}"
             );
         }
+    }
+}
+
+void TaskListWidget::setCollapsible(bool collapsible)
+{
+    m_collapsible = collapsible;
+
+    if (m_collapsible) {
+        // 初始化为收缩状态
+        m_collapsed = true;
+        setMinimumWidth(m_collapsedWidth);
+        setMaximumWidth(m_collapsedWidth);
+        resize(m_collapsedWidth, height());  // 立即调整大小
+
+        // 启用鼠标追踪
+        setMouseTracking(true);
+        setAttribute(Qt::WA_Hover, true);  // 启用 hover 事件
+
+        // 在收缩状态下，改变样式以提供视觉提示
+        updateStyleForCollapsedState();
+
+        qDebug() << "TaskListWidget 设置为可收缩模式，当前宽度:" << width();
+    } else {
+        // 恢复展开状态
+        m_collapsed = false;
+        setMinimumWidth(m_expandedWidth);
+        setMaximumWidth(m_expandedWidth);
+        resize(m_expandedWidth, height());
+    }
+}
+
+void TaskListWidget::updateStyleForCollapsedState()
+{
+    if (m_collapsed) {
+        // 收缩状态：隐藏所有子控件，只显示一个触发条
+        for (QObject *child : children()) {
+            if (QWidget *widget = qobject_cast<QWidget*>(child)) {
+                widget->hide();
+            }
+        }
+
+        // 收缩状态：显示一个带有箭头提示的条
+        setStyleSheet(
+            "TaskListWidget {"
+            "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(33, 150, 243, 200), stop:1 rgba(33, 150, 243, 100));"
+            "  border-top-right-radius: 8px;"
+            "  border-bottom-right-radius: 8px;"
+            "  border-right: 3px solid #2196F3;"
+            "}"
+        );
+
+        qDebug() << "TaskListWidget 收缩状态：子控件已隐藏";
+    } else {
+        // 展开状态：显示所有子控件
+        for (QObject *child : children()) {
+            if (QWidget *widget = qobject_cast<QWidget*>(child)) {
+                widget->show();
+            }
+        }
+
+        // 展开状态：恢复原样式
+        setStyleSheet(
+            "TaskListWidget {"
+            "  background-color: #fafafa;"
+            "  border-radius: 8px;"
+            "  border: 1px solid #ccc;"
+            "}"
+        );
+
+        qDebug() << "TaskListWidget 展开状态：子控件已显示";
+    }
+}
+
+void TaskListWidget::expand()
+{
+    if (!m_collapsed) {
+        qDebug() << "TaskListWidget::expand() - 已经是展开状态";
+        return;
+    }
+
+    qDebug() << "TaskListWidget::expand() - 开始展开动画";
+    m_collapsed = false;
+    updateStyleForCollapsedState();  // 更新样式
+
+    auto *animation = new QPropertyAnimation(this, "minimumWidth");
+    animation->setDuration(200);
+    animation->setStartValue(m_collapsedWidth);
+    animation->setEndValue(m_expandedWidth);
+    animation->setEasingCurve(QEasingCurve::OutCubic);
+
+    auto *animation2 = new QPropertyAnimation(this, "maximumWidth");
+    animation2->setDuration(200);
+    animation2->setStartValue(m_collapsedWidth);
+    animation2->setEndValue(m_expandedWidth);
+    animation2->setEasingCurve(QEasingCurve::OutCubic);
+
+    // 展开完成后，如果鼠标在窗口内，设为完全不透明；否则设为半透明
+    connect(animation, &QPropertyAnimation::finished, this, [this]() {
+        if (m_opacityEffect) {
+            if (underMouse()) {
+                m_opacityEffect->setOpacity(1.0);
+                qDebug() << "展开完成 - 鼠标在窗口内，设置透明度为 100%";
+            } else {
+                m_opacityEffect->setOpacity(0.65);
+                qDebug() << "展开完成 - 鼠标在窗口外，设置透明度为 65%";
+            }
+        }
+    });
+
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+    animation2->start(QAbstractAnimation::DeleteWhenStopped);
+
+    emit expandStateChanged(true);
+}
+
+void TaskListWidget::collapse()
+{
+    if (m_collapsed || !m_collapsible || m_pinned) return;
+
+    m_collapsed = true;
+
+    auto *animation = new QPropertyAnimation(this, "minimumWidth");
+    animation->setDuration(200);
+    animation->setStartValue(m_expandedWidth);
+    animation->setEndValue(m_collapsedWidth);
+    animation->setEasingCurve(QEasingCurve::InCubic);
+
+    auto *animation2 = new QPropertyAnimation(this, "maximumWidth");
+    animation2->setDuration(200);
+    animation2->setStartValue(m_expandedWidth);
+    animation2->setEndValue(m_collapsedWidth);
+    animation2->setEasingCurve(QEasingCurve::InCubic);
+
+    // 动画完成后再更新样式和隐藏子控件，并设置为完全不透明（收缩状态下应完全可见）
+    connect(animation, &QPropertyAnimation::finished, this, [this]() {
+        updateStyleForCollapsedState();
+        if (m_opacityEffect) {
+            m_opacityEffect->setOpacity(1.0);  // 收缩状态下，蓝色触发条应该完全可见
+            qDebug() << "收缩完成 - 设置透明度为 100%";
+        }
+    });
+
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+    animation2->start(QAbstractAnimation::DeleteWhenStopped);
+
+    emit expandStateChanged(false);
+}
+
+void TaskListWidget::enterEvent(QEnterEvent *event)
+{
+    QWidget::enterEvent(event);
+    qDebug() << "TaskListWidget::enterEvent() - 鼠标进入，collapsible:" << m_collapsible << "pinned:" << m_pinned << "collapsed:" << m_collapsed;
+
+    // 鼠标进入时，设置为完全不透明
+    if (!m_collapsed && m_opacityEffect) {
+        m_opacityEffect->setOpacity(1.0);
+        qDebug() << "设置透明度为 100% (不透明)";
+    }
+
+    if (m_collapsible && !m_pinned) {
+        expand();
+    }
+}
+
+void TaskListWidget::leaveEvent(QEvent *event)
+{
+    QWidget::leaveEvent(event);
+
+    // 鼠标离开时，设置为半透明（65%不透明度）
+    if (!m_collapsed && m_opacityEffect) {
+        m_opacityEffect->setOpacity(0.65);
+        qDebug() << "设置透明度为 65% (半透明)";
+    }
+
+    if (m_collapsible && !m_pinned) {
+        // 延迟收缩，给用户时间移动鼠标回来
+        QTimer::singleShot(300, this, [this]() {
+            // 如果有任何模态对话框打开，不收缩
+            if (QApplication::activeModalWidget()) {
+                qDebug() << "TaskListWidget::leaveEvent - 检测到模态对话框，不收缩";
+                return;
+            }
+
+            if (!underMouse() && !m_pinned && m_collapsible) {
+                collapse();
+            }
+        });
+    }
+}
+
+void TaskListWidget::onPinToggled()
+{
+    m_pinned = !m_pinned;
+    updatePinButtonIcon();
+
+    if (m_pinned) {
+        // 固定时展开
+        expand();
+    }
+}
+
+void TaskListWidget::updatePinButtonIcon()
+{
+    if (m_pinned) {
+        m_pinButton->setText("📍");
+        m_pinButton->setToolTip("取消固定");
+        m_pinButton->setStyleSheet(
+            "QPushButton {"
+            "  background-color: rgba(255, 255, 255, 0.4);"
+            "  border: 1px solid rgba(255, 255, 255, 0.6);"
+            "  border-radius: 4px;"
+            "  font-size: 16px;"
+            "  color: white;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: rgba(255, 255, 255, 0.5);"
+            "}"
+        );
+    } else {
+        m_pinButton->setText("📌");
+        m_pinButton->setToolTip("固定侧边栏");
+        m_pinButton->setStyleSheet(
+            "QPushButton {"
+            "  background-color: rgba(255, 255, 255, 0.2);"
+            "  border: 1px solid rgba(255, 255, 255, 0.3);"
+            "  border-radius: 4px;"
+            "  font-size: 16px;"
+            "  color: white;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: rgba(255, 255, 255, 0.3);"
+            "}"
+        );
     }
 }
