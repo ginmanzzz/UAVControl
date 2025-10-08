@@ -8,7 +8,12 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/user00/projects/drawing-demo/ElementDetailWidget.cpp" "CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o.d"
   "/home/user00/projects/drawing-demo/InteractiveMapWidget.cpp" "CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.o.d"
+  "/home/user00/projects/drawing-demo/RegionFeatureDialog.cpp" "CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o.d"
+  "/home/user00/projects/drawing-demo/TaskDialog.cpp" "CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o.d"
+  "/home/user00/projects/drawing-demo/TaskListWidget.cpp" "CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o.d"
+  "/home/user00/projects/drawing-demo/TaskManager.cpp" "CMakeFiles/drawing-demo.dir/TaskManager.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/TaskManager.cpp.o.d"
   "/home/user00/projects/drawing-demo/build/drawing-demo_autogen/mocs_compilation.cpp" "CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o.d"
   "/home/user00/projects/drawing-demo/main.cpp" "CMakeFiles/drawing-demo.dir/main.cpp.o" "gcc" "CMakeFiles/drawing-demo.dir/main.cpp.o.d"
   )

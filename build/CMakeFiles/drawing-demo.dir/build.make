@@ -111,11 +111,86 @@ CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user00/projects/drawing-demo/InteractiveMapWidget.cpp -o CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.s
 
+CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o: CMakeFiles/drawing-demo.dir/flags.make
+CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o: /home/user00/projects/drawing-demo/ElementDetailWidget.cpp
+CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o: CMakeFiles/drawing-demo.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user00/projects/drawing-demo/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o -MF CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o.d -o CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o -c /home/user00/projects/drawing-demo/ElementDetailWidget.cpp
+
+CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user00/projects/drawing-demo/ElementDetailWidget.cpp > CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.i
+
+CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user00/projects/drawing-demo/ElementDetailWidget.cpp -o CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.s
+
+CMakeFiles/drawing-demo.dir/TaskManager.cpp.o: CMakeFiles/drawing-demo.dir/flags.make
+CMakeFiles/drawing-demo.dir/TaskManager.cpp.o: /home/user00/projects/drawing-demo/TaskManager.cpp
+CMakeFiles/drawing-demo.dir/TaskManager.cpp.o: CMakeFiles/drawing-demo.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user00/projects/drawing-demo/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/drawing-demo.dir/TaskManager.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/drawing-demo.dir/TaskManager.cpp.o -MF CMakeFiles/drawing-demo.dir/TaskManager.cpp.o.d -o CMakeFiles/drawing-demo.dir/TaskManager.cpp.o -c /home/user00/projects/drawing-demo/TaskManager.cpp
+
+CMakeFiles/drawing-demo.dir/TaskManager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/drawing-demo.dir/TaskManager.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user00/projects/drawing-demo/TaskManager.cpp > CMakeFiles/drawing-demo.dir/TaskManager.cpp.i
+
+CMakeFiles/drawing-demo.dir/TaskManager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/drawing-demo.dir/TaskManager.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user00/projects/drawing-demo/TaskManager.cpp -o CMakeFiles/drawing-demo.dir/TaskManager.cpp.s
+
+CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o: CMakeFiles/drawing-demo.dir/flags.make
+CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o: /home/user00/projects/drawing-demo/TaskListWidget.cpp
+CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o: CMakeFiles/drawing-demo.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user00/projects/drawing-demo/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o -MF CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o.d -o CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o -c /home/user00/projects/drawing-demo/TaskListWidget.cpp
+
+CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user00/projects/drawing-demo/TaskListWidget.cpp > CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.i
+
+CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user00/projects/drawing-demo/TaskListWidget.cpp -o CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.s
+
+CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o: CMakeFiles/drawing-demo.dir/flags.make
+CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o: /home/user00/projects/drawing-demo/TaskDialog.cpp
+CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o: CMakeFiles/drawing-demo.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user00/projects/drawing-demo/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o -MF CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o.d -o CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o -c /home/user00/projects/drawing-demo/TaskDialog.cpp
+
+CMakeFiles/drawing-demo.dir/TaskDialog.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/drawing-demo.dir/TaskDialog.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user00/projects/drawing-demo/TaskDialog.cpp > CMakeFiles/drawing-demo.dir/TaskDialog.cpp.i
+
+CMakeFiles/drawing-demo.dir/TaskDialog.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/drawing-demo.dir/TaskDialog.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user00/projects/drawing-demo/TaskDialog.cpp -o CMakeFiles/drawing-demo.dir/TaskDialog.cpp.s
+
+CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o: CMakeFiles/drawing-demo.dir/flags.make
+CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o: /home/user00/projects/drawing-demo/RegionFeatureDialog.cpp
+CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o: CMakeFiles/drawing-demo.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user00/projects/drawing-demo/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o -MF CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o.d -o CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o -c /home/user00/projects/drawing-demo/RegionFeatureDialog.cpp
+
+CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user00/projects/drawing-demo/RegionFeatureDialog.cpp > CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.i
+
+CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user00/projects/drawing-demo/RegionFeatureDialog.cpp -o CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.s
+
 # Object files for target drawing-demo
 drawing__demo_OBJECTS = \
 "CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o" \
 "CMakeFiles/drawing-demo.dir/main.cpp.o" \
-"CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.o"
+"CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.o" \
+"CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o" \
+"CMakeFiles/drawing-demo.dir/TaskManager.cpp.o" \
+"CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o" \
+"CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o" \
+"CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o"
 
 # External object files for target drawing-demo
 drawing__demo_EXTERNAL_OBJECTS =
@@ -123,6 +198,11 @@ drawing__demo_EXTERNAL_OBJECTS =
 drawing-demo: CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o
 drawing-demo: CMakeFiles/drawing-demo.dir/main.cpp.o
 drawing-demo: CMakeFiles/drawing-demo.dir/InteractiveMapWidget.cpp.o
+drawing-demo: CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o
+drawing-demo: CMakeFiles/drawing-demo.dir/TaskManager.cpp.o
+drawing-demo: CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o
+drawing-demo: CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o
+drawing-demo: CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o
 drawing-demo: CMakeFiles/drawing-demo.dir/build.make
 drawing-demo: libMapPainter.a
 drawing-demo: /home/user00/projects/maplibre-native-qt/install/lib/libQMapLibreWidgets.so.3.0.0
@@ -137,7 +217,7 @@ drawing-demo: /home/user00/Qt6/6.7.3/gcc_64/lib/libQt6Core.so.6.7.3
 drawing-demo: /usr/lib/x86_64-linux-gnu/libGLX.so
 drawing-demo: /usr/lib/x86_64-linux-gnu/libOpenGL.so
 drawing-demo: CMakeFiles/drawing-demo.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/user00/projects/drawing-demo/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable drawing-demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/user00/projects/drawing-demo/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable drawing-demo"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/drawing-demo.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

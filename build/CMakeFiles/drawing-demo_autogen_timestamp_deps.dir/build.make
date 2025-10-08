@@ -66,11 +66,11 @@ include CMakeFiles/drawing-demo_autogen_timestamp_deps.dir/compiler_depend.make
 # Include the progress variables for this target.
 include CMakeFiles/drawing-demo_autogen_timestamp_deps.dir/progress.make
 
-CMakeFiles/drawing-demo_autogen_timestamp_deps: /home/user00/Qt6/6.7.3/gcc_64/lib/libQt6Gui.so.6.7.3
-CMakeFiles/drawing-demo_autogen_timestamp_deps: libMapPainter.a
 CMakeFiles/drawing-demo_autogen_timestamp_deps: /home/user00/projects/maplibre-native-qt/install/lib/libQMapLibreWidgets.so.3.0.0
+CMakeFiles/drawing-demo_autogen_timestamp_deps: libMapPainter.a
 CMakeFiles/drawing-demo_autogen_timestamp_deps: /home/user00/Qt6/6.7.3/gcc_64/lib/libQt6Core.so.6.7.3
 CMakeFiles/drawing-demo_autogen_timestamp_deps: /home/user00/Qt6/6.7.3/gcc_64/libexec/moc
+CMakeFiles/drawing-demo_autogen_timestamp_deps: /home/user00/Qt6/6.7.3/gcc_64/lib/libQt6Gui.so.6.7.3
 CMakeFiles/drawing-demo_autogen_timestamp_deps: /home/user00/Qt6/6.7.3/gcc_64/lib/libQt6Widgets.so.6.7.3
 
 drawing-demo_autogen_timestamp_deps: CMakeFiles/drawing-demo_autogen_timestamp_deps

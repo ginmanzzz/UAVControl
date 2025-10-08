@@ -42,6 +42,17 @@ add_executable(drawing-demo
     main.cpp
     InteractiveMapWidget.h
     InteractiveMapWidget.cpp
+    ElementDetailWidget.h
+    ElementDetailWidget.cpp
+    Task.h
+    TaskManager.h
+    TaskManager.cpp
+    TaskListWidget.h
+    TaskListWidget.cpp
+    TaskDialog.h
+    TaskDialog.cpp
+    RegionFeatureDialog.h
+    RegionFeatureDialog.cpp
 )
 
 # 链接库

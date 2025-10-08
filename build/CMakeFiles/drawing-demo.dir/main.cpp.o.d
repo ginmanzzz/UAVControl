@@ -464,9 +464,7 @@ CMakeFiles/drawing-demo.dir/main.cpp.o: \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpicture.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextdocument.h \
  /home/user00/projects/drawing-demo/ElementDetailWidget.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QHBoxLayout \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QApplication \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qapplication.h \
+ /home/user00/projects/drawing-demo/Task.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QPushButton \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qpushbutton.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractbutton.h \
@@ -484,6 +482,27 @@ CMakeFiles/drawing-demo.dir/main.cpp.o: \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabwidget.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qrubberband.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qabstractitemmodel.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QHBoxLayout \
+ /home/user00/projects/drawing-demo/TaskManager.h \
+ /home/user00/projects/drawing-demo/TaskListWidget.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QCheckBox \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qcheckbox.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QLineEdit \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlineedit.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextcursor.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextformat.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpen.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextoption.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QScrollArea \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qscrollarea.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractscrollarea.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QFrame \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qframe.h \
+ /home/user00/projects/drawing-demo/RegionFeatureDialog.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QDialog \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qdialog.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QApplication \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qapplication.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QMessageBox \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qmessagebox.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qdialog.h \

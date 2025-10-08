@@ -177,6 +177,7 @@
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qopenglext.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpaintdevice.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpalette.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpen.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpicture.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpixelformat.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpixmap.h \
@@ -188,7 +189,10 @@
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qscreen.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qscreen_platform.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qsurfaceformat.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextcursor.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextdocument.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextformat.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextoption.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtgui-config.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtguiexports.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtguiglobal.h \
@@ -202,19 +206,26 @@
   /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qtopenglwidgetsexports.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qtopenglwidgetsglobal.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QApplication \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QCheckBox \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QComboBox \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QDialog \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QFrame \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QHBoxLayout \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QLabel \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QLineEdit \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QMessageBox \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QPushButton \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QScrollArea \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QVBoxLayout \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QWidget \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractbutton.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractitemdelegate.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractscrollarea.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractslider.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractspinbox.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qapplication.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qboxlayout.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qcheckbox.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qcombobox.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qdialog.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qdialogbuttonbox.h \
@@ -223,9 +234,11 @@
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlabel.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlayout.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlayoutitem.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlineedit.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qmessagebox.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qpushbutton.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qrubberband.h \
+  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qscrollarea.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qsizepolicy.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qslider.h \
   /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyle.h \
@@ -239,6 +252,10 @@
   /home/user00/projects/drawing-demo/ElementDetailWidget.h \
   /home/user00/projects/drawing-demo/InteractiveMapWidget.h \
   /home/user00/projects/drawing-demo/MapPainter.h \
+  /home/user00/projects/drawing-demo/RegionFeatureDialog.h \
+  /home/user00/projects/drawing-demo/Task.h \
+  /home/user00/projects/drawing-demo/TaskListWidget.h \
+  /home/user00/projects/drawing-demo/TaskManager.h \
   /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Export \
   /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Map \
   /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Settings \

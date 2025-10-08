@@ -11,6 +11,9 @@
 #include <QVector>
 #include <QMap>
 
+// 前向声明
+struct MapElement;
+
 // 元素类型枚举
 enum class ElementType {
     LoiterPoint,
@@ -26,6 +29,8 @@ struct ElementInfo {
     QMapLibre::Coordinates vertices;   // 对于多边形：所有顶点
     double radius;                     // 对于禁飞区：半径（米）
     QString color;                     // 对于 UAV：颜色
+    QMapLibre::AnnotationID annotationId;  // 标注ID
+    const MapElement *element;         // 指向原始MapElement的指针（用于访问地形等信息）
 };
 
 /**

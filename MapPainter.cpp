@@ -83,6 +83,8 @@ QMapLibre::AnnotationID MapPainter::drawLoiterPoint(double latitude, double long
     ElementInfo info;
     info.type = ElementType::LoiterPoint;
     info.coordinate = QMapLibre::Coordinate(latitude, longitude);
+    info.annotationId = id;
+    info.element = nullptr;
     m_elementInfo[id] = info;
 
     qDebug() << QString("添加盘旋点: (%1, %2), ID: %3").arg(latitude).arg(longitude).arg(id);
@@ -112,6 +114,8 @@ QMapLibre::AnnotationID MapPainter::drawUAV(double latitude, double longitude, c
     info.type = ElementType::UAV;
     info.coordinate = QMapLibre::Coordinate(latitude, longitude);
     info.color = color;
+    info.annotationId = id;
+    info.element = nullptr;
     m_elementInfo[id] = info;
 
     qDebug() << QString("添加无人机 (%1): (%2, %3), ID: %4").arg(color).arg(latitude).arg(longitude).arg(id);
@@ -146,6 +150,8 @@ QMapLibre::AnnotationID MapPainter::drawNoFlyZone(double latitude, double longit
     info.type = ElementType::NoFlyZone;
     info.coordinate = QMapLibre::Coordinate(latitude, longitude);
     info.radius = radiusInMeters;
+    info.annotationId = zoneId;
+    info.element = nullptr;
     m_elementInfo[zoneId] = info;
 
     qDebug() << QString("添加禁飞区域: 中心(%1, %2), 半径 %3m, ID: %4")
@@ -157,6 +163,7 @@ void MapPainter::removeAnnotation(QMapLibre::AnnotationID id)
 {
     m_map->removeAnnotation(id);
     m_annotations.removeAll(id);
+    m_elementInfo.remove(id);  // 清理元素信息
     qDebug() << "删除标注 ID:" << id;
 }
 
@@ -169,6 +176,7 @@ void MapPainter::clearAll()
         m_map->removeAnnotation(id);
     }
     m_annotations.clear();
+    m_elementInfo.clear();  // 清理所有元素信息
 
     qDebug() << "清除所有画家标注";
 }
@@ -270,6 +278,8 @@ QMapLibre::AnnotationID MapPainter::drawPolygonArea(const QMapLibre::Coordinates
     ElementInfo info;
     info.type = ElementType::Polygon;
     info.vertices = coordinates;
+    info.annotationId = id;
+    info.element = nullptr;
     m_elementInfo[id] = info;
 
     qDebug() << QString("添加多边形区域: %1个顶点, ID: %2")

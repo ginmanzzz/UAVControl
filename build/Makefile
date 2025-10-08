@@ -194,6 +194,30 @@ drawing-demo_autogen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo_autogen.dir/build.make CMakeFiles/drawing-demo_autogen.dir/build
 .PHONY : drawing-demo_autogen/fast
 
+ElementDetailWidget.o: ElementDetailWidget.cpp.o
+.PHONY : ElementDetailWidget.o
+
+# target to build an object file
+ElementDetailWidget.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.o
+.PHONY : ElementDetailWidget.cpp.o
+
+ElementDetailWidget.i: ElementDetailWidget.cpp.i
+.PHONY : ElementDetailWidget.i
+
+# target to preprocess a source file
+ElementDetailWidget.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.i
+.PHONY : ElementDetailWidget.cpp.i
+
+ElementDetailWidget.s: ElementDetailWidget.cpp.s
+.PHONY : ElementDetailWidget.s
+
+# target to generate assembly for a file
+ElementDetailWidget.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/ElementDetailWidget.cpp.s
+.PHONY : ElementDetailWidget.cpp.s
+
 InteractiveMapWidget.o: InteractiveMapWidget.cpp.o
 .PHONY : InteractiveMapWidget.o
 
@@ -266,6 +290,102 @@ MapPainter_autogen/mocs_compilation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/MapPainter.dir/build.make CMakeFiles/MapPainter.dir/MapPainter_autogen/mocs_compilation.cpp.s
 .PHONY : MapPainter_autogen/mocs_compilation.cpp.s
 
+RegionFeatureDialog.o: RegionFeatureDialog.cpp.o
+.PHONY : RegionFeatureDialog.o
+
+# target to build an object file
+RegionFeatureDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.o
+.PHONY : RegionFeatureDialog.cpp.o
+
+RegionFeatureDialog.i: RegionFeatureDialog.cpp.i
+.PHONY : RegionFeatureDialog.i
+
+# target to preprocess a source file
+RegionFeatureDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.i
+.PHONY : RegionFeatureDialog.cpp.i
+
+RegionFeatureDialog.s: RegionFeatureDialog.cpp.s
+.PHONY : RegionFeatureDialog.s
+
+# target to generate assembly for a file
+RegionFeatureDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/RegionFeatureDialog.cpp.s
+.PHONY : RegionFeatureDialog.cpp.s
+
+TaskDialog.o: TaskDialog.cpp.o
+.PHONY : TaskDialog.o
+
+# target to build an object file
+TaskDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskDialog.cpp.o
+.PHONY : TaskDialog.cpp.o
+
+TaskDialog.i: TaskDialog.cpp.i
+.PHONY : TaskDialog.i
+
+# target to preprocess a source file
+TaskDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskDialog.cpp.i
+.PHONY : TaskDialog.cpp.i
+
+TaskDialog.s: TaskDialog.cpp.s
+.PHONY : TaskDialog.s
+
+# target to generate assembly for a file
+TaskDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskDialog.cpp.s
+.PHONY : TaskDialog.cpp.s
+
+TaskListWidget.o: TaskListWidget.cpp.o
+.PHONY : TaskListWidget.o
+
+# target to build an object file
+TaskListWidget.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.o
+.PHONY : TaskListWidget.cpp.o
+
+TaskListWidget.i: TaskListWidget.cpp.i
+.PHONY : TaskListWidget.i
+
+# target to preprocess a source file
+TaskListWidget.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.i
+.PHONY : TaskListWidget.cpp.i
+
+TaskListWidget.s: TaskListWidget.cpp.s
+.PHONY : TaskListWidget.s
+
+# target to generate assembly for a file
+TaskListWidget.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskListWidget.cpp.s
+.PHONY : TaskListWidget.cpp.s
+
+TaskManager.o: TaskManager.cpp.o
+.PHONY : TaskManager.o
+
+# target to build an object file
+TaskManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskManager.cpp.o
+.PHONY : TaskManager.cpp.o
+
+TaskManager.i: TaskManager.cpp.i
+.PHONY : TaskManager.i
+
+# target to preprocess a source file
+TaskManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskManager.cpp.i
+.PHONY : TaskManager.cpp.i
+
+TaskManager.s: TaskManager.cpp.s
+.PHONY : TaskManager.s
+
+# target to generate assembly for a file
+TaskManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/drawing-demo.dir/build.make CMakeFiles/drawing-demo.dir/TaskManager.cpp.s
+.PHONY : TaskManager.cpp.s
+
 drawing-demo_autogen/mocs_compilation.o: drawing-demo_autogen/mocs_compilation.cpp.o
 .PHONY : drawing-demo_autogen/mocs_compilation.o
 
@@ -328,6 +448,9 @@ help:
 	@echo "... drawing-demo_autogen_timestamp_deps"
 	@echo "... MapPainter"
 	@echo "... drawing-demo"
+	@echo "... ElementDetailWidget.o"
+	@echo "... ElementDetailWidget.i"
+	@echo "... ElementDetailWidget.s"
 	@echo "... InteractiveMapWidget.o"
 	@echo "... InteractiveMapWidget.i"
 	@echo "... InteractiveMapWidget.s"
@@ -337,6 +460,18 @@ help:
 	@echo "... MapPainter_autogen/mocs_compilation.o"
 	@echo "... MapPainter_autogen/mocs_compilation.i"
 	@echo "... MapPainter_autogen/mocs_compilation.s"
+	@echo "... RegionFeatureDialog.o"
+	@echo "... RegionFeatureDialog.i"
+	@echo "... RegionFeatureDialog.s"
+	@echo "... TaskDialog.o"
+	@echo "... TaskDialog.i"
+	@echo "... TaskDialog.s"
+	@echo "... TaskListWidget.o"
+	@echo "... TaskListWidget.i"
+	@echo "... TaskListWidget.s"
+	@echo "... TaskManager.o"
+	@echo "... TaskManager.i"
+	@echo "... TaskManager.s"
 	@echo "... drawing-demo_autogen/mocs_compilation.o"
 	@echo "... drawing-demo_autogen/mocs_compilation.i"
 	@echo "... drawing-demo_autogen/mocs_compilation.s"

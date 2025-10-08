@@ -10,7 +10,7 @@
 		"/usr/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake",
 		"/usr/share/cmake-3.28/Modules/CMakeSystem.cmake.in",
 		"/home/user00/projects/drawing-demo/build/CMakeFiles/3.28.3/CMakeSystem.cmake",
-		"/usr/share/cmake-3.28/Modules/CMakeNinjaFindMake.cmake",
+		"/usr/share/cmake-3.28/Modules/CMakeUnixFindMake.cmake",
 		"/usr/share/cmake-3.28/Modules/CMakeSystemSpecificInitialize.cmake",
 		"/usr/share/cmake-3.28/Modules/Platform/Linux-Initialize.cmake",
 		"/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake",
@@ -616,9 +616,45 @@
 	"HEADERS" : 
 	[
 		[
+			"/home/user00/projects/drawing-demo/ElementDetailWidget.h",
+			"Mu",
+			"EWIEGA46WW/moc_ElementDetailWidget.cpp",
+			null
+		],
+		[
 			"/home/user00/projects/drawing-demo/InteractiveMapWidget.h",
 			"Mu",
 			"EWIEGA46WW/moc_InteractiveMapWidget.cpp",
+			null
+		],
+		[
+			"/home/user00/projects/drawing-demo/RegionFeatureDialog.h",
+			"Mu",
+			"EWIEGA46WW/moc_RegionFeatureDialog.cpp",
+			null
+		],
+		[
+			"/home/user00/projects/drawing-demo/Task.h",
+			"Mu",
+			"EWIEGA46WW/moc_Task.cpp",
+			null
+		],
+		[
+			"/home/user00/projects/drawing-demo/TaskDialog.h",
+			"Mu",
+			"EWIEGA46WW/moc_TaskDialog.cpp",
+			null
+		],
+		[
+			"/home/user00/projects/drawing-demo/TaskListWidget.h",
+			"Mu",
+			"EWIEGA46WW/moc_TaskListWidget.cpp",
+			null
+		],
+		[
+			"/home/user00/projects/drawing-demo/TaskManager.h",
+			"Mu",
+			"EWIEGA46WW/moc_TaskManager.cpp",
 			null
 		]
 	],
@@ -630,6 +666,7 @@
 		"QT_CORE_LIB",
 		"QT_GUI_LIB",
 		"QT_NETWORK_LIB",
+		"QT_NO_DEBUG",
 		"QT_OPENGLWIDGETS_LIB",
 		"QT_OPENGL_LIB",
 		"QT_SQL_LIB",
@@ -675,7 +712,7 @@
 	"MOC_PATH_PREFIX" : false,
 	"MOC_PREDEFS_CMD" : 
 	[
-		"/usr/bin/g++",
+		"/usr/bin/c++",
 		"-std=gnu++17",
 		"-dM",
 		"-E",
@@ -699,10 +736,23 @@
 	"SOURCES" : 
 	[
 		[
+			"/home/user00/projects/drawing-demo/ElementDetailWidget.cpp",
+			"Mu",
+			null
+		],
+		[
 			"/home/user00/projects/drawing-demo/InteractiveMapWidget.cpp",
 			"Mu",
 			null
 		],
+		[
+			"/home/user00/projects/drawing-demo/RegionFeatureDialog.cpp",
+			"Mu",
+			null
+		],
+		[ "/home/user00/projects/drawing-demo/TaskDialog.cpp", "Mu", null ],
+		[ "/home/user00/projects/drawing-demo/TaskListWidget.cpp", "Mu", null ],
+		[ "/home/user00/projects/drawing-demo/TaskManager.cpp", "Mu", null ],
 		[ "/home/user00/projects/drawing-demo/main.cpp", "Mu", null ]
 	],
 	"VERBOSITY" : 0

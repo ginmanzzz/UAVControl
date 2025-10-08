@@ -1,12 +1,13 @@
 CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o: \
  /home/user00/projects/drawing-demo/build/drawing-demo_autogen/mocs_compilation.cpp \
  /usr/include/stdc-predef.h \
- /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp \
- /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../InteractiveMapWidget.h \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/GLWidget \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/gl_widget.hpp \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/Export \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/export_widgets.hpp \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/moc_ElementDetailWidget.cpp \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../ElementDetailWidget.h \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../MapPainter.h \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Map \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/map.hpp \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Export \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/export_core.hpp \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QtGlobal \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qglobal.h \
  /usr/include/c++/13/type_traits \
@@ -159,10 +160,6 @@ CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o: \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtresource.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qttranslation.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qversiontagging.h \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Map \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/map.hpp \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Export \
- /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/export_core.hpp \
  /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Settings \
  /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/settings.hpp \
  /home/user00/projects/maplibre-native-qt/install/include/QMapLibre/Types \
@@ -387,10 +384,12 @@ CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o: \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qsize.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QStringList \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qstringlist.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/QOpenGLWidget \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qopenglwidget.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qtopenglwidgetsglobal.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qtopenglwidgetsexports.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QObject \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QString \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QVector \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/QMap \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qmap.h \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../Task.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QWidget \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qwidget.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
@@ -411,24 +410,64 @@ CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o: \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qsizepolicy.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qcursor.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qbitmap.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/QSurfaceFormat \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qsurfaceformat.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qopengl.h \
- /usr/include/GL/gl.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qopenglext.h \
- /usr/include/inttypes.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QWidget \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QLabel \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlabel.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qframe.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qwidget.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpicture.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qiodevice.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextdocument.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qurl.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QPushButton \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qpushbutton.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractbutton.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QComboBox \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qcombobox.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractitemdelegate.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyleoption.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlocale.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractspinbox.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qvalidator.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qregularexpression.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qslider.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractslider.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qstyle.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabbar.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtabwidget.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qrubberband.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qabstractitemmodel.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QVBoxLayout \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qboxlayout.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlayout.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlayoutitem.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qboxlayout.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qgridlayout.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QHBoxLayout \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextcursor.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextformat.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpen.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextoption.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtmochelpers.h \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/moc_InteractiveMapWidget.cpp \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../InteractiveMapWidget.h \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/GLWidget \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/gl_widget.hpp \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/Export \
+ /home/user00/projects/maplibre-native-qt/install/include/QMapLibreWidgets/export_widgets.hpp \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/QOpenGLWidget \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qopenglwidget.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qtopenglwidgetsglobal.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtOpenGLWidgets/qtopenglwidgetsexports.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QWidget \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/QSurfaceFormat \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qsurfaceformat.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qopengl.h \
+ /usr/include/GL/gl.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qopenglext.h \
+ /usr/include/inttypes.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/QMouseEvent \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qevent.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qcoreevent.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qiodevice.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qurl.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qeventpoint.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qvector2d.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qvectornd.h \
@@ -451,16 +490,26 @@ CMakeFiles/drawing-demo.dir/drawing-demo_autogen/mocs_compilation.cpp.o: \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qeventloop.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qcoreapplication_platform.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qinputmethod.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qlocale.h \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qguiapplication_platform.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QLabel \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlabel.h \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/moc_RegionFeatureDialog.cpp \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../RegionFeatureDialog.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QDialog \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qdialog.h \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/moc_TaskDialog.cpp \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../TaskDialog.h \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../TaskManager.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QLineEdit \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qlineedit.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QTextEdit \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qtextedit.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qabstractscrollarea.h \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/moc_TaskListWidget.cpp \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../TaskListWidget.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QCheckBox \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qcheckbox.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QScrollArea \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qscrollarea.h \
+ /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/QFrame \
  /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qframe.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtWidgets/qwidget.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpicture.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextdocument.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextcursor.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextformat.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qpen.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtGui/qtextoption.h \
- /home/user00/Qt6/6.7.3/gcc_64/include/QtCore/qtmochelpers.h
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/moc_TaskManager.cpp \
+ /home/user00/projects/drawing-demo/build/drawing-demo_autogen/EWIEGA46WW/../../../TaskManager.h
