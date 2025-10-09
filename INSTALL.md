@@ -9,7 +9,7 @@
 - ✅ Qt6 位于 `~/Qt6/6.7.3/gcc_64/`
 - ✅ MapLibre 源码位于 `~/maplibre-native-qt/`
 
-**说明**：脚本会自动检查 MapLibre 的兼容性，如果不兼容会自动重新编译（约 10-20 分钟）。
+**说明**：脚本会自动编译 MapLibre 以确保系统兼容性（约 10-20 分钟）。
 
 ### 一键安装
 
@@ -35,7 +35,7 @@ chmod +x install_kyrin.sh
 2. ✅ **安装系统依赖**（build-essential、Qt6 运行库、MapLibre 运行库）
 3. ✅ **安装 CMake 3.29.6**（到 `~/tools/`）
 4. ✅ **编译 OpenSSL 3.0.14**（到 `~/.local/openssl-3.0.14/`）
-5. ✅ **检查 MapLibre 兼容性**（不兼容则自动重新编译）
+5. ✅ **编译 MapLibre（确保系统兼容性）
 6. ✅ **配置环境变量**（自动写入 `~/.bashrc`）
 7. ✅ **克隆项目**（从 GitHub）
 8. ✅ **编译项目**
@@ -136,13 +136,13 @@ nano ~/.bashrc
   ├─ 创建软链接到 Qt6 lib 目录
   └─ 验证 Qt6 识别 OpenSSL
 
-[步骤 5/7] 检查 MapLibre 兼容性
-  ├─ 检查 MapLibre 库依赖是否满足
-  ├─ 检查 glibc 版本兼容性
-  └─ 如果不兼容：
-      ├─ 安装编译依赖
-      ├─ 使用 ~/maplibre-native-qt 源码编译
-      └─ 安装到 ~/maplibre-native-qt/install
+[步骤 5/7] 编译 MapLibre
+  ├─ 安装编译依赖（ninja、pkg-config 等）
+  ├─ 备份旧的 install 目录（如果存在）
+  ├─ 使用 ~/maplibre-native-qt 源码
+  ├─ 配置 CMake（Release 模式）
+  ├─ 编译（使用多核加速）
+  └─ 安装到 ~/maplibre-native-qt/install
 
 [步骤 6/7] 配置环境变量
   ├─ 检查 ~/.bashrc 是否已配置

@@ -13,7 +13,7 @@
 #   2. 安装系统依赖
 #   3. 安装 CMake 3.29.6
 #   4. 编译安装 OpenSSL 3.0.14
-#   5. 检查 MapLibre 兼容性（不兼容则自动重新编译）
+#   5. 编译 MapLibre（确保系统兼容性）
 #   6. 配置环境变量
 #   7. 克隆并编译项目
 #   8. 运行程序
@@ -69,12 +69,8 @@ if [ ! -d "$MAPLIBRE_SRC" ]; then
 fi
 print_info "✓ MapLibre 源码已找到: $MAPLIBRE_SRC"
 
-# 检查 MapLibre install 目录
-if [ -d "$MAPLIBRE_PATH" ]; then
-    print_info "✓ MapLibre install 目录存在: $MAPLIBRE_PATH（稍后会检查兼容性）"
-else
-    print_warn "MapLibre install 目录不存在，稍后会自动编译"
-fi
+# MapLibre install 目录会在编译后自动创建
+print_info "MapLibre 将在步骤 5 编译并安装到: $MAPLIBRE_PATH"
 
 ################################################################################
 # 步骤 2: 安装系统依赖
@@ -169,75 +165,51 @@ print_info "验证 Qt6 识别 OpenSSL..."
 $QT6_PATH/bin/qtdiag | grep -A3 SSL || print_warn "qtdiag 未能显示 SSL 信息（可能正常）"
 
 ################################################################################
-# 步骤 5: 检查并编译 MapLibre（如果需要）
+# 步骤 5: 编译 MapLibre
 ################################################################################
-print_step "步骤 5/7: 检查 MapLibre 兼容性"
+print_step "步骤 5/7: 编译 MapLibre"
 
-# 检查 MapLibre 是否需要重新编译
-print_info "检查 MapLibre 库兼容性..."
+print_info "开始编译 MapLibre（可能需要 10-20 分钟）..."
 
-# 尝试检查 MapLibre 是否可用
-MAPLIBRE_NEEDS_REBUILD=false
+# 安装编译依赖
+print_info "安装 MapLibre 编译依赖..."
+sudo apt install -y \
+    pkg-config ninja-build ccache \
+    libxkbcommon0 libxkbcommon-dev \
+    libxkbcommon-x11-0 libxkbcommon-x11-dev \
+    xkb-data libx11-xcb-dev libxcb1-dev \
+    libxcb-xkb-dev libxcb-keysyms1-dev
 
-if ldd $MAPLIBRE_PATH/lib/libQMapLibreWidgets.so.3 2>&1 | grep -q "not found"; then
-    print_warn "MapLibre 库依赖缺失，需要重新编译"
-    MAPLIBRE_NEEDS_REBUILD=true
-else
-    # 尝试简单的符号检查
-    if readelf -s $MAPLIBRE_PATH/lib/libQMapLibre.so.3.0.0 2>&1 | grep -q "GLIBC_2.3[89]"; then
-        print_warn "MapLibre 需要更新的 glibc 版本，建议重新编译"
-        read -p "是否重新编译 MapLibre？(Y/n): " rebuild_choice
-        if [[ ! "$rebuild_choice" =~ ^[Nn]$ ]]; then
-            MAPLIBRE_NEEDS_REBUILD=true
-        fi
-    else
-        print_info "✓ MapLibre 库兼容性检查通过，跳过编译"
-    fi
+# 备份旧的 install 目录（如果存在）
+if [ -d "$MAPLIBRE_PATH" ]; then
+    print_info "备份旧的 MapLibre install 目录..."
+    mv "$MAPLIBRE_PATH" "${MAPLIBRE_PATH}.backup.$(date +%s)"
 fi
 
-if [ "$MAPLIBRE_NEEDS_REBUILD" = true ]; then
-    print_info "开始编译 MapLibre（可能需要 10-20 分钟）..."
+# 使用已有的 MapLibre 源码（已在步骤1检查过）
+print_info "使用 MapLibre 源码: $MAPLIBRE_SRC"
 
-    # 安装编译依赖
-    print_info "安装 MapLibre 编译依赖..."
-    sudo apt install -y \
-        pkg-config ninja-build ccache \
-        libxkbcommon0 libxkbcommon-dev \
-        libxkbcommon-x11-0 libxkbcommon-x11-dev \
-        xkb-data libx11-xcb-dev libxcb1-dev \
-        libxcb-xkb-dev libxcb-keysyms1-dev
+cd "$MAPLIBRE_SRC"
 
-    # 备份旧的 install 目录
-    if [ -d "$MAPLIBRE_PATH" ]; then
-        print_info "备份旧的 MapLibre install 目录..."
-        mv "$MAPLIBRE_PATH" "${MAPLIBRE_PATH}.backup.$(date +%s)"
-    fi
+# 清理旧的构建
+rm -rf build install
+mkdir build && cd build
 
-    # 使用已有的 MapLibre 源码（已在步骤1检查过）
-    print_info "使用 MapLibre 源码: $MAPLIBRE_SRC"
+# 配置并编译
+print_info "配置 CMake..."
+cmake .. \
+    -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="$MAPLIBRE_PATH" \
+    -DCMAKE_PREFIX_PATH="$QT6_PATH"
 
-    cd "$MAPLIBRE_SRC"
+print_info "开始编译（使用 $(nproc) 核心）..."
+ninja -j$(nproc)
 
-    # 清理旧的构建
-    rm -rf build install
-    mkdir build && cd build
+print_info "安装到 $MAPLIBRE_PATH..."
+ninja install
 
-    # 配置并编译
-    print_info "配置 CMake..."
-    cmake .. \
-        -GNinja \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="$MAPLIBRE_PATH" \
-        -DCMAKE_PREFIX_PATH="$QT6_PATH"
-
-    print_info "开始编译（使用 $(nproc) 核心）..."
-    ninja -j$(nproc)
-
-    print_info "安装到 $MAPLIBRE_PATH..."
-    ninja install
-
-    print_info "✓ MapLibre 编译完成！"
-fi
+print_info "✓ MapLibre 编译完成！"
 
 ################################################################################
 # 步骤 6: 配置环境变量（写入 ~/.bashrc）
