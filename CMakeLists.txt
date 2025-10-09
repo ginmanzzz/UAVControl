@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # 设置 Qt6 和 MapLibre 路径
 set(CMAKE_PREFIX_PATH
     "$ENV{HOME}/Qt6/6.7.3/gcc_64"
-    "$ENV{HOME}/projects/maplibre-native-qt/install"
+    "$ENV{HOME}/maplibre-native-qt/install"
     "$ENV{HOME}/.local/openssl-3.0.14"
 )
 
@@ -73,7 +73,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
 set_target_properties(drawing-demo PROPERTIES
-    INSTALL_RPATH "$ENV{HOME}/Qt6/6.7.3/gcc_64/lib:$ENV{HOME}/projects/maplibre-native-qt/install/lib:$ENV{HOME}/.local/openssl-3.0.14/lib"
+    INSTALL_RPATH "$ENV{HOME}/Qt6/6.7.3/gcc_64/lib:$ENV{HOME}/maplibre-native-qt/install/lib:$ENV{HOME}/.local/openssl-3.0.14/lib"
     BUILD_WITH_INSTALL_RPATH TRUE
     LINK_FLAGS "-Wl,--disable-new-dtags"
 )

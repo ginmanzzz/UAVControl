@@ -7,7 +7,7 @@
 确保你的系统已经有以下内容（假设已经复制到位）：
 
 - ✅ Qt6 位于 `~/Qt6/6.7.3/gcc_64/`
-- ✅ MapLibre 位于 `~/projects/maplibre-native-qt/install/`
+- ✅ MapLibre 位于 `~/maplibre-native-qt/install/`
 
 ### 一键安装
 
@@ -74,6 +74,18 @@ chmod +x install_kyrin.sh
 
 如果检测到已配置（存在标记），则跳过。
 
+### Q: Qt6 或 MapLibre 不在默认位置怎么办？
+
+脚本要求：
+- Qt6 必须在 `~/Qt6/6.7.3/gcc_64/`
+- MapLibre 必须在 `~/maplibre-native-qt/install/`
+
+如果你的路径不同，请手动创建软链接：
+```bash
+ln -s /你的/Qt6/路径 ~/Qt6
+ln -s /你的/maplibre/路径 ~/maplibre-native-qt
+```
+
 ### Q: 我想卸载怎么办？
 
 手动删除以下内容：
@@ -100,8 +112,8 @@ nano ~/.bashrc
 
 ```
 [步骤 1/6] 检查前置条件
-  ├─ 检查 Qt6 是否存在
-  └─ 检查 MapLibre 是否存在
+  ├─ 检查 Qt6 是否存在于 ~/Qt6/6.7.3/gcc_64
+  └─ 检查 MapLibre 是否存在于 ~/maplibre-native-qt/install
 
 [步骤 2/6] 安装系统依赖
   ├─ apt update

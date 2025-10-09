@@ -117,8 +117,8 @@ source ~/.bashrc
 **说明**：
 - **不需要设置 `LD_LIBRARY_PATH`**：CMakeLists.txt 已通过 RPATH 自动处理库路径
 - **不需要克隆 Qt6 和 MapLibre**：假设已复制到对应目录
-  - Qt6 位于：`$HOME/Qt6/6.7.3/gcc_64`
-  - MapLibre 位于：`$HOME/projects/maplibre-native-qt/install`
+  - Qt6 位于：`~/Qt6/6.7.3/gcc_64`
+  - MapLibre 位于：`~/maplibre-native-qt/install`
 
 ### 5. 克隆并编译本项目
 

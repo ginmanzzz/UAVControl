@@ -6,15 +6,16 @@
 # 前置条件：
 #   - 系统：Kyrin OS 2.0 SP1
 #   - Qt6 已存在于 ~/Qt6/6.7.3/gcc_64/
-#   - MapLibre 已存在于 ~/projects/maplibre-native-qt/install/
+#   - MapLibre 已存在于 ~/maplibre-native-qt/install/
 #
 # 功能：
-#   1. 安装系统依赖
-#   2. 安装 CMake 3.29.6
-#   3. 编译安装 OpenSSL 3.0.14
-#   4. 配置环境变量
-#   5. 克隆并编译项目
-#   6. 运行程序
+#   1. 检查前置条件
+#   2. 安装系统依赖
+#   3. 安装 CMake 3.29.6
+#   4. 编译安装 OpenSSL 3.0.14
+#   5. 配置环境变量
+#   6. 克隆并编译项目
+#   7. 运行程序
 ################################################################################
 
 set -e  # 遇到错误立即退出
@@ -49,17 +50,20 @@ print_step() {
 ################################################################################
 print_step "步骤 1/6: 检查前置条件"
 
-if [ ! -d "$HOME/Qt6/6.7.3/gcc_64" ]; then
-    print_error "未找到 Qt6，请确保 Qt6 安装在 $HOME/Qt6/6.7.3/gcc_64/"
-    exit 1
-fi
-print_info "✓ Qt6 已找到: $HOME/Qt6/6.7.3/gcc_64"
+QT6_PATH="$HOME/Qt6/6.7.3/gcc_64"
+MAPLIBRE_PATH="$HOME/maplibre-native-qt/install"
 
-if [ ! -d "$HOME/projects/maplibre-native-qt/install" ]; then
-    print_error "未找到 MapLibre，请确保 MapLibre 安装在 $HOME/projects/maplibre-native-qt/install/"
+if [ ! -d "$QT6_PATH" ]; then
+    print_error "未找到 Qt6，请确保 Qt6 安装在 $QT6_PATH"
     exit 1
 fi
-print_info "✓ MapLibre 已找到: $HOME/projects/maplibre-native-qt/install"
+print_info "✓ Qt6 已找到: $QT6_PATH"
+
+if [ ! -d "$MAPLIBRE_PATH" ]; then
+    print_error "未找到 MapLibre，请确保 MapLibre 安装在 $MAPLIBRE_PATH"
+    exit 1
+fi
+print_info "✓ MapLibre 已找到: $MAPLIBRE_PATH"
 
 ################################################################################
 # 步骤 2: 安装系统依赖
@@ -146,12 +150,12 @@ fi
 
 # 创建软链接到 Qt6 lib 目录
 print_info "创建软链接到 Qt6 库目录..."
-ln -sf $OPENSSL_DIR/lib/libssl.so.3    $HOME/Qt6/6.7.3/gcc_64/lib/libssl.so.3
-ln -sf $OPENSSL_DIR/lib/libcrypto.so.3 $HOME/Qt6/6.7.3/gcc_64/lib/libcrypto.so.3
+ln -sf $OPENSSL_DIR/lib/libssl.so.3    $QT6_PATH/lib/libssl.so.3
+ln -sf $OPENSSL_DIR/lib/libcrypto.so.3 $QT6_PATH/lib/libcrypto.so.3
 
 # 验证 Qt6 识别到 OpenSSL 3.0
 print_info "验证 Qt6 识别 OpenSSL..."
-$HOME/Qt6/6.7.3/gcc_64/bin/qtdiag | grep -A3 SSL || print_warn "qtdiag 未能显示 SSL 信息（可能正常）"
+$QT6_PATH/bin/qtdiag | grep -A3 SSL || print_warn "qtdiag 未能显示 SSL 信息（可能正常）"
 
 ################################################################################
 # 步骤 5: 配置环境变量（写入 ~/.bashrc）
@@ -182,8 +186,8 @@ EOF
 fi
 
 # 应用环境变量（本次会话）
-export PATH="$HOME/Qt6/6.7.3/gcc_64/bin:$PATH"
-export CMAKE_PREFIX_PATH="$HOME/Qt6/6.7.3/gcc_64:$CMAKE_PREFIX_PATH"
+export PATH="$QT6_PATH/bin:$PATH"
+export CMAKE_PREFIX_PATH="$QT6_PATH:$CMAKE_PREFIX_PATH"
 
 ################################################################################
 # 步骤 6: 克隆并编译项目
