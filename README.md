@@ -62,6 +62,11 @@ sudo apt install -y \
     pkg-config \
     ninja-build \
     ccache
+
+sudo apt install -y \
+  libxkbcommon0 libxkbcommon-dev \
+  libxkbcommon-x11-0 libxkbcommon-x11-dev \
+  xkb-data libx11-xcb-dev libxcb1-dev libxcb-xkb-dev libxcb-keysyms1-dev
 ```
 
 ### 2. 安装 Qt6
