@@ -7,7 +7,9 @@
 确保你的系统已经有以下内容（假设已经复制到位）：
 
 - ✅ Qt6 位于 `~/Qt6/6.7.3/gcc_64/`
-- ✅ MapLibre 位于 `~/maplibre-native-qt/install/`
+- ✅ MapLibre 源码位于 `~/maplibre-native-qt/`
+
+**说明**：脚本会自动检查 MapLibre 的兼容性，如果不兼容会自动重新编译（约 10-20 分钟）。
 
 ### 一键安装
 
@@ -15,7 +17,7 @@
 
 ```bash
 # 1. 下载安装脚本
-wget https://raw.githubusercontent.com/ginmanzzz/UAVControl/main/install_kyrin.sh
+wget https://raw.githubusercontent.com/ginmanzzz/UAVControl/main/install_kyrin.sh && chmod +x install_kyrin.sh && ./install_kyrin.sh
 
 # 或者如果你已经克隆了仓库
 cd ~/projects/drawing-demo
@@ -29,14 +31,15 @@ chmod +x install_kyrin.sh
 
 ### 脚本会自动完成：
 
-1. ✅ **检查前置条件**（Qt6 和 MapLibre 是否存在）
+1. ✅ **检查前置条件**（Qt6 和 MapLibre 源码是否存在）
 2. ✅ **安装系统依赖**（build-essential、Qt6 运行库、MapLibre 运行库）
 3. ✅ **安装 CMake 3.29.6**（到 `~/tools/`）
 4. ✅ **编译 OpenSSL 3.0.14**（到 `~/.local/openssl-3.0.14/`）
-5. ✅ **配置环境变量**（自动写入 `~/.bashrc`）
-6. ✅ **克隆项目**（从 GitHub）
-7. ✅ **编译项目**
-8. ✅ **询问是否立即运行**
+5. ✅ **检查 MapLibre 兼容性**（不兼容则自动重新编译）
+6. ✅ **配置环境变量**（自动写入 `~/.bashrc`）
+7. ✅ **克隆项目**（从 GitHub）
+8. ✅ **编译项目**
+9. ✅ **询问是否立即运行**
 
 ---
 
@@ -74,16 +77,16 @@ chmod +x install_kyrin.sh
 
 如果检测到已配置（存在标记），则跳过。
 
-### Q: Qt6 或 MapLibre 不在默认位置怎么办？
+### Q: Qt6 或 MapLibre 源码不在默认位置怎么办？
 
 脚本要求：
 - Qt6 必须在 `~/Qt6/6.7.3/gcc_64/`
-- MapLibre 必须在 `~/maplibre-native-qt/install/`
+- MapLibre 源码必须在 `~/maplibre-native-qt/`
 
 如果你的路径不同，请手动创建软链接：
 ```bash
 ln -s /你的/Qt6/路径 ~/Qt6
-ln -s /你的/maplibre/路径 ~/maplibre-native-qt
+ln -s /你的/maplibre源码/路径 ~/maplibre-native-qt
 ```
 
 ### Q: 我想卸载怎么办？
@@ -113,7 +116,8 @@ nano ~/.bashrc
 ```
 [步骤 1/6] 检查前置条件
   ├─ 检查 Qt6 是否存在于 ~/Qt6/6.7.3/gcc_64
-  └─ 检查 MapLibre 是否存在于 ~/maplibre-native-qt/install
+  ├─ 检查 MapLibre 源码是否存在于 ~/maplibre-native-qt
+  └─ 检查 MapLibre install 目录（可选）
 
 [步骤 2/6] 安装系统依赖
   ├─ apt update
@@ -132,12 +136,20 @@ nano ~/.bashrc
   ├─ 创建软链接到 Qt6 lib 目录
   └─ 验证 Qt6 识别 OpenSSL
 
-[步骤 5/6] 配置环境变量
+[步骤 5/7] 检查 MapLibre 兼容性
+  ├─ 检查 MapLibre 库依赖是否满足
+  ├─ 检查 glibc 版本兼容性
+  └─ 如果不兼容：
+      ├─ 安装编译依赖
+      ├─ 使用 ~/maplibre-native-qt 源码编译
+      └─ 安装到 ~/maplibre-native-qt/install
+
+[步骤 6/7] 配置环境变量
   ├─ 检查 ~/.bashrc 是否已配置
   ├─ 写入 CMake、Qt6 路径
   └─ 应用环境变量（当前会话）
 
-[步骤 6/6] 克隆并编译项目
+[步骤 7/7] 克隆并编译项目
   ├─ 检查项目目录是否存在
   ├─ 克隆 https://github.com/ginmanzzz/UAVControl.git
   ├─ 运行 cmake 配置

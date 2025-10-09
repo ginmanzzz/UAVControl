@@ -6,10 +6,10 @@
 # 前置条件：
 #   - 系统：Kyrin OS 2.0 SP1
 #   - Qt6 已存在于 ~/Qt6/6.7.3/gcc_64/
-#   - MapLibre 可选（如不兼容会自动重新编译）
+#   - MapLibre 源码已存在于 ~/maplibre-native-qt/
 #
 # 功能：
-#   1. 检查前置条件
+#   1. 检查前置条件（Qt6、MapLibre 源码）
 #   2. 安装系统依赖
 #   3. 安装 CMake 3.29.6
 #   4. 编译安装 OpenSSL 3.0.14
@@ -52,18 +52,28 @@ print_step() {
 print_step "步骤 1/6: 检查前置条件"
 
 QT6_PATH="$HOME/Qt6/6.7.3/gcc_64"
+MAPLIBRE_SRC="$HOME/maplibre-native-qt"
 MAPLIBRE_PATH="$HOME/maplibre-native-qt/install"
 
+# 检查 Qt6
 if [ ! -d "$QT6_PATH" ]; then
     print_error "未找到 Qt6，请确保 Qt6 安装在 $QT6_PATH"
     exit 1
 fi
 print_info "✓ Qt6 已找到: $QT6_PATH"
 
+# 检查 MapLibre 源码
+if [ ! -d "$MAPLIBRE_SRC" ]; then
+    print_error "未找到 MapLibre 源码，请确保源码在 $MAPLIBRE_SRC"
+    exit 1
+fi
+print_info "✓ MapLibre 源码已找到: $MAPLIBRE_SRC"
+
+# 检查 MapLibre install 目录
 if [ -d "$MAPLIBRE_PATH" ]; then
-    print_info "✓ MapLibre 已找到: $MAPLIBRE_PATH（稍后会检查兼容性）"
+    print_info "✓ MapLibre install 目录存在: $MAPLIBRE_PATH（稍后会检查兼容性）"
 else
-    print_warn "未找到 MapLibre，稍后会自动编译"
+    print_warn "MapLibre install 目录不存在，稍后会自动编译"
 fi
 
 ################################################################################
@@ -197,25 +207,19 @@ if [ "$MAPLIBRE_NEEDS_REBUILD" = true ]; then
         xkb-data libx11-xcb-dev libxcb1-dev \
         libxcb-xkb-dev libxcb-keysyms1-dev
 
-    # 备份旧的 MapLibre
+    # 备份旧的 install 目录
     if [ -d "$MAPLIBRE_PATH" ]; then
-        print_info "备份旧的 MapLibre..."
+        print_info "备份旧的 MapLibre install 目录..."
         mv "$MAPLIBRE_PATH" "${MAPLIBRE_PATH}.backup.$(date +%s)"
     fi
 
-    # 克隆 MapLibre 源码
-    MAPLIBRE_SRC="$HOME/src/maplibre-native-qt"
-    if [ ! -d "$MAPLIBRE_SRC" ]; then
-        print_info "克隆 MapLibre 源码..."
-        mkdir -p "$HOME/src"
-        cd "$HOME/src"
-        git clone https://github.com/maplibre/maplibre-native-qt.git
-    fi
+    # 使用已有的 MapLibre 源码（已在步骤1检查过）
+    print_info "使用 MapLibre 源码: $MAPLIBRE_SRC"
 
     cd "$MAPLIBRE_SRC"
 
     # 清理旧的构建
-    rm -rf build
+    rm -rf build install
     mkdir build && cd build
 
     # 配置并编译
