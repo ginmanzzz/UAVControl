@@ -195,7 +195,7 @@ export CMAKE_PREFIX_PATH="$QT6_PATH:$CMAKE_PREFIX_PATH"
 print_step "步骤 6/6: 克隆并编译项目"
 
 PROJECT_DIR="$HOME/projects/drawing-demo"
-REPO_URL="git@github.com:ginmanzzz/UAVControl.git"
+REPO_URL="https://github.com/ginmanzzz/UAVControl.git"
 
 if [ -d "$PROJECT_DIR" ]; then
     print_warn "项目目录已存在: $PROJECT_DIR"

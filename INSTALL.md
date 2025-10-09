@@ -139,7 +139,7 @@ nano ~/.bashrc
 
 [步骤 6/6] 克隆并编译项目
   ├─ 检查项目目录是否存在
-  ├─ 克隆 git@github.com:ginmanzzz/UAVControl.git
+  ├─ 克隆 https://github.com/ginmanzzz/UAVControl.git
   ├─ 运行 cmake 配置
   ├─ 运行 cmake --build 编译
   └─ 询问是否立即运行程序
