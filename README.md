@@ -67,6 +67,27 @@ sudo apt install -y \
   libxkbcommon0 libxkbcommon-dev \
   libxkbcommon-x11-0 libxkbcommon-x11-dev \
   xkb-data libx11-xcb-dev libxcb1-dev libxcb-xkb-dev libxcb-keysyms1-dev
+
+sudo apt install -y zlib1g-dev
+
+# 1) 取源码并解压（版本号可用 3.0.x 的任一最新稳定版）
+mkdir -p $HOME/src && cd $HOME/src
+wget https://www.openssl.org/source/openssl-3.0.14.tar.gz
+tar -xzf openssl-3.0.14.tar.gz
+cd openssl-3.0.14
+
+# 2) 配置为共享库 + 安装到用户目录
+./Configure --prefix=$HOME/.local/openssl-3.0.14 --openssldir=$HOME/.local/openssl-3.0.14 shared
+make -j"$(nproc)"
+make install
+# 临时加入库搜索路径（把 lib64 放在最前面）
+export OPENSSL3_LIB="$HOME/.local/openssl-3.0.14/lib64"
+export LD_LIBRARY_PATH="$OPENSSL3_LIB:$LD_LIBRARY_PATH"
+
+# 补无版本名链接（有些插件会找不带版本号的 .so）
+ln -sf "$OPENSSL3_LIB/libssl.so.3"    "$OPENSSL3_LIB/libssl.so"
+ln -sf "$OPENSSL3_LIB/libcrypto.so.3" "$OPENSSL3_LIB/libcrypto.so"
+
 ```
 
 ### 2. 安装 Qt6
