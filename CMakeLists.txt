@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_PREFIX_PATH
     "$ENV{HOME}/Qt6/6.7.3/gcc_64"
     "$ENV{HOME}/projects/maplibre-native-qt/install"
+    "$ENV{HOME}/.local/openssl-3.0.14"
 )
 
 # 查找 Qt
@@ -65,14 +66,14 @@ target_link_libraries(drawing-demo
         MapPainter
 )
 
-# 设置 RPATH，使可执行文件能自动找到共享库
+# 设置 RPATH，使可执行文件能自动找到共享库（包括 OpenSSL 3.0）
 # 禁用 RUNPATH，强制使用 RPATH（优先级更高）
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
 set_target_properties(drawing-demo PROPERTIES
-    INSTALL_RPATH "$ENV{HOME}/Qt6/6.7.3/gcc_64/lib:$ENV{HOME}/projects/maplibre-native-qt/install/lib"
+    INSTALL_RPATH "$ENV{HOME}/Qt6/6.7.3/gcc_64/lib:$ENV{HOME}/projects/maplibre-native-qt/install/lib:$ENV{HOME}/.local/openssl-3.0.14/lib"
     BUILD_WITH_INSTALL_RPATH TRUE
     LINK_FLAGS "-Wl,--disable-new-dtags"
 )

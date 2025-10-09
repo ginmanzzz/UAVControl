@@ -2,6 +2,20 @@
 
 这是一个基于 QMapLibre 的交互式地图标注与任务管理工具，支持多种地图元素的绘制、任务组织和交互查看。
 
+## 🚀 快速开始（Kyrin OS）
+
+**一键安装**：在 Kyrin OS 2.0 SP1 上，只需运行：
+
+```bash
+wget https://raw.githubusercontent.com/ginmanzzz/UAVControl/main/install_kyrin.sh
+chmod +x install_kyrin.sh
+./install_kyrin.sh
+```
+
+详见 [INSTALL.md](INSTALL.md) | 完整安装指南见下方
+
+---
+
 ## ✨ 主要功能
 
 ### 任务管理系统
@@ -23,7 +37,9 @@
 - **内联编辑** - 在详情窗口直接修改地形类型
 - **默认地形** - 新建区域默认为平原
 
-## 📦 完整安装指南（Ubuntu 24.04）
+## 📦 完整安装指南（Kyrin OS 2.0 SP1）
+
+> **注意**：本指南专为 Kyrin OS 2.0 SP1 优化。由于系统自带的 cmake 版本过低、libssl 为 1.1 版本（Qt6 需要 3.0），需要手动安装部分依赖。
 
 ### 1. 系统依赖安装
 
@@ -32,194 +48,186 @@
 sudo apt update
 
 # 安装基础构建工具
-sudo apt install -y build-essential cmake git
+sudo apt install -y build-essential git
 
-# 安装 Qt6 依赖（在线安装器会用到）
+# 安装 Qt6 运行依赖
 sudo apt install -y \
-    libxcb-xinerama0 \
-    libxcb-cursor0 \
-    libxcb-icccm4 \
-    libxcb-image0 \
-    libxcb-keysyms1 \
-    libxcb-randr0 \
-    libxcb-render-util0 \
-    libxcb-shape0 \
-    libxcb-xfixes0 \
-    libxcb-xkb1 \
-    libxkbcommon-x11-0 \
-    libfontconfig1 \
-    libdbus-1-3 \
-    libgl1 \
-    libglib2.0-0
+    libxcb-xinerama0 libxcb-cursor0 libxcb-icccm4 \
+    libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+    libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 \
+    libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 \
+    libdbus-1-3 libgl1 libglib2.0-0
 
-# 安装 MapLibre 编译依赖
+# 安装 MapLibre 运行依赖
 sudo apt install -y \
-    libglx-dev \
-    libgl1-mesa-dev \
-    libicu-dev \
-    libcurl4-openssl-dev \
-    libuv1-dev \
-    pkg-config \
-    ninja-build \
-    ccache
+    libglx-dev libgl1-mesa-dev libicu-dev \
+    libcurl4-openssl-dev libuv1-dev zlib1g-dev
+```
 
-sudo apt install -y \
-  libxkbcommon0 libxkbcommon-dev \
-  libxkbcommon-x11-0 libxkbcommon-x11-dev \
-  xkb-data libx11-xcb-dev libxcb1-dev libxcb-xkb-dev libxcb-keysyms1-dev
+### 2. 安装 CMake 3.29.6（系统版本过低）
 
-sudo apt install -y zlib1g-dev
-
+```bash
+# 下载并安装 CMake 3.29.6
 mkdir -p $HOME/tools && cd $HOME/tools
 ver=3.29.6
 wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-linux-x86_64.tar.gz
 tar -xzf cmake-$ver-linux-x86_64.tar.gz
+
+# 添加到 PATH（写入 ~/.bashrc）
 echo "export PATH=$HOME/tools/cmake-$ver-linux-x86_64/bin:\$PATH" >> ~/.bashrc
 source ~/.bashrc
-cmake --version
 
-echo 'export PATH="$HOME/Qt6/6.7.3/gcc_64/bin:$PATH"' >> ~/.bashrc
-echo 'export CMAKE_PREFIX_PATH="$HOME/Qt6/6.7.3/gcc_64:$CMAKE_PREFIX_PATH"' >> ~/.bashrc
+# 验证安装
+cmake --version  # 应显示 3.29.6
+```
 
-# 1) 取源码并解压（版本号可用 3.0.x 的任一最新稳定版）
+### 3. 编译安装 OpenSSL 3.0.14（Qt6 需要，系统自带 1.1）
+
+```bash
+# 下载源码
 mkdir -p $HOME/src && cd $HOME/src
 wget https://www.openssl.org/source/openssl-3.0.14.tar.gz
 tar -xzf openssl-3.0.14.tar.gz
 cd openssl-3.0.14
 
-# 2) 配置为共享库 + 安装到用户目录
-./Configure --prefix=$HOME/.local/openssl-3.0.14 --openssldir=$HOME/.local/openssl-3.0.14 shared
-make -j"$(nproc)"
+# 编译并安装到用户目录（使用 shared 动态库）
+./Configure --prefix=$HOME/.local/openssl-3.0.14 --libdir=lib shared
+make -j$(nproc)
 make install
-# 临时加入库搜索路径（把 lib64 放在最前面）
-export OPENSSL3_LIB="$HOME/.local/openssl-3.0.14/lib64"
-export LD_LIBRARY_PATH="$OPENSSL3_LIB:$LD_LIBRARY_PATH"
 
-# 补无版本名链接（有些插件会找不带版本号的 .so）
-ln -sf "$OPENSSL3_LIB/libssl.so.3"    "$OPENSSL3_LIB/libssl.so"
-ln -sf "$OPENSSL3_LIB/libcrypto.so.3" "$OPENSSL3_LIB/libcrypto.so"
+# 创建软链接到 Qt6 lib 目录（让 Qt6 使用 OpenSSL 3.0）
+ln -sf $HOME/.local/openssl-3.0.14/lib/libssl.so.3    $HOME/Qt6/6.7.3/gcc_64/lib/libssl.so.3
+ln -sf $HOME/.local/openssl-3.0.14/lib/libcrypto.so.3 $HOME/Qt6/6.7.3/gcc_64/lib/libcrypto.so.3
 
+# 验证 Qt6 识别到 OpenSSL 3.0（可选）
+$HOME/Qt6/6.7.3/gcc_64/bin/qtdiag | grep -A3 SSL
 ```
 
-### 2. 安装 Qt6
+### 4. 配置环境变量（写入 ~/.bashrc）
 
-#### 下载 Qt 在线安装器
+```bash
+# 添加 Qt6 路径
+echo 'export PATH="$HOME/Qt6/6.7.3/gcc_64/bin:$PATH"' >> ~/.bashrc
+echo 'export CMAKE_PREFIX_PATH="$HOME/Qt6/6.7.3/gcc_64:$CMAKE_PREFIX_PATH"' >> ~/.bashrc
+
+# 重新加载配置
+source ~/.bashrc
+```
+
+**说明**：
+- **不需要设置 `LD_LIBRARY_PATH`**：CMakeLists.txt 已通过 RPATH 自动处理库路径
+- **不需要克隆 Qt6 和 MapLibre**：假设已复制到对应目录
+  - Qt6 位于：`$HOME/Qt6/6.7.3/gcc_64`
+  - MapLibre 位于：`$HOME/projects/maplibre-native-qt/install`
+
+### 5. 克隆并编译本项目
+
+```bash
+# 克隆项目（或使用你的实际 git 仓库地址）
+cd ~/projects
+git clone <your-repo-url> drawing-demo
+# 如果本地已有项目，跳过 clone
+
+cd drawing-demo
+
+# 创建构建目录并编译
+mkdir -p build && cd build
+cmake ..
+cmake --build . -j$(nproc)
+```
+
+**编译输出**：可执行文件位于 `build/drawing-demo`
+
+### 6. 运行程序
+
+```bash
+# 直接运行（RPATH 已配置，无需手动设置环境变量）
+cd ~/projects/drawing-demo/build
+./drawing-demo
+```
+
+**说明**：
+- CMakeLists.txt 已通过 RPATH 包含所有必要的库路径（Qt6、MapLibre、OpenSSL 3.0）
+- 通常无需手动设置 `LD_LIBRARY_PATH`
+
+#### 如果仍提示找不到库（极少情况）
+
+```bash
+# 手动设置库路径后运行（作为备用方案）
+export LD_LIBRARY_PATH="$HOME/Qt6/6.7.3/gcc_64/lib:$HOME/projects/maplibre-native-qt/install/lib:$HOME/.local/openssl-3.0.14/lib:$LD_LIBRARY_PATH"
+./drawing-demo
+```
+
+---
+
+## 📦 Ubuntu 24.04 安装指南（参考）
+
+<details>
+<summary>点击展开 Ubuntu 24.04 完整安装步骤（包含 Qt6 和 MapLibre 编译）</summary>
+
+### 1. 系统依赖安装
+
+```bash
+sudo apt update
+sudo apt install -y build-essential cmake git
+
+# Qt6 依赖
+sudo apt install -y \
+    libxcb-xinerama0 libxcb-cursor0 libxcb-icccm4 \
+    libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+    libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 \
+    libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 \
+    libdbus-1-3 libgl1 libglib2.0-0
+
+# MapLibre 编译依赖
+sudo apt install -y \
+    libglx-dev libgl1-mesa-dev libicu-dev \
+    libcurl4-openssl-dev libuv1-dev \
+    pkg-config ninja-build ccache zlib1g-dev
+```
+
+### 2. 安装 Qt6（在线安装器）
 
 ```bash
 cd ~/Downloads
-
-# 下载在线安装器（官方地址）
 wget https://d13lb3tujbc8s0.cloudfront.net/onlineinstallers/qt-unified-linux-x64-online.run
-
-# 赋予执行权限
 chmod +x qt-unified-linux-x64-online.run
-
-# 运行安装器
 ./qt-unified-linux-x64-online.run
 ```
 
-#### 安装器配置步骤
+安装到 `$HOME/Qt6`，勾选 Qt 6.7.3 Desktop gcc 64-bit 和 Additional Libraries。
 
-1. **登录** - 使用 Qt 账号登录（没有账号需要先注册）
-2. **欢迎页面** - Next
-3. **选择安装目录** - 推荐使用 `$HOME/Qt6`
-4. **选择组件** - **重要！必须勾选以下组件**：
-   ```
-   Qt
-   └── Qt 6.7.3
-       ├── Desktop gcc 64-bit        ✅ 必选
-       ├── Additional Libraries       ✅ 必选（展开并勾选全部）
-       │   ├── Qt Quick 3D
-       │   ├── Qt Charts
-       │   ├── Qt Data Visualization
-       │   ├── Qt Location
-       │   └── ...（其他库）
-       └── Developer and Designer Tools
-           └── CMake                  ✅ 可选（如果系统已安装可不选）
-   ```
-   **注意**：一定要展开 "Additional Libraries" 并勾选，否则可能缺少必要的库文件
-
-5. **许可协议** - 同意并 Next
-6. **开始安装** - 等待安装完成（约需 10-30 分钟，取决于网速）
-
-### 3. 编译安装 QMapLibre
+### 3. 编译 MapLibre
 
 ```bash
-# 创建项目目录
-mkdir -p ~/projects
-cd ~/projects
-
-# 克隆 QMapLibre 仓库
+mkdir -p ~/projects && cd ~/projects
 git clone https://github.com/maplibre/maplibre-native-qt.git
 cd maplibre-native-qt
-
-# 创建构建目录
 mkdir build && cd build
 
-# 配置 CMake（指定 Qt6 和安装路径）
 cmake .. \
     -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=../install \
     -DCMAKE_PREFIX_PATH="$HOME/Qt6/6.7.3/gcc_64"
 
-# 编译（使用多核加速，根据 CPU 核心数调整 -j 参数）
 ninja -j$(nproc)
-
-# 安装到 install 目录
 ninja install
-
-# 检查安装结果
-ls ../install/lib/cmake/QMapLibre  # 应该能看到 QMapLibreConfig.cmake 等文件
 ```
 
-**预计编译时间**：5-15 分钟（取决于 CPU 性能）
-
-### 4. 克隆并编译本项目
+### 4. 编译本项目
 
 ```bash
-# 回到 projects 目录
 cd ~/projects
-
-# 克隆项目（或使用你的实际 git 仓库地址）
 git clone <your-repo-url> drawing-demo
-# 如果本地已有项目，跳过 clone
-
 cd drawing-demo
-
-# 创建构建目录
 mkdir -p build && cd build
-
-# 配置 CMake（路径会自动从 CMakeLists.txt 读取）
 cmake ..
-
-# 编译
 cmake --build . -j$(nproc)
-```
-
-**编译输出**：可执行文件位于 `build/drawing-demo`
-
-### 5. 运行程序
-
-```bash
-# 在 build 目录中直接运行
-cd ~/projects/drawing-demo/build
 ./drawing-demo
-
-# 或者从项目根目录运行
-cd ~/projects/drawing-demo
-./build/drawing-demo
 ```
 
-**注意**：由于 CMakeLists.txt 中已设置 RPATH，通常无需手动设置 `LD_LIBRARY_PATH`
-
-#### 如果出现库找不到的错误
-
-```bash
-# 手动设置库路径后运行
-export LD_LIBRARY_PATH="$HOME/Qt6/6.7.3/gcc_64/lib:$HOME/projects/maplibre-native-qt/install/lib:$LD_LIBRARY_PATH"
-./build/drawing-demo
-```
+</details>
 
 ## 🚀 使用说明
 
