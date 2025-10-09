@@ -70,6 +70,17 @@ sudo apt install -y \
 
 sudo apt install -y zlib1g-dev
 
+mkdir -p $HOME/tools && cd $HOME/tools
+ver=3.29.6
+wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-linux-x86_64.tar.gz
+tar -xzf cmake-$ver-linux-x86_64.tar.gz
+echo "export PATH=$HOME/tools/cmake-$ver-linux-x86_64/bin:\$PATH" >> ~/.bashrc
+source ~/.bashrc
+cmake --version
+
+echo 'export PATH="$HOME/Qt6/6.7.3/gcc_64/bin:$PATH"' >> ~/.bashrc
+echo 'export CMAKE_PREFIX_PATH="$HOME/Qt6/6.7.3/gcc_64:$CMAKE_PREFIX_PATH"' >> ~/.bashrc
+
 # 1) 取源码并解压（版本号可用 3.0.x 的任一最新稳定版）
 mkdir -p $HOME/src && cd $HOME/src
 wget https://www.openssl.org/source/openssl-3.0.14.tar.gz
@@ -130,17 +141,6 @@ chmod +x qt-unified-linux-x64-online.run
 
 5. **许可协议** - 同意并 Next
 6. **开始安装** - 等待安装完成（约需 10-30 分钟，取决于网速）
-
-#### 设置环境变量（可选但推荐）
-
-```bash
-# 编辑 ~/.bashrc
-echo 'export PATH="$HOME/Qt6/6.7.3/gcc_64/bin:$PATH"' >> ~/.bashrc
-echo 'export CMAKE_PREFIX_PATH="$HOME/Qt6/6.7.3/gcc_64:$CMAKE_PREFIX_PATH"' >> ~/.bashrc
-
-# 使配置生效
-source ~/.bashrc
-```
 
 ### 3. 编译安装 QMapLibre
 
