@@ -554,26 +554,26 @@ private:
     }
 
     void setupMap() {
-        // 设置 OSM 样式
-        QString osmStyle = R"({
+        // 设置高德地图样式（AMap - 国内免费瓦片服务，无需API Key）
+        QString amapStyle = R"({
             "version": 8,
-            "name": "OSM Standard",
+            "name": "AMap",
             "sources": {
-                "osm": {
+                "amap": {
                     "type": "raster",
-                    "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                    "tiles": ["https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"],
                     "tileSize": 256,
-                    "maxzoom": 19
+                    "maxzoom": 18
                 }
             },
             "layers": [{
-                "id": "osm",
+                "id": "amap",
                 "type": "raster",
-                "source": "osm"
+                "source": "amap"
             }]
         })";
 
-        m_mapWidget->map()->setStyleJson(osmStyle);
+        m_mapWidget->map()->setStyleJson(amapStyle);
 
         // 创建画家对象
         m_painter = new MapPainter(m_mapWidget->map(), this);
