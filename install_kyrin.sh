@@ -6,16 +6,17 @@
 # 前置条件：
 #   - 系统：Kyrin OS 2.0 SP1
 #   - Qt6 已存在于 ~/Qt6/6.7.3/gcc_64/
-#   - MapLibre 已存在于 ~/maplibre-native-qt/install/
+#   - MapLibre 可选（如不兼容会自动重新编译）
 #
 # 功能：
 #   1. 检查前置条件
 #   2. 安装系统依赖
 #   3. 安装 CMake 3.29.6
 #   4. 编译安装 OpenSSL 3.0.14
-#   5. 配置环境变量
-#   6. 克隆并编译项目
-#   7. 运行程序
+#   5. 检查 MapLibre 兼容性（不兼容则自动重新编译）
+#   6. 配置环境变量
+#   7. 克隆并编译项目
+#   8. 运行程序
 ################################################################################
 
 set -e  # 遇到错误立即退出
@@ -59,11 +60,11 @@ if [ ! -d "$QT6_PATH" ]; then
 fi
 print_info "✓ Qt6 已找到: $QT6_PATH"
 
-if [ ! -d "$MAPLIBRE_PATH" ]; then
-    print_error "未找到 MapLibre，请确保 MapLibre 安装在 $MAPLIBRE_PATH"
-    exit 1
+if [ -d "$MAPLIBRE_PATH" ]; then
+    print_info "✓ MapLibre 已找到: $MAPLIBRE_PATH（稍后会检查兼容性）"
+else
+    print_warn "未找到 MapLibre，稍后会自动编译"
 fi
-print_info "✓ MapLibre 已找到: $MAPLIBRE_PATH"
 
 ################################################################################
 # 步骤 2: 安装系统依赖
@@ -158,9 +159,86 @@ print_info "验证 Qt6 识别 OpenSSL..."
 $QT6_PATH/bin/qtdiag | grep -A3 SSL || print_warn "qtdiag 未能显示 SSL 信息（可能正常）"
 
 ################################################################################
-# 步骤 5: 配置环境变量（写入 ~/.bashrc）
+# 步骤 5: 检查并编译 MapLibre（如果需要）
 ################################################################################
-print_step "步骤 5/6: 配置环境变量"
+print_step "步骤 5/7: 检查 MapLibre 兼容性"
+
+# 检查 MapLibre 是否需要重新编译
+print_info "检查 MapLibre 库兼容性..."
+
+# 尝试检查 MapLibre 是否可用
+MAPLIBRE_NEEDS_REBUILD=false
+
+if ldd $MAPLIBRE_PATH/lib/libQMapLibreWidgets.so.3 2>&1 | grep -q "not found"; then
+    print_warn "MapLibre 库依赖缺失，需要重新编译"
+    MAPLIBRE_NEEDS_REBUILD=true
+else
+    # 尝试简单的符号检查
+    if readelf -s $MAPLIBRE_PATH/lib/libQMapLibre.so.3.0.0 2>&1 | grep -q "GLIBC_2.3[89]"; then
+        print_warn "MapLibre 需要更新的 glibc 版本，建议重新编译"
+        read -p "是否重新编译 MapLibre？(Y/n): " rebuild_choice
+        if [[ ! "$rebuild_choice" =~ ^[Nn]$ ]]; then
+            MAPLIBRE_NEEDS_REBUILD=true
+        fi
+    else
+        print_info "✓ MapLibre 库兼容性检查通过，跳过编译"
+    fi
+fi
+
+if [ "$MAPLIBRE_NEEDS_REBUILD" = true ]; then
+    print_info "开始编译 MapLibre（可能需要 10-20 分钟）..."
+
+    # 安装编译依赖
+    print_info "安装 MapLibre 编译依赖..."
+    sudo apt install -y \
+        pkg-config ninja-build ccache \
+        libxkbcommon0 libxkbcommon-dev \
+        libxkbcommon-x11-0 libxkbcommon-x11-dev \
+        xkb-data libx11-xcb-dev libxcb1-dev \
+        libxcb-xkb-dev libxcb-keysyms1-dev
+
+    # 备份旧的 MapLibre
+    if [ -d "$MAPLIBRE_PATH" ]; then
+        print_info "备份旧的 MapLibre..."
+        mv "$MAPLIBRE_PATH" "${MAPLIBRE_PATH}.backup.$(date +%s)"
+    fi
+
+    # 克隆 MapLibre 源码
+    MAPLIBRE_SRC="$HOME/src/maplibre-native-qt"
+    if [ ! -d "$MAPLIBRE_SRC" ]; then
+        print_info "克隆 MapLibre 源码..."
+        mkdir -p "$HOME/src"
+        cd "$HOME/src"
+        git clone https://github.com/maplibre/maplibre-native-qt.git
+    fi
+
+    cd "$MAPLIBRE_SRC"
+
+    # 清理旧的构建
+    rm -rf build
+    mkdir build && cd build
+
+    # 配置并编译
+    print_info "配置 CMake..."
+    cmake .. \
+        -GNinja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="$MAPLIBRE_PATH" \
+        -DCMAKE_PREFIX_PATH="$QT6_PATH"
+
+    print_info "开始编译（使用 $(nproc) 核心）..."
+    ninja -j$(nproc)
+
+    print_info "安装到 $MAPLIBRE_PATH..."
+    ninja install
+
+    print_info "✓ MapLibre 编译完成！"
+fi
+
+################################################################################
+# 步骤 6: 配置环境变量（写入 ~/.bashrc）
+################################################################################
+print_step "步骤 6/7: 配置环境变量"
 
 BASHRC="$HOME/.bashrc"
 MARKER="# ====== drawing-demo 项目配置 ======"
@@ -190,9 +268,9 @@ export PATH="$QT6_PATH/bin:$PATH"
 export CMAKE_PREFIX_PATH="$QT6_PATH:$CMAKE_PREFIX_PATH"
 
 ################################################################################
-# 步骤 6: 克隆并编译项目
+# 步骤 7: 克隆并编译项目
 ################################################################################
-print_step "步骤 6/6: 克隆并编译项目"
+print_step "步骤 7/7: 克隆并编译项目"
 
 PROJECT_DIR="$HOME/projects/drawing-demo"
 REPO_URL="https://github.com/ginmanzzz/UAVControl.git"
