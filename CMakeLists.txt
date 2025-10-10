@@ -27,8 +27,8 @@ find_package(QMapLibre COMPONENTS Widgets REQUIRED)
 
 # 添加 MapPainter 库
 add_library(MapPainter STATIC
-    MapPainter.h
-    MapPainter.cpp
+    task/map/MapPainter.h
+    task/map/MapPainter.cpp
 )
 
 target_link_libraries(MapPainter
@@ -41,19 +41,23 @@ target_link_libraries(MapPainter
 # 添加主程序可执行文件
 add_executable(drawing-demo
     main.cpp
-    InteractiveMapWidget.h
-    InteractiveMapWidget.cpp
-    ElementDetailWidget.h
-    ElementDetailWidget.cpp
-    Task.h
-    TaskManager.h
-    TaskManager.cpp
-    TaskListWidget.h
-    TaskListWidget.cpp
-    TaskDialog.h
-    TaskDialog.cpp
-    RegionFeatureDialog.h
-    RegionFeatureDialog.cpp
+    task/TaskUI.h
+    task/TaskUI.cpp
+    task/map/InteractiveMapWidget.h
+    task/map/InteractiveMapWidget.cpp
+    task/ElementDetailWidget.h
+    task/ElementDetailWidget.cpp
+    task/Task.h
+    task/TaskManager.h
+    task/TaskManager.cpp
+    task/TaskListWidget.h
+    task/TaskListWidget.cpp
+    task/TaskDialog.h
+    task/TaskDialog.cpp
+    task/RegionFeatureDialog.h
+    task/RegionFeatureDialog.cpp
+    launch/LaunchUI.h
+    launch/LaunchUI.cpp
 )
 
 # 链接库

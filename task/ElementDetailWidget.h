@@ -4,7 +4,7 @@
 #ifndef ELEMENTDETAILWIDGET_H
 #define ELEMENTDETAILWIDGET_H
 
-#include "MapPainter.h"
+#include "map/MapPainter.h"
 #include "Task.h"
 #include <QWidget>
 #include <QLabel>

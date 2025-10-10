@@ -1,0 +1,129 @@
+// Copyright (C) 2023 MapLibre contributors
+// SPDX-License-Identifier: MIT
+
+#ifndef TASKUI_H
+#define TASKUI_H
+
+#include "map/MapPainter.h"
+#include "map/InteractiveMapWidget.h"
+#include "ElementDetailWidget.h"
+#include "TaskManager.h"
+#include "TaskListWidget.h"
+#include "RegionFeatureDialog.h"
+#include <QMapLibre/Map>
+#include <QMapLibre/Settings>
+
+#include <QWidget>
+#include <QPushButton>
+#include <QLabel>
+#include <QGraphicsDropShadowEffect>
+
+// 自定义悬浮提示标签
+class CustomTooltip : public QLabel {
+public:
+    explicit CustomTooltip(QWidget *parent = nullptr);
+    void showTooltip(const QString &text, const QPoint &globalPos);
+};
+
+// 自定义按钮，支持自定义 tooltip
+class TooltipButton : public QPushButton {
+    Q_OBJECT
+public:
+    explicit TooltipButton(const QString &tooltipText, QWidget *parent = nullptr);
+    ~TooltipButton();
+    void setTooltipText(const QString &text);
+
+protected:
+    void enterEvent(QEnterEvent *event) override;
+    void leaveEvent(QEvent *event) override;
+
+private:
+    QString m_tooltipText;
+    CustomTooltip *m_tooltip;
+};
+
+// 任务管理 UI Widget
+class TaskUI : public QWidget {
+    Q_OBJECT
+
+public:
+    explicit TaskUI(QWidget *parent = nullptr);
+
+    void showEvent(QShowEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+
+signals:
+    void initialized();  // 当地图和组件初始化完成时发出
+
+public slots:
+    void onElementTerrainChanged(QMapLibre::AnnotationID annotationId, MapElement::TerrainType newTerrain);
+    void onElementDeleteRequested(QMapLibre::AnnotationID annotationId);
+
+private slots:
+    void setupMap();
+    void updateOverlayPositions();
+    void onCurrentTaskChanged(int taskId);
+
+    // 地图交互
+    void onMapClicked(const QMapLibre::Coordinate &coord);
+    void onMapMouseMoved(const QMapLibre::Coordinate &coord);
+    void onMapRightClicked();
+
+    // 操作按钮
+    void startPlaceLoiter();
+    void startPlaceNoFly();
+    void startPlaceUAV();
+    void startDrawPolygon();
+    void clearAll();
+
+    // 绘制处理
+    void addLoiterPointAt(double lat, double lon);
+    void addUAVAt(double lat, double lon);
+    void handleNoFlyZoneClick(double lat, double lon);
+    void handlePolygonClick(double lat, double lon);
+    void handlePolygonUndo();
+    void finishPolygon();
+
+    void returnToNormalMode();
+    void resetNoFlyZoneDrawing();
+    void resetPolygonDrawing();
+
+private:
+    void setupUI();
+    double calculateDistance(double lat1, double lon1, double lat2, double lon2);
+    double getZoomDependentThreshold(double baseThreshold = 50.0);
+    QString getColorName(const QString &colorValue);
+
+    enum InteractionMode {
+        MODE_NORMAL = 0,
+        MODE_LOITER = 1,
+        MODE_NOFLY = 2,
+        MODE_POLYGON = 3,
+        MODE_UAV = 4
+    };
+
+    // UI 组件
+    InteractiveMapWidget *m_mapWidget = nullptr;
+    MapPainter *m_painter = nullptr;
+    TaskManager *m_taskManager = nullptr;
+    TaskListWidget *m_taskListWidget = nullptr;
+    ElementDetailWidget *m_detailWidget = nullptr;
+    QWidget *m_buttonContainer = nullptr;
+
+    InteractionMode m_currentMode = MODE_NORMAL;
+    bool m_mapInitialized = false;
+
+    // 禁飞区绘制状态
+    bool m_noFlyZoneCenterSet = false;
+    QMapLibre::Coordinate m_noFlyZoneCenter;
+
+    // 多边形绘制状态
+    QMapLibre::Coordinates m_polygonPoints;
+
+    // 无人机模式状态
+    bool m_isInNoFlyZone = false;
+    QString m_currentUAVColor = "black";
+};
+
+#endif // TASKUI_H

@@ -5,7 +5,7 @@
 #define TASKMANAGER_H
 
 #include "Task.h"
-#include "MapPainter.h"
+#include "map/MapPainter.h"
 #include <QObject>
 #include <QVector>
 #include <QMap>
