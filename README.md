@@ -27,13 +27,21 @@ chmod +x install_kyrin.sh
 1. **放置盘旋点** 📍 - 使用自定义图标标记地图位置
 2. **放置无人机** 🛩️ - 支持多种颜色的无人机图标（黑、红、蓝、紫、绿、黄）
 3. **绘制禁飞区域** 🚫 - 两次点击交互绘制圆形禁飞区，支持地形特征选择
-4. **绘制多边形区域** 🔷 - 多点绘制任意多边形区域，支持地形特征选择
+4. **绘制任务区域** 🔷 - 多点绘制任务区域，支持地形特征选择
 5. **元素详情查看** 💬 - 点击已放置的元素查看详细信息，支持内联编辑和删除
 6. **实时坐标显示** 📊 - 右下角显示鼠标经纬度
 7. **智能交互阈值** 🎯 - 根据地图缩放级别自动调整交互距离
 
+### 区域管理系统
+- **独立区域** - 区域可独立于任务存在，不绑定到特定任务
+- **共享区域** - 一个区域可被多个任务引用，实现资源复用
+- **引用计数** - 自动追踪区域被引用的次数，只有引用计数为0时才真正删除
+- **任务区域列表** - 左侧边栏【任务区域】按钮显示所有任务区域及面积统计
+- **全局冲突检测** - 禁飞区与无人机的冲突检测跨越所有任务进行全局检查
+- **自动刷新** - 创建或删除区域时，区域列表窗口自动更新
+
 ### 地形特征系统
-- **多边形/禁飞区地形类型** - 平原、丘陵、山地、高山地
+- **任务区域/禁飞区地形类型** - 平原、丘陵、山地、高山地
 - **内联编辑** - 在详情窗口直接修改地形类型
 - **默认地形** - 新建区域默认为平原
 
@@ -286,9 +294,9 @@ cmake --build . -j$(nproc)
 7. 自动返回普通浏览模式
 8. 右键可取消操作
 
-#### 绘制多边形区域 🔷
+#### 绘制任务区域 🔷
 1. **先选择或创建一个任务**
-2. 点击 **"绘制多边形"** 按钮
+2. 点击 **"绘制任务区域"** 按钮
 3. 依次点击添加顶点（至少3个）
 4. **点击起点附近或按 ESC 完成绘制**（阈值随缩放自动调整）
 5. 弹出对话框选择地形特征（默认：平原）
@@ -309,7 +317,7 @@ cmake --build . -j$(nproc)
 - **盘旋点**：经度、纬度
 - **无人机**：经度、纬度、颜色
 - **禁飞区域**：中心点经纬度、半径、区域面积、地形特征（可编辑）
-- **多边形区域**：所有顶点坐标、区域面积、地形特征（可编辑）
+- **任务区域**：所有顶点坐标、区域面积、地形特征（可编辑）
 
 **操作按钮**：
 - **地形下拉框**（仅区域元素）：内联修改地形特征
@@ -330,9 +338,9 @@ cmake --build . -j$(nproc)
 
 ### 地图交互
 - ✅ 单次放置模式（自动返回普通浏览）
-- ✅ 多种元素类型（盘旋点、无人机、禁飞区、多边形）
+- ✅ 多种元素类型（盘旋点、无人机、禁飞区、任务区域）
 - ✅ 交互式元素详情查看
-- ✅ 实时预览（禁飞区圆形预览、多边形线段预览）
+- ✅ 实时预览（禁飞区圆形预览、任务区域线段预览）
 - ✅ 右键取消/回退操作
 - ✅ 鼠标坐标实时显示（右下角）
 - ✅ **智能交互阈值**（基于缩放级别，公式：`threshold = baseThreshold * 2^(12 - zoom)`）
@@ -345,12 +353,12 @@ cmake --build . -j$(nproc)
 - ✅ 实时保存地形修改
 
 ### 元素操作
-- ✅ 所有元素类型支持删除（盘旋点、无人机、禁飞区、多边形）
+- ✅ 所有元素类型支持删除（盘旋点、无人机、禁飞区、任务区域）
 - ✅ 删除前确认对话框
 - ✅ 区域元素支持地形编辑
 - ✅ 图标自动缩放和染色
 - ✅ Haversine 公式精确距离计算
-- ✅ 射线法判断点在多边形内
+- ✅ 射线法判断点在任务区域内
 
 ### UI/UX 优化
 - ✅ 简洁的详情窗口样式（仅标题有蓝色边框）
@@ -358,93 +366,236 @@ cmake --build . -j$(nproc)
 - ✅ 操作模式提示（左下角）
 - ✅ 清晰的按钮文案（"清除当前任务标记"）
 
-## 项目结构
+## 项目架构
+
+本项目采用模块化架构，将任务管理、区域管理、地图绘制等功能分离，实现高内聚低耦合。
+
+### 整体架构图
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         TaskUI (主界面)                      │
+│  ┌─────────────────┐  ┌──────────────┐  ┌─────────────────┐ │
+│  │ TaskListWidget  │  │ MapWidget    │  │ RegionDetail    │ │
+│  │  (任务列表UI)    │  │  (地图显示)   │  │  Widget         │ │
+│  │  - 任务列表      │  │              │  │  (区域详情)      │ │
+│  │  - 区域列表      │  │              │  │                 │ │
+│  └─────────────────┘  └──────────────┘  └─────────────────┘ │
+└────────────┬──────────────────┬────────────────┬────────────┘
+             │                  │                │
+        ┌────▼────┐      ┌──────▼──────┐   ┌────▼────┐
+        │  Task   │      │   Region    │   │  Map    │
+        │ Manager │◄────►│   Manager   │◄──┤ Painter │
+        └─────────┘      └─────────────┘   └─────────┘
+             │                  │
+        ┌────▼────┐      ┌──────▼──────┐
+        │  Task   │      │   Region    │
+        │ (数据)   │      │   (数据)     │
+        └─────────┘      └─────────────┘
+```
+
+### 目录结构
 
 ```
 drawing-demo/
-├── MapPainter.h/cpp             # 地图画家类 - 绘制各种地图元素
-├── InteractiveMapWidget.h/cpp   # 交互式地图组件 - 处理鼠标交互
-├── ElementDetailWidget.h/cpp    # 元素详情浮动窗口 - 显示/编辑元素信息
-├── Task.h                       # 任务数据结构 - MapElement、TerrainType
-├── TaskManager.h/cpp            # 任务管理器 - 任务 CRUD、可见性控制
-├── TaskListWidget.h/cpp         # 任务列表 UI - 左侧面板
-├── TaskDialog.h/cpp             # 任务创建/编辑对话框
-├── RegionFeatureDialog.h/cpp    # 地形特征选择对话框
-├── main.cpp                     # 主程序入口 - TestPainterWindow
-├── image/
-│   ├── pin.png                  # 盘旋点图标
-│   └── uav.png                  # 无人机图标（支持染色）
-├── CMakeLists.txt               # CMake 构建配置
-└── README.md                    # 项目文档（本文件）
+├── CMakeLists.txt                      # 主构建配置
+├── main.cpp                            # 程序入口
+├── launch/                             # 启动模块
+│   ├── CMakeLists.txt                  # 启动模块构建配置
+│   └── LaunchWindow.h/cpp              # 启动窗口
+├── task/                               # 任务管理模块
+│   ├── CMakeLists.txt                  # 任务模块构建配置
+│   ├── Task.h                          # 任务数据结构
+│   ├── TaskManager.h/cpp               # 任务管理器 - 核心业务逻辑
+│   ├── TaskUI.h/cpp                    # 任务UI主界面
+│   ├── TaskListWidget.h/cpp            # 任务列表侧边栏 + 区域列表窗口
+│   ├── TaskDialog.h/cpp                # 任务创建/编辑对话框
+│   ├── RegionDetailWidget.h/cpp        # 区域详情浮动窗口
+│   ├── RegionFeatureDialog.h/cpp       # 地形特征选择对话框
+│   └── map_region/                     # 地图区域管理子模块
+│       ├── Region.h/cpp                # 区域数据模型
+│       ├── RegionManager.h/cpp         # 区域管理器
+│       ├── MapRegionTypes.h            # 区域类型定义
+│       ├── MapPainter.h/cpp            # 地图绘制引擎
+│       └── InteractiveMapWidget.h/cpp  # 交互式地图组件
+└── image/
+    ├── pin.png                         # 盘旋点图标
+    ├── uav.png                         # 无人机图标（支持染色）
+    ├── polygon.png                     # 任务区域图标
+    └── nofly.png                       # 禁飞区图标
 ```
 
 ### 核心类说明
 
-#### 1. Task & TaskManager - 任务管理系统
+#### 1. Region & RegionManager - 区域管理系统 ⭐ 核心架构
 
-**Task 类**：
-- 存储任务信息（ID、名称、描述、可见性）
-- 管理该任务下的所有地图元素（`QVector<MapElement>`）
-- 提供元素增删改查接口
+**Region 类** - 区域数据模型
+- 封装单个区域的所有属性和行为
+- 支持四种区域类型：盘旋点、无人机、禁飞区、任务区域（Polygon）
+- 存储区域数据：坐标、顶点、半径、颜色、地形类型、AnnotationID
+- 独立于任务存在，可被多个任务引用
 
-**TaskManager 类**：
-- 管理所有任务的生命周期
-- 当前任务切换
-- 查找可见元素（考虑任务可见性）
-- 元素删除（支持跨任务查找）
-
-**MapElement 结构**：
 ```cpp
-struct MapElement {
-    enum Type { LoiterPoint, UAV, NoFlyZone, Polygon };
-    enum TerrainType { Plain, Hills, Mountain, HighMountain };
+class Region {
+public:
+    enum class RegionType { LoiterPoint, UAV, NoFlyZone, Polygon };
+    enum class TerrainType { Plain, Hills, Mountain, HighMountain };
 
-    Type type;
-    QMapLibre::AnnotationID annotationId;
-    QMapLibre::Coordinate coordinate;
-    QMapLibre::Coordinates vertices;
-    double radius;
-    QString color;
-    TerrainType terrainType;  // 地形特征
+    int id() const;                              // 区域唯一ID
+    RegionType type() const;                     // 区域类型
+    QMapLibre::Coordinate coordinate() const;    // 中心坐标
+    QMapLibre::Coordinates vertices() const;     // 任务区域顶点
+    double radius() const;                       // 半径（禁飞区）
+    QString color() const;                       // 颜色（无人机）
+    TerrainType terrainType() const;             // 地形特征
 };
 ```
 
-#### 2. MapPainter - 地图绘制引擎
+**RegionManager 类** - 区域生命周期管理器
+- 统一管理所有区域的创建、删除、更新
+- 区域ID自动生成（递增）
+- 区域与地图绘制的协调（调用MapPainter）
+- 提供区域查询接口（按ID、按类型）
+- 发送信号通知区域变化（regionCreated、regionRemoved、regionUpdated）
 
-负责在地图上绘制各种元素，并管理元素信息。
+```cpp
+class RegionManager {
+signals:
+    void regionCreated(int regionId);   // 区域创建信号
+    void regionRemoved(int regionId);   // 区域删除信号
+    void regionUpdated(int regionId);   // 区域更新信号
+
+public:
+    // 创建各类区域
+    Region* createLoiterPoint(double lat, double lon, const QString &name = QString());
+    Region* createUAV(double lat, double lon, const QString &color, const QString &name = QString());
+    Region* createNoFlyZone(double lat, double lon, double radius, const QString &name = QString());
+    Region* createTaskRegion(const QMapLibre::Coordinates &vertices, const QString &name = QString());
+
+    // 区域管理
+    void removeRegion(int regionId);
+    Region* getRegion(int regionId) const;
+    const QMap<int, Region*>& getAllRegions() const;
+
+    // 地形更新
+    void updateRegionTerrainType(int regionId, Region::TerrainType terrain);
+};
+```
+
+**设计优势**：
+- ✅ 单一职责：Region负责数据，RegionManager负责管理
+- ✅ 解耦：区域不依赖任务，可独立存在
+- ✅ 可复用：一个区域可被多个任务共享
+- ✅ 可扩展：新增区域类型只需修改RegionManager
+
+#### 2. Task & TaskManager - 任务管理系统
+
+**Task 类** - 轻量化任务数据
+- 存储任务基本信息（ID、名称、描述、可见性）
+- 存储该任务引用的区域ID列表（`QVector<int> regionIds`）
+- 不再直接存储区域数据，通过ID引用区域
+
+```cpp
+class Task {
+public:
+    int id() const;
+    QString name() const;
+    QString description() const;
+    bool isVisible() const;
+
+    void addRegion(int regionId);           // 添加区域引用
+    void removeRegion(int regionId);        // 移除区域引用
+    const QVector<int>& regions() const;    // 获取所有区域ID
+};
+```
+
+**TaskManager 类** - 任务与区域的关联管理
+- 管理所有任务的生命周期
+- 维护任务与区域的多对多关联关系
+- 维护区域引用计数（记录每个区域被多少个任务引用）
+- 当前任务切换与状态管理
+- 全局冲突检测（跨任务检查禁飞区与无人机冲突）
+
+```cpp
+class TaskManager {
+public:
+    // 任务管理
+    int createTask(const QString &name, const QString &desc = QString());
+    void removeTask(int taskId);
+    void setCurrentTask(int taskId);
+    Task* currentTask() const;
+
+    // 区域关联管理
+    void addRegionToTask(int taskId, int regionId);           // 将区域关联到任务
+    void removeRegionFromTask(int taskId, int regionId);      // 从任务移除区域
+    int getRegionReferenceCount(int regionId) const;          // 获取区域引用计数
+
+    // 区域创建（自动关联到当前任务，如果有的话）
+    QMapLibre::AnnotationID addLoiterPoint(double lat, double lon);
+    QMapLibre::AnnotationID addUAV(double lat, double lon, const QString &color);
+    QMapLibre::AnnotationID addNoFlyZone(double lat, double lon, double radius);
+    QMapLibre::AnnotationID addTaskRegion(const QMapLibre::Coordinates &coordinates);
+
+    // 全局冲突检测
+    bool isInAnyNoFlyZone(const QMapLibre::Coordinate &coord) const;
+    QVector<Region*> checkNoFlyZoneConflictWithUAVs(double centerLat, double centerLon, double radius) const;
+
+    RegionManager* regionManager() const;  // 访问区域管理器
+};
+```
+
+**引用计数机制**：
+- 当区域被添加到任务时，引用计数+1
+- 当区域从任务移除时，引用计数-1
+- 当引用计数降为0时，区域变为独立区域
+- 删除任务时，自动处理所有关联区域的引用计数
+- 清除独立区域时，只删除引用计数为0的区域
+
+#### 3. MapPainter - 地图绘制引擎
+
+负责在地图上绘制各种区域，被RegionManager调用。纯绘制层，不管理数据。
 
 **主要功能**：
-- 绘制盘旋点、无人机、禁飞区域、多边形区域
-- 图标加载和染色（支持多种颜色）
-- 元素信息存储和查询
+- 绘制盘旋点、无人机、禁飞区域、任务区域
+- 图标加载和染色（支持多种颜色的无人机）
 - 圆形坐标生成（Haversine 公式）
-- 元素点击检测（距离计算、点在多边形内判断）
+- 区域点击检测（距离计算、点在任务区域内判断 - 射线法）
+- 绘制预览（禁飞区预览、任务区域绘制过程中的线段预览）
 
 **关键方法**：
 ```cpp
-// 绘制方法
+// 绘制方法（返回 AnnotationID）
 QMapLibre::AnnotationID drawLoiterPoint(double lat, double lon);
 QMapLibre::AnnotationID drawUAV(double lat, double lon, const QString &color);
 QMapLibre::AnnotationID drawNoFlyZone(double lat, double lon, double radius);
-QMapLibre::AnnotationID drawPolygonArea(const QMapLibre::Coordinates &coords);
+QMapLibre::AnnotationID drawTaskRegionArea(const QMapLibre::Coordinates &coords);
 
 // 预览方法
 QMapLibre::AnnotationID drawPreviewNoFlyZone(double lat, double lon, double radius);
 QMapLibre::AnnotationID drawPreviewLines(const QMapLibre::Coordinates &coords);
 void clearPreview();
+void clearTaskRegionPreview();
 
-// 元素查询
-const ElementInfo* findElementNear(const QMapLibre::Coordinate &coord, double threshold);
+// 区域查询（点击检测）
+const RegionInfo* findRegionNear(const QMapLibre::Coordinate &coord, double threshold);
+
+// 删除
+void removeAnnotation(QMapLibre::AnnotationID id);
 ```
 
-#### 3. InteractiveMapWidget - 交互控制器
+**设计特点**：
+- 无状态：不保存区域业务数据，只负责绘制
+- 高效检测：点状元素优先于区域元素，优化用户体验
+- 精确计算：Haversine公式计算地球表面距离，射线法判断点在任务区域内
+
+#### 4. InteractiveMapWidget - 交互控制器
 
 包装 QMapLibre 地图组件，处理鼠标交互事件。
 
 **主要功能**：
-- 鼠标点击与拖动智能区分（5像素阈值）
-- 实时坐标显示（右下角）
-- 操作模式提示（左下角）
+- 鼠标点击与拖动智能区分（5像素阈值，避免拖动触发点击）
+- 实时坐标显示（右下角浮动标签）
+- 操作模式提示（左下角状态栏）
 - 鼠标移动事件处理
 
 **信号**：
@@ -454,45 +605,105 @@ void mapMouseMoved(const QMapLibre::Coordinate &coord);   // 鼠标移动
 void mapRightClicked();                                   // 右键点击
 ```
 
-#### 4. ElementDetailWidget - 详情展示
+#### 5. RegionDetailWidget - 区域详情窗口
 
-浮动窗口，显示点击元素的详细信息。
+浮动窗口，显示点击区域的详细信息，支持内联编辑。
 
 **主要功能**：
-- 自适应大小和位置
-- 简洁的信息展示（标题有蓝色边框，内容为普通文字）
-- 支持多种元素类型
-- 自动计算面积（禁飞区、多边形）
-- 内联地形编辑（QComboBox 下拉框）
-- 删除按钮（所有元素类型）
+- 自适应大小和位置（跟随点击位置）
+- 区域信息展示：类型、坐标、面积、地形等
+- 自动计算面积（禁飞区圆形、任务区域 - Shoelace公式）
+- 内联地形编辑（QComboBox 下拉框，实时更新）
+- 删除按钮（所有区域类型）
+- 颜色显示（无人机颜色标签）
 
 **信号**：
 ```cpp
-void terrainChanged(QMapLibre::AnnotationID, MapElement::TerrainType);
-void deleteRequested(QMapLibre::AnnotationID);
+void terrainChanged(int regionId, Region::TerrainType);  // 地形类型变更
+void deleteRequested(int regionId);                      // 请求删除区域
 ```
 
-#### 5. TestPainterWindow（main.cpp）- 主窗口
+#### 6. TaskListWidget - 任务列表与区域列表UI
 
-应用程序主窗口，集成所有组件。
+左侧边栏组件，集成任务管理和区域列表功能。
 
 **主要功能**：
-- 模式切换管理（普通、盘旋点、无人机、禁飞区、多边形）
-- UI 布局（左侧任务面板、右侧地图、浮动按钮）
-- 交互流程控制
-- 元素详情显示触发
-- **智能交互阈值计算**（`getZoomDependentThreshold()`）
-- **任务验证**（操作前检查）
+- **常驻侧边栏**（40px宽，半透明浅灰色，贯穿地图全高）
+- **三个功能按钮**：
+  - 【任务区域】：显示任务区域列表窗口
+  - 【任务方案】：显示/隐藏任务列表
+  - 【行动方案】：预留功能
+- **任务列表**（350px宽，可展开/收缩）：
+  - 创建/删除/编辑任务
+  - 任务可见性切换（复选框）
+  - 当前任务选择（点击高亮）
+- **任务区域列表窗口**（300x400px，独立窗口）：
+  - 显示所有任务区域（Polygon类型）
+  - 区域ID + 区域面积（km²）
+  - 自动刷新（监听regionCreated/regionRemoved信号）
+  - 可滚动，非模态
+
+#### 7. TaskUI - 主界面控制器
+
+应用程序主界面，集成所有组件，控制交互流程。
+
+**主要功能**：
+- **模式切换管理**：普通、盘旋点、无人机、禁飞区、任务区域绘制
+- **UI 布局**：左侧任务列表、右侧地图、顶部工具栏、浮动详情窗口
+- **交互流程控制**：
+  - 点击处理（地图点击、元素点击、绘制点击）
+  - 右键处理（撤销绘制）
+  - ESC键处理（取消绘制）
+  - 鼠标移动处理（实时预览）
+- **区域详情显示**：点击区域触发详情窗口
+- **智能交互阈值**：根据地图缩放级别动态调整点击检测距离
+- **全局冲突检测**：放置无人机/禁飞区时检查冲突
+- **任务验证**：操作前检查是否需要当前任务
 
 ## 实现细节
 
-### 任务与元素关联机制
+### 任务与区域关联机制 - 引用计数设计
 
-每个 `MapElement` 存储在对应的 `Task` 中：
-- `Task` 包含 `QVector<MapElement>`
-- `TaskManager` 管理所有 `Task` 对象
-- 查找元素时遍历可见任务的元素列表
-- 删除元素时通过 `annotationId` 跨任务查找并移除
+**核心思想**：区域独立于任务存在，通过引用计数管理生命周期。
+
+**数据结构**：
+```cpp
+// TaskManager 中维护的数据结构
+QMap<int, Task*> m_tasks;                      // 任务ID -> 任务对象
+QMap<int, int> m_regionRefCount;               // 区域ID -> 引用计数
+RegionManager *m_regionMgr;                    // 区域管理器（持有所有Region）
+
+// Task 中存储的数据
+QVector<int> m_regionIds;                      // 该任务引用的区域ID列表
+```
+
+**关联流程**：
+1. 用户创建区域（如绘制任务区域）
+   - RegionManager 创建 Region 对象，生成唯一ID
+   - Region 添加到 RegionManager 的 `QMap<int, Region*>`
+   - 如果有当前任务，自动关联：
+     - Task 的 regionIds 添加该ID
+     - m_regionRefCount[regionId]++
+
+2. 用户切换任务
+   - 不影响 Region 数据，Region 继续存在于 RegionManager
+   - 根据新任务的 regionIds 控制可见性
+
+3. 用户删除任务
+   - 遍历该任务的所有 regionIds
+   - 对每个 regionId：m_regionRefCount[regionId]--
+   - 如果引用计数降为0，从 RegionManager 删除该 Region
+
+4. 用户删除区域
+   - 找到所有引用该区域的任务，从其 regionIds 移除
+   - m_regionRefCount[regionId] 降为 0
+   - RegionManager 删除 Region 对象
+
+**优势**：
+- ✅ 一个区域可被多个任务共享（引用计数 > 1）
+- ✅ 区域可独立存在（引用计数 = 0）
+- ✅ 自动生命周期管理，防止内存泄漏
+- ✅ 删除任务不会误删其他任务使用的区域
 
 ### 智能交互阈值算法
 
@@ -512,7 +723,7 @@ double getZoomDependentThreshold(double baseThreshold = 50.0) {
 - 缩放级别 16（近距离）：threshold ≈ 3m（精确）
 
 **应用场景**：
-- 多边形闭合判断（50m 基准）
+- 任务区域闭合判断（50m 基准）
 - 元素点击检测（100m 基准）
 
 ### 点击检测算法
@@ -521,8 +732,8 @@ double getZoomDependentThreshold(double baseThreshold = 50.0) {
 2. **圆形元素**（禁飞区）：
    - 点在圆内：距离为 0
    - 点在圆外：距离 = 点到圆心距离 - 半径
-3. **多边形元素**：
-   - 使用射线法判断点是否在多边形内部
+3. **任务区域元素**：
+   - 使用射线法判断点是否在任务区域内部
    - 在内部：距离为 0
    - 在外部：计算到所有顶点的最小距离
 
@@ -544,7 +755,7 @@ double getZoomDependentThreshold(double baseThreshold = 50.0) {
 
 ### 地形特征选择流程
 
-1. 用户完成区域绘制（禁飞区或多边形）
+1. 用户完成区域绘制（禁飞区或任务区域）
 2. 弹出 `RegionFeatureDialog` 对话框
 3. 选择地形类型（默认平原）
 4. 将地形信息存储到 `MapElement.terrainType`
@@ -694,7 +905,7 @@ rm -rf build
 
 主要版本：
 - **v5.0** (2025-10-09) - 任务管理系统、地形特征、智能交互阈值、UI 优化
-- **v4.0** (2025-10-08) - 元素详情查看、多边形支持、UI 优化
+- **v4.0** (2025-10-08) - 元素详情查看、任务区域支持、UI 优化
 - **v3.0** (2025-10-08) - 单次放置模式，自动返回普通浏览
 - **v2.2** (2025-10-08) - 修复预览圆 + 坐标显示
 - **v2.1** (2025-10-08) - 两次点击交互
