@@ -59,8 +59,8 @@ signals:
     void initialized();  // 当地图和组件初始化完成时发出
 
 public slots:
-    void onRegionTerrainChanged(QMapLibre::AnnotationID annotationId, TerrainType newTerrain);
-    void onRegionDeleteRequested(QMapLibre::AnnotationID annotationId);
+    void onRegionTerrainChanged(int regionId, TerrainType newTerrain);
+    void onRegionDeleteRequested(int regionId);
 
 private slots:
     void setupMap();
@@ -78,6 +78,7 @@ private slots:
     void startPlaceUAV();
     void startDrawTaskRegion();
     void clearAll();
+    void openPlanDialog();
 
     // 绘制处理
     void addLoiterPointAt(double lat, double lon);
@@ -113,6 +114,7 @@ private:
     TaskListWidget *m_taskListWidget = nullptr;
     RegionDetailWidget *m_detailWidget = nullptr;
     QWidget *m_buttonContainer = nullptr;
+    class PlanDialog *m_planDialog = nullptr;
 
     InteractionMode m_currentMode = MODE_NORMAL;
     bool m_mapInitialized = false;

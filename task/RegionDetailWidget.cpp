@@ -231,7 +231,7 @@ void RegionDetailWidget::addTerrainLine(const QString &label, TerrainType curren
     connect(terrainCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, terrainCombo](int index) {
         if (m_currentRegion) {
             TerrainType newTerrain = static_cast<TerrainType>(terrainCombo->currentData().toInt());
-            emit terrainChanged(m_currentRegion->annotationId, newTerrain);
+            emit terrainChanged(m_currentRegion->regionId, newTerrain);
         }
     });
 
@@ -272,7 +272,7 @@ void RegionDetailWidget::addDeleteButton()
     );
     connect(m_deleteButton, &QPushButton::clicked, this, [this]() {
         if (m_currentRegion) {
-            emit deleteRequested(m_currentRegion->annotationId);
+            emit deleteRequested(m_currentRegion->regionId);
             hide();
         }
     });

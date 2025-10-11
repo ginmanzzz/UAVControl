@@ -158,10 +158,17 @@ QMapLibre::AnnotationID MapPainter::drawNoFlyZone(double latitude, double longit
 
 void MapPainter::removeAnnotation(QMapLibre::AnnotationID id)
 {
+    qDebug() << "MapPainter::removeAnnotation 开始删除标注 ID:" << id;
+    qDebug() << "  - 删除前 m_annotations 数量:" << m_annotations.size();
+    qDebug() << "  - 删除前 m_regionInfo 数量:" << m_regionInfo.size();
+
     m_map->removeAnnotation(id);
     m_annotations.removeAll(id);
     m_regionInfo.remove(id);  // 清理元素信息
-    qDebug() << "删除标注 ID:" << id;
+
+    qDebug() << "  - 删除后 m_annotations 数量:" << m_annotations.size();
+    qDebug() << "  - 删除后 m_regionInfo 数量:" << m_regionInfo.size();
+    qDebug() << "MapPainter::removeAnnotation 完成删除标注 ID:" << id;
 }
 
 void MapPainter::clearAll()

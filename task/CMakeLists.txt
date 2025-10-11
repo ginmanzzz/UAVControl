@@ -3,6 +3,7 @@
 # 收集task模块的所有源文件
 set(TASK_SOURCES
     Task.h
+    Plan.h
     TaskManager.h
     TaskManager.cpp
     TaskUI.h
@@ -11,6 +12,8 @@ set(TASK_SOURCES
     TaskListWidget.cpp
     TaskDialog.h
     TaskDialog.cpp
+    PlanDialog.h
+    PlanDialog.cpp
     RegionDetailWidget.h
     RegionDetailWidget.cpp
     RegionFeatureDialog.h

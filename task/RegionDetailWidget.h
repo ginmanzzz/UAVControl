@@ -27,8 +27,8 @@ public:
     void showRegion(const RegionInfo *info, const QPoint &screenPos);
 
 signals:
-    void terrainChanged(QMapLibre::AnnotationID annotationId, TerrainType newTerrain);
-    void deleteRequested(QMapLibre::AnnotationID annotationId);
+    void terrainChanged(int regionId, TerrainType newTerrain);
+    void deleteRequested(int regionId);
 
 private:
     void addTitle(const QString &text);

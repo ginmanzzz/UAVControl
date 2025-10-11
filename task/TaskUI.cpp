@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "TaskUI.h"
+#include "PlanDialog.h"
+#include "Plan.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -275,11 +277,34 @@ void TaskUI::setupUI() {
         "}"
     );
 
+    // 创建方案规划按钮
+    auto *planBtn = new TooltipButton("打开方案规划窗口", buttonContainer);
+    planBtn->setText("方案规划");
+    planBtn->setStyleSheet(
+        "QPushButton {"
+        "  background-color: rgba(103, 58, 183, 230);"
+        "  color: white;"
+        "  border: none;"
+        "  border-radius: 8px;"
+        "  padding: 8px 12px;"
+        "  font-size: 12px;"
+        "  font-weight: bold;"
+        "  min-width: 82px;"
+        "}"
+        "QPushButton:hover {"
+        "  background-color: rgba(94, 53, 177, 240);"
+        "}"
+        "QPushButton:pressed {"
+        "  background-color: rgba(81, 45, 168, 240);"
+        "}"
+    );
+
     connect(loiterBtn, &QPushButton::clicked, this, &TaskUI::startPlaceLoiter);
     connect(noFlyBtn, &QPushButton::clicked, this, &TaskUI::startPlaceNoFly);
     connect(taskRegionBtn, &QPushButton::clicked, this, &TaskUI::startDrawTaskRegion);
     connect(uavBtn, &QPushButton::clicked, this, &TaskUI::startPlaceUAV);
     connect(clearBtn, &QPushButton::clicked, this, &TaskUI::clearAll);
+    connect(planBtn, &QPushButton::clicked, this, &TaskUI::openPlanDialog);
 
     buttonLayout->addWidget(loiterBtn);
     buttonLayout->addWidget(noFlyBtn);
@@ -287,6 +312,7 @@ void TaskUI::setupUI() {
     buttonLayout->addWidget(uavContainer);
     buttonLayout->addStretch();
     buttonLayout->addWidget(clearBtn);
+    buttonLayout->addWidget(planBtn);
 
     buttonContainer->setStyleSheet("background: transparent;");
     m_buttonContainer = buttonContainer;
@@ -376,26 +402,25 @@ void TaskUI::onCurrentTaskChanged(int taskId) {
     }
 }
 
-void TaskUI::onRegionTerrainChanged(QMapLibre::AnnotationID annotationId, TerrainType newTerrain) {
-    Region *region = m_regionManager->findRegionByAnnotationId(annotationId);
+void TaskUI::onRegionTerrainChanged(int regionId, TerrainType newTerrain) {
+    Region *region = m_regionManager->getRegion(regionId);
     if (!region) {
         qWarning() << "未找到对应的区域";
         return;
     }
 
-    m_regionManager->updateRegionTerrainType(region->id(), static_cast<Region::TerrainType>(newTerrain));
-    qDebug() << QString("已更新区域 ID:%1 的地形特征").arg(annotationId);
+    m_regionManager->updateRegionTerrainType(regionId, static_cast<Region::TerrainType>(newTerrain));
+    qDebug() << QString("已更新区域 ID:%1 的地形特征").arg(regionId);
 }
 
-void TaskUI::onRegionDeleteRequested(QMapLibre::AnnotationID annotationId) {
-    Region *region = m_regionManager->findRegionByAnnotationId(annotationId);
+void TaskUI::onRegionDeleteRequested(int regionId) {
+    Region *region = m_regionManager->getRegion(regionId);
     if (!region) {
         QMessageBox::warning(this, "错误", "未找到对应的区域");
         return;
     }
 
     QString regionTypeName = Region::typeToString(region->type());
-    int regionId = region->id();
 
     // 获取引用计数和引用任务列表
     int refCount = m_taskManager->getRegionReferenceCount(regionId);
@@ -435,7 +460,7 @@ void TaskUI::onRegionDeleteRequested(QMapLibre::AnnotationID annotationId) {
     if (msgBox.exec() == QMessageBox::Yes) {
         // 真正删除region（RegionManager会自动通知TaskManager清理引用）
         m_regionManager->removeRegion(regionId);
-        qDebug() << QString("已删除%1 ID:%2 (引用计数: %3)").arg(regionTypeName).arg(annotationId).arg(refCount);
+        qDebug() << QString("已删除%1 ID:%2 (引用计数: %3)").arg(regionTypeName).arg(regionId).arg(refCount);
     }
 }
 
@@ -881,4 +906,24 @@ QString TaskUI::getColorName(const QString &colorValue) {
         {"yellow", "黄色"}
     };
     return colorNames.value(colorValue, "黑色");
+}
+
+void TaskUI::openPlanDialog() {
+    qDebug() << "打开方案规划窗口";
+
+    // 延迟创建 PlanDialog
+    if (!m_planDialog) {
+        m_planDialog = new PlanDialog(this);
+
+        // 创建一个示例方案
+        static Plan *samplePlan = new Plan(1, "示例方案");
+        m_planDialog->setPlan(samplePlan);
+    }
+
+    // 显示窗口并定位到地图左上角（左侧小列右方）
+    m_planDialog->show();
+    m_planDialog->raise();
+
+    // 定位到地图左上角，左侧边栏（40px）右方 + 10px间距
+    m_planDialog->move(50, 10);
 }

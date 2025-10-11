@@ -137,24 +137,36 @@ Region* RegionManager::createTaskRegion(const QMapLibre::Coordinates &vertices, 
 // ==================== 删除区域 ====================
 
 bool RegionManager::removeRegion(int regionId) {
+    qDebug() << "RegionManager::removeRegion 开始删除区域 ID:" << regionId;
+
     Region *region = m_regions.value(regionId, nullptr);
     if (!region) {
         qWarning() << "RegionManager::removeRegion: 区域不存在, ID =" << regionId;
         return false;
     }
 
+    QMapLibre::AnnotationID annotationId = region->annotationId();
+    qDebug() << "  - 区域名称:" << region->name();
+    qDebug() << "  - 区域类型:" << Region::typeToString(region->type());
+    qDebug() << "  - AnnotationID:" << annotationId;
+
     // 从地图移除标注
-    if (m_painter && region->annotationId() != 0) {
-        m_painter->removeAnnotation(region->annotationId());
+    if (m_painter) {
+        qDebug() << "  - 调用 MapPainter::removeAnnotation(" << annotationId << ")";
+        m_painter->removeAnnotation(annotationId);
+    } else {
+        qWarning() << "  - 无法删除标注: painter is null";
     }
 
     // 从映射表删除
     m_regions.remove(regionId);
+    qDebug() << "  - 已从 m_regions 中移除";
 
     // 发出信号（让 TaskManager 清理引用）
     emit regionRemoved(regionId);
+    qDebug() << "  - 已发送 regionRemoved 信号";
 
-    qDebug() << "删除区域: ID =" << regionId << ", 名称 =" << region->name();
+    qDebug() << "RegionManager::removeRegion 完成删除区域 ID:" << regionId;
 
     // 释放内存
     delete region;
