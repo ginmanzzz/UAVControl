@@ -13,7 +13,7 @@ MapPainter::MapPainter(QMapLibre::Map *map, QObject *parent)
     , m_loiterIconPath("image/pin.png")
     , m_iconLoaded(false)
     , m_previewAnnotationId(0)
-    , m_polygonPreviewLineId(0)
+    , m_taskRegionPreviewLineId(0)
     , m_dynamicLineId(0)
 {
 }
@@ -80,12 +80,11 @@ QMapLibre::AnnotationID MapPainter::drawLoiterPoint(double latitude, double long
     m_annotations.append(id);
 
     // 保存元素信息
-    ElementInfo info;
-    info.type = ElementType::LoiterPoint;
+    RegionInfo info;
+    info.type = RegionType::LoiterPoint;
     info.coordinate = QMapLibre::Coordinate(latitude, longitude);
     info.annotationId = id;
-    info.element = nullptr;
-    m_elementInfo[id] = info;
+    m_regionInfo[id] = info;
 
     qDebug() << QString("添加盘旋点: (%1, %2), ID: %3").arg(latitude).arg(longitude).arg(id);
     return id;
@@ -110,13 +109,12 @@ QMapLibre::AnnotationID MapPainter::drawUAV(double latitude, double longitude, c
     m_annotations.append(id);
 
     // 保存元素信息
-    ElementInfo info;
-    info.type = ElementType::UAV;
+    RegionInfo info;
+    info.type = RegionType::UAV;
     info.coordinate = QMapLibre::Coordinate(latitude, longitude);
     info.color = color;
     info.annotationId = id;
-    info.element = nullptr;
-    m_elementInfo[id] = info;
+    m_regionInfo[id] = info;
 
     qDebug() << QString("添加无人机 (%1): (%2, %3), ID: %4").arg(color).arg(latitude).arg(longitude).arg(id);
     return id;
@@ -146,13 +144,12 @@ QMapLibre::AnnotationID MapPainter::drawNoFlyZone(double latitude, double longit
     m_annotations.append(zoneId);
 
     // 保存元素信息
-    ElementInfo info;
-    info.type = ElementType::NoFlyZone;
+    RegionInfo info;
+    info.type = RegionType::NoFlyZone;
     info.coordinate = QMapLibre::Coordinate(latitude, longitude);
     info.radius = radiusInMeters;
     info.annotationId = zoneId;
-    info.element = nullptr;
-    m_elementInfo[zoneId] = info;
+    m_regionInfo[zoneId] = info;
 
     qDebug() << QString("添加禁飞区域: 中心(%1, %2), 半径 %3m, ID: %4")
                     .arg(latitude).arg(longitude).arg(radiusInMeters).arg(zoneId);
@@ -163,7 +160,7 @@ void MapPainter::removeAnnotation(QMapLibre::AnnotationID id)
 {
     m_map->removeAnnotation(id);
     m_annotations.removeAll(id);
-    m_elementInfo.remove(id);  // 清理元素信息
+    m_regionInfo.remove(id);  // 清理元素信息
     qDebug() << "删除标注 ID:" << id;
 }
 
@@ -176,7 +173,7 @@ void MapPainter::clearAll()
         m_map->removeAnnotation(id);
     }
     m_annotations.clear();
-    m_elementInfo.clear();  // 清理所有元素信息
+    m_regionInfo.clear();  // 清理所有元素信息
 
     qDebug() << "清除所有画家标注";
 }
@@ -243,7 +240,7 @@ QMapLibre::Coordinates MapPainter::generateCircleCoordinates(
     return coords;
 }
 
-QMapLibre::AnnotationID MapPainter::drawPolygonArea(const QMapLibre::Coordinates &coordinates)
+QMapLibre::AnnotationID MapPainter::drawTaskRegionArea(const QMapLibre::Coordinates &coordinates)
 {
     if (coordinates.size() < 3) {
         qWarning() << "多边形至少需要3个点";
@@ -275,12 +272,11 @@ QMapLibre::AnnotationID MapPainter::drawPolygonArea(const QMapLibre::Coordinates
     m_annotations.append(id);
 
     // 保存元素信息
-    ElementInfo info;
-    info.type = ElementType::Polygon;
+    RegionInfo info;
+    info.type = RegionType::Polygon;
     info.vertices = coordinates;
     info.annotationId = id;
-    info.element = nullptr;
-    m_elementInfo[id] = info;
+    m_regionInfo[id] = info;
 
     qDebug() << QString("添加多边形区域: %1个顶点, ID: %2")
                     .arg(coordinates.size()).arg(id);
@@ -290,7 +286,7 @@ QMapLibre::AnnotationID MapPainter::drawPolygonArea(const QMapLibre::Coordinates
 QMapLibre::AnnotationID MapPainter::drawPreviewLines(const QMapLibre::Coordinates &coordinates)
 {
     // 先清除之前的预览线
-    clearPolygonPreview();
+    clearTaskRegionPreview();
 
     if (coordinates.size() < 2) {
         return 0;
@@ -311,16 +307,16 @@ QMapLibre::AnnotationID MapPainter::drawPreviewLines(const QMapLibre::Coordinate
 
     // 添加到地图
     QVariant annotation = QVariant::fromValue(line);
-    m_polygonPreviewLineId = m_map->addAnnotation(annotation);
+    m_taskRegionPreviewLineId = m_map->addAnnotation(annotation);
 
-    return m_polygonPreviewLineId;
+    return m_taskRegionPreviewLineId;
 }
 
-void MapPainter::clearPolygonPreview()
+void MapPainter::clearTaskRegionPreview()
 {
-    if (m_polygonPreviewLineId != 0) {
-        m_map->removeAnnotation(m_polygonPreviewLineId);
-        m_polygonPreviewLineId = 0;
+    if (m_taskRegionPreviewLineId != 0) {
+        m_map->removeAnnotation(m_taskRegionPreviewLineId);
+        m_taskRegionPreviewLineId = 0;
     }
 }
 
@@ -504,20 +500,20 @@ static double distanceToPolygon(const QMapLibre::Coordinate &point, const QMapLi
     return minDistance;
 }
 
-const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clickCoord, double threshold) const
+const RegionInfo* MapPainter::findRegionNear(const QMapLibre::Coordinate &clickCoord, double threshold) const
 {
-    const ElementInfo* nearestPointElement = nullptr;   // 最近的点状元素（UAV/盘旋点）
-    const ElementInfo* nearestAreaElement = nullptr;    // 最近的区域元素（多边形/禁飞区）
+    const RegionInfo* nearestPointElement = nullptr;   // 最近的点状元素（UAV/盘旋点）
+    const RegionInfo* nearestAreaElement = nullptr;    // 最近的区域元素（多边形/禁飞区）
     double minPointDistance = threshold;
     double minAreaDistance = threshold;
 
     // 遍历所有元素，分别记录点状和区域元素
-    for (auto it = m_elementInfo.constBegin(); it != m_elementInfo.constEnd(); ++it) {
-        const ElementInfo &info = it.value();
+    for (auto it = m_regionInfo.constBegin(); it != m_regionInfo.constEnd(); ++it) {
+        const RegionInfo &info = it.value();
         double distance = 0.0;
 
         switch (info.type) {
-        case ElementType::LoiterPoint:
+        case RegionType::LoiterPoint:
             // 盘旋点图标：底部中心是真实位置，需要调整检测范围
             // 图标 32x32 像素，约等于地图上 10-20 米的范围（取决于缩放级别）
             // 我们使用更宽松的阈值来检测
@@ -529,7 +525,7 @@ const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clic
             }
             break;
 
-        case ElementType::UAV:
+        case RegionType::UAV:
             // 无人机图标：中心对齐
             distance = calculateDistance(clickCoord.first, clickCoord.second,
                                         info.coordinate.first, info.coordinate.second);
@@ -539,7 +535,7 @@ const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clic
             }
             break;
 
-        case ElementType::NoFlyZone:
+        case RegionType::NoFlyZone:
             // 计算点到圆心的距离
             distance = calculateDistance(clickCoord.first, clickCoord.second,
                                         info.coordinate.first, info.coordinate.second);
@@ -556,7 +552,7 @@ const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clic
             }
             break;
 
-        case ElementType::Polygon:
+        case RegionType::Polygon:
             // 计算点到多边形的距离
             distance = distanceToPolygon(clickCoord, info.vertices);
             if (distance < minAreaDistance) {
@@ -579,11 +575,11 @@ const ElementInfo* MapPainter::findElementNear(const QMapLibre::Coordinate &clic
 bool MapPainter::isInNoFlyZone(const QMapLibre::Coordinate &coord) const
 {
     // 遍历所有元素，检查是否在禁飞区内
-    for (auto it = m_elementInfo.constBegin(); it != m_elementInfo.constEnd(); ++it) {
-        const ElementInfo &info = it.value();
+    for (auto it = m_regionInfo.constBegin(); it != m_regionInfo.constEnd(); ++it) {
+        const RegionInfo &info = it.value();
 
         // 只检查禁飞区类型
-        if (info.type == ElementType::NoFlyZone) {
+        if (info.type == RegionType::NoFlyZone) {
             // 计算点到圆心的距离
             double distance = calculateDistance(coord.first, coord.second,
                                                 info.coordinate.first, info.coordinate.second);

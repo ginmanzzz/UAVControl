@@ -1,12 +1,14 @@
 // Copyright (C) 2023 MapLibre contributors
 // SPDX-License-Identifier: MIT
 
-#include "ElementDetailWidget.h"
+#include "RegionDetailWidget.h"
+#include "TaskManager.h"
+#include "Task.h"
 #include <QtMath>
 
-ElementDetailWidget::ElementDetailWidget(QWidget *parent)
+RegionDetailWidget::RegionDetailWidget(QWidget *parent)
     : QWidget(parent)
-    , m_currentElement(nullptr)
+    , m_currentRegion(nullptr)
 {
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -32,14 +34,14 @@ ElementDetailWidget::ElementDetailWidget(QWidget *parent)
     hide();
 }
 
-void ElementDetailWidget::showElement(const ElementInfo *info, const QPoint &screenPos)
+void RegionDetailWidget::showRegion(const RegionInfo *info, const QPoint &screenPos)
 {
     if (!info) {
         hide();
         return;
     }
 
-    m_currentElement = info;
+    m_currentRegion = info;
 
     // 清除旧内容
     QLayoutItem *item;
@@ -51,48 +53,60 @@ void ElementDetailWidget::showElement(const ElementInfo *info, const QPoint &scr
     // 添加标题
     QString title;
     switch (info->type) {
-        case ElementType::LoiterPoint:
+        case RegionType::LoiterPoint:
             title = "📍 盘旋点";
             break;
-        case ElementType::UAV:
+        case RegionType::UAV:
             title = QString("🛩️ 无人机 (%1)").arg(getColorName(info->color));
             break;
-        case ElementType::NoFlyZone:
+        case RegionType::NoFlyZone:
             title = "🚫 禁飞区域";
             break;
-        case ElementType::Polygon:
-            title = "🔷 多边形区域";
+        case RegionType::Polygon:
+            title = "🔷 任务区域";
             break;
     }
 
     addTitle(title);
 
-    // 显示任务信息
-    addInfoLine("任务ID", QString("#%1").arg(info->taskId));
-    addInfoLine("任务名称", info->taskName);
+    // 显示关联的任务列表
+    if (m_taskManager) {
+        QVector<Task*> referencingTasks = m_taskManager->getTasksReferencingRegion(info->regionId);
+
+        if (referencingTasks.isEmpty()) {
+            addInfoLine("任务", "无任务关联");
+        } else {
+            // 以列表形式显示所有关联任务
+            for (int i = 0; i < referencingTasks.size(); ++i) {
+                Task *task = referencingTasks[i];
+                QString label = (i == 0) ? "任务" : "";  // 第一行显示"任务"标签，后续行留空对齐
+                addInfoLine(label, QString("#%1 %2").arg(task->id()).arg(task->name()));
+            }
+        }
+    } else {
+        addInfoLine("任务", "（管理器未初始化）");
+    }
 
     // 根据类型显示不同内容
     switch (info->type) {
-        case ElementType::LoiterPoint:
-        case ElementType::UAV:
+        case RegionType::LoiterPoint:
+        case RegionType::UAV:
             addInfoLine("经度", QString("%1°").arg(info->coordinate.second, 0, 'f', 6));
             addInfoLine("纬度", QString("%1°").arg(info->coordinate.first, 0, 'f', 6));
             break;
 
-        case ElementType::NoFlyZone: {
+        case RegionType::NoFlyZone: {
             addInfoLine("中心经度", QString("%1°").arg(info->coordinate.second, 0, 'f', 6));
             addInfoLine("中心纬度", QString("%1°").arg(info->coordinate.first, 0, 'f', 6));
             addInfoLine("半径", QString("%1 米").arg(info->radius, 0, 'f', 1));
             double areaKm2 = M_PI * info->radius * info->radius / 1000000.0;
             addInfoLine("区域面积", QString("%1 km²").arg(areaKm2, 0, 'f', 3));
             // 地形特征下拉选择
-            if (info->element) {
-                addTerrainLine("地形特征", info->element->terrainType);
-            }
+            addTerrainLine("地形特征", info->terrainType);
             break;
         }
 
-        case ElementType::Polygon: {
+        case RegionType::Polygon: {
             addInfoLine("顶点数量", QString("%1").arg(info->vertices.size()));
             for (int i = 0; i < info->vertices.size(); ++i) {
                 addInfoLine(QString("顶点%1").arg(i + 1),
@@ -100,17 +114,15 @@ void ElementDetailWidget::showElement(const ElementInfo *info, const QPoint &scr
                     .arg(info->vertices[i].first, 0, 'f', 5)
                     .arg(info->vertices[i].second, 0, 'f', 5));
             }
-            double areaKm2 = calculatePolygonArea(info->vertices) / 1000000.0;
+            double areaKm2 = calculateTaskRegionArea(info->vertices) / 1000000.0;
             addInfoLine("区域面积", QString("%1 km²").arg(areaKm2, 0, 'f', 3));
             // 地形特征下拉选择
-            if (info->element) {
-                addTerrainLine("地形特征", info->element->terrainType);
-            }
+            addTerrainLine("地形特征", info->terrainType);
             break;
         }
     }
 
-    // 添加删除按钮（所有元素类型都支持）
+    // 添加删除按钮（所有区域类型都支持）
     addDeleteButton();
 
     adjustSize();
@@ -119,7 +131,7 @@ void ElementDetailWidget::showElement(const ElementInfo *info, const QPoint &scr
     raise();
 }
 
-void ElementDetailWidget::addTitle(const QString &text)
+void RegionDetailWidget::addTitle(const QString &text)
 {
     // 标题容器（带蓝色边框）
     auto *titleContainer = new QWidget(m_contentWidget);
@@ -149,7 +161,7 @@ void ElementDetailWidget::addTitle(const QString &text)
     m_contentLayout->addSpacing(8);
 }
 
-void ElementDetailWidget::addInfoLine(const QString &label, const QString &value)
+void RegionDetailWidget::addInfoLine(const QString &label, const QString &value)
 {
     auto *lineWidget = new QWidget(m_contentWidget);
     auto *lineLayout = new QHBoxLayout(lineWidget);
@@ -177,7 +189,7 @@ void ElementDetailWidget::addInfoLine(const QString &label, const QString &value
     m_contentLayout->addWidget(lineWidget);
 }
 
-void ElementDetailWidget::addTerrainLine(const QString &label, MapElement::TerrainType currentTerrain)
+void RegionDetailWidget::addTerrainLine(const QString &label, TerrainType currentTerrain)
 {
     auto *lineWidget = new QWidget(m_contentWidget);
     auto *lineLayout = new QHBoxLayout(lineWidget);
@@ -194,10 +206,10 @@ void ElementDetailWidget::addTerrainLine(const QString &label, MapElement::Terra
 
     // 地形下拉选择框
     auto *terrainCombo = new QComboBox(lineWidget);
-    terrainCombo->addItem("平原", MapElement::Plain);
-    terrainCombo->addItem("丘陵", MapElement::Hills);
-    terrainCombo->addItem("山地", MapElement::Mountain);
-    terrainCombo->addItem("高山地", MapElement::HighMountain);
+    terrainCombo->addItem("平原", static_cast<int>(TerrainType::Plain));
+    terrainCombo->addItem("丘陵", static_cast<int>(TerrainType::Hills));
+    terrainCombo->addItem("山地", static_cast<int>(TerrainType::Mountain));
+    terrainCombo->addItem("高山地", static_cast<int>(TerrainType::HighMountain));
     terrainCombo->setCurrentIndex(static_cast<int>(currentTerrain));
     terrainCombo->setStyleSheet(
         "QComboBox {"
@@ -217,9 +229,9 @@ void ElementDetailWidget::addTerrainLine(const QString &label, MapElement::Terra
     );
 
     connect(terrainCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, terrainCombo](int index) {
-        if (m_currentElement) {
-            MapElement::TerrainType newTerrain = static_cast<MapElement::TerrainType>(terrainCombo->currentData().toInt());
-            emit terrainChanged(m_currentElement->annotationId, newTerrain);
+        if (m_currentRegion) {
+            TerrainType newTerrain = static_cast<TerrainType>(terrainCombo->currentData().toInt());
+            emit terrainChanged(m_currentRegion->annotationId, newTerrain);
         }
     });
 
@@ -230,7 +242,7 @@ void ElementDetailWidget::addTerrainLine(const QString &label, MapElement::Terra
     m_contentLayout->addWidget(lineWidget);
 }
 
-void ElementDetailWidget::addDeleteButton()
+void RegionDetailWidget::addDeleteButton()
 {
     // 添加分隔线
     auto *separator = new QWidget(m_contentWidget);
@@ -259,8 +271,8 @@ void ElementDetailWidget::addDeleteButton()
         "}"
     );
     connect(m_deleteButton, &QPushButton::clicked, this, [this]() {
-        if (m_currentElement) {
-            emit deleteRequested(m_currentElement->annotationId);
+        if (m_currentRegion) {
+            emit deleteRequested(m_currentRegion->annotationId);
             hide();
         }
     });
@@ -271,7 +283,7 @@ void ElementDetailWidget::addDeleteButton()
     m_contentLayout->addWidget(buttonWidget);
 }
 
-QString ElementDetailWidget::getColorName(const QString &color) const
+QString RegionDetailWidget::getColorName(const QString &color) const
 {
     if (color == "black") return "黑色";
     if (color == "red") return "红色";
@@ -282,7 +294,7 @@ QString ElementDetailWidget::getColorName(const QString &color) const
     return color;
 }
 
-double ElementDetailWidget::calculatePolygonArea(const QMapLibre::Coordinates &vertices) const
+double RegionDetailWidget::calculateTaskRegionArea(const QMapLibre::Coordinates &vertices) const
 {
     if (vertices.size() < 3) return 0.0;
 

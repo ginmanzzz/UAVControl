@@ -4,39 +4,16 @@
 #ifndef MAPPAINTER_H
 #define MAPPAINTER_H
 
+#include "MapRegionTypes.h"
 #include <QMapLibre/Map>
-#include <QMapLibre/Types>
 #include <QObject>
 #include <QString>
 #include <QVector>
 #include <QMap>
 
-// 前向声明
-struct MapElement;
-
-// 元素类型枚举
-enum class ElementType {
-    LoiterPoint,
-    UAV,
-    NoFlyZone,
-    Polygon
-};
-
-// 元素信息结构
-struct ElementInfo {
-    ElementType type;
-    QMapLibre::Coordinate coordinate;  // 对于点类型：位置；对于区域类型：中心点
-    QMapLibre::Coordinates vertices;   // 对于多边形：所有顶点
-    double radius;                     // 对于禁飞区：半径（米）
-    QString color;                     // 对于 UAV：颜色
-    QMapLibre::AnnotationID annotationId;  // 标注ID
-    const MapElement *element;         // 指向原始MapElement的指针（用于访问地形等信息）
-    int taskId;                        // 所属任务ID
-    QString taskName;                  // 所属任务名称
-};
-
 /**
- * @brief 地图画家类 - 用于在地图上绘制盘旋点和禁飞区域
+ * @brief 地图画家类 - 用于在地图上绘制区域标记
+ *
  */
 class MapPainter : public QObject {
     Q_OBJECT
@@ -48,6 +25,7 @@ public:
      * @param parent 父对象
      */
     explicit MapPainter(QMapLibre::Map *map, QObject *parent = nullptr);
+
 
     /**
      * @brief 画盘旋点（使用自定义图标）
@@ -67,19 +45,36 @@ public:
     QMapLibre::AnnotationID drawUAV(double latitude, double longitude, const QString &color = "black");
 
     /**
-     * @brief 画禁飞区域（红色半透明圆形 + 文字标签）
+     * @brief 画禁飞区域（红色半透明圆形）
      * @param latitude 中心点纬度
      * @param longitude 中心点经度
      * @param radiusInMeters 半径（米）
-     * @return 区域标注 ID（文字标注ID存储在内部）
+     * @return 区域标注 ID
      */
     QMapLibre::AnnotationID drawNoFlyZone(double latitude, double longitude, double radiusInMeters);
+
+    /**
+     * @brief 绘制任务区域（蓝色半透明）
+     * @param coordinates 任务区域顶点坐标列表
+     * @return 区域标注 ID
+     */
+    QMapLibre::AnnotationID drawTaskRegionArea(const QMapLibre::Coordinates &coordinates);
 
     /**
      * @brief 删除指定标注
      * @param id 标注 ID
      */
     void removeAnnotation(QMapLibre::AnnotationID id);
+
+    /**
+     * @brief 根据点击位置查找最近的区域
+     * @param clickCoord 点击的地理坐标
+     * @param threshold 阈值距离（米）
+     * @return 区域信息指针，未找到则返回 nullptr
+     */
+    const RegionInfo* findRegionNear(const QMapLibre::Coordinate &clickCoord, double threshold = 100.0) const;
+
+    // ==================== MapPainter 特有方法 ====================
 
     /**
      * @brief 清除所有由该画家创建的标注
@@ -101,13 +96,6 @@ public:
     void clearPreview();
 
     /**
-     * @brief 绘制多边形区域（蓝色半透明）
-     * @param coordinates 多边形顶点坐标列表
-     * @return 区域标注 ID
-     */
-    QMapLibre::AnnotationID drawPolygonArea(const QMapLibre::Coordinates &coordinates);
-
-    /**
      * @brief 绘制预览线段（从点集合绘制连线）
      * @param coordinates 点坐标列表
      * @return 线段标注 ID
@@ -115,9 +103,9 @@ public:
     QMapLibre::AnnotationID drawPreviewLines(const QMapLibre::Coordinates &coordinates);
 
     /**
-     * @brief 清除多边形预览（包括线段和临时标记）
+     * @brief 清除任务区域预览（包括线段和临时标记）
      */
-    void clearPolygonPreview();
+    void clearTaskRegionPreview();
 
     /**
      * @brief 更新动态预览线（从上一个点到鼠标当前位置）
@@ -138,14 +126,6 @@ public:
      * @return 是否成功加载图标
      */
     bool setLoiterIconPath(const QString &iconPath);
-
-    /**
-     * @brief 根据点击位置查找最近的元素
-     * @param clickCoord 点击的地理坐标
-     * @param threshold 阈值距离（米）
-     * @return 元素信息指针，未找到则返回 nullptr
-     */
-    const ElementInfo* findElementNear(const QMapLibre::Coordinate &clickCoord, double threshold = 100.0) const;
 
     /**
      * @brief 检查点是否在任何禁飞区内
@@ -189,9 +169,9 @@ private:
     bool m_iconLoaded;                              // 盘旋点图标是否已加载
     QSet<QString> m_loadedUAVColors;                // 已加载的 UAV 图标颜色集合
     QVector<QMapLibre::AnnotationID> m_annotations; // 所有标注 ID
-    QMap<QMapLibre::AnnotationID, ElementInfo> m_elementInfo; // 元素信息映射表
+    QMap<QMapLibre::AnnotationID, RegionInfo> m_regionInfo; // 区域信息映射表
     QMapLibre::AnnotationID m_previewAnnotationId;  // 预览区域标注 ID
-    QMapLibre::AnnotationID m_polygonPreviewLineId; // 多边形预览线段 ID
+    QMapLibre::AnnotationID m_taskRegionPreviewLineId; // 任务区域预览线段 ID
     QMapLibre::AnnotationID m_dynamicLineId;        // 动态预览线 ID
 
     static constexpr const char* LOITER_ICON_NAME = "loiter-point-icon";

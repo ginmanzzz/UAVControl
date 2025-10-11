@@ -25,39 +25,15 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 # 查找 QMapLibre（需要先安装或设置 CMAKE_PREFIX_PATH）
 find_package(QMapLibre COMPONENTS Widgets REQUIRED)
 
-# 添加 MapPainter 库
-add_library(MapPainter STATIC
-    task/map/MapPainter.h
-    task/map/MapPainter.cpp
-)
-
-target_link_libraries(MapPainter
-    PUBLIC
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Gui
-        QMapLibre::Widgets
-)
+# 添加子模块的CMakeLists.txt
+add_subdirectory(task)
+add_subdirectory(launch)
 
 # 添加主程序可执行文件
 add_executable(drawing-demo
     main.cpp
-    task/TaskUI.h
-    task/TaskUI.cpp
-    task/map/InteractiveMapWidget.h
-    task/map/InteractiveMapWidget.cpp
-    task/ElementDetailWidget.h
-    task/ElementDetailWidget.cpp
-    task/Task.h
-    task/TaskManager.h
-    task/TaskManager.cpp
-    task/TaskListWidget.h
-    task/TaskListWidget.cpp
-    task/TaskDialog.h
-    task/TaskDialog.cpp
-    task/RegionFeatureDialog.h
-    task/RegionFeatureDialog.cpp
-    launch/LaunchUI.h
-    launch/LaunchUI.cpp
+    ${TASK_MODULE_SOURCES}
+    ${LAUNCH_MODULE_SOURCES}
 )
 
 # 链接库
@@ -67,7 +43,6 @@ target_link_libraries(drawing-demo
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
         QMapLibre::Widgets
-        MapPainter
 )
 
 # 设置 RPATH，使可执行文件能自动找到共享库（包括 OpenSSL 3.0）

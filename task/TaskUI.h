@@ -4,9 +4,11 @@
 #ifndef TASKUI_H
 #define TASKUI_H
 
-#include "map/MapPainter.h"
-#include "map/InteractiveMapWidget.h"
-#include "ElementDetailWidget.h"
+#include "map_region/MapRegionTypes.h"
+#include "map_region/MapPainter.h"
+#include "map_region/InteractiveMapWidget.h"
+#include "RegionDetailWidget.h"
+#include "map_region/RegionManager.h"
 #include "TaskManager.h"
 #include "TaskListWidget.h"
 #include "RegionFeatureDialog.h"
@@ -57,8 +59,8 @@ signals:
     void initialized();  // 当地图和组件初始化完成时发出
 
 public slots:
-    void onElementTerrainChanged(QMapLibre::AnnotationID annotationId, MapElement::TerrainType newTerrain);
-    void onElementDeleteRequested(QMapLibre::AnnotationID annotationId);
+    void onRegionTerrainChanged(QMapLibre::AnnotationID annotationId, TerrainType newTerrain);
+    void onRegionDeleteRequested(QMapLibre::AnnotationID annotationId);
 
 private slots:
     void setupMap();
@@ -74,20 +76,20 @@ private slots:
     void startPlaceLoiter();
     void startPlaceNoFly();
     void startPlaceUAV();
-    void startDrawPolygon();
+    void startDrawTaskRegion();
     void clearAll();
 
     // 绘制处理
     void addLoiterPointAt(double lat, double lon);
     void addUAVAt(double lat, double lon);
     void handleNoFlyZoneClick(double lat, double lon);
-    void handlePolygonClick(double lat, double lon);
-    void handlePolygonUndo();
-    void finishPolygon();
+    void handleTaskRegionClick(double lat, double lon);
+    void handleTaskRegionUndo();
+    void finishTaskRegion();
 
     void returnToNormalMode();
     void resetNoFlyZoneDrawing();
-    void resetPolygonDrawing();
+    void resetTaskRegionDrawing();
 
 private:
     void setupUI();
@@ -99,16 +101,17 @@ private:
         MODE_NORMAL = 0,
         MODE_LOITER = 1,
         MODE_NOFLY = 2,
-        MODE_POLYGON = 3,
+        MODE_TASK_REGION = 3,
         MODE_UAV = 4
     };
 
     // UI 组件
     InteractiveMapWidget *m_mapWidget = nullptr;
     MapPainter *m_painter = nullptr;
+    RegionManager *m_regionManager = nullptr;
     TaskManager *m_taskManager = nullptr;
     TaskListWidget *m_taskListWidget = nullptr;
-    ElementDetailWidget *m_detailWidget = nullptr;
+    RegionDetailWidget *m_detailWidget = nullptr;
     QWidget *m_buttonContainer = nullptr;
 
     InteractionMode m_currentMode = MODE_NORMAL;
@@ -118,8 +121,8 @@ private:
     bool m_noFlyZoneCenterSet = false;
     QMapLibre::Coordinate m_noFlyZoneCenter;
 
-    // 多边形绘制状态
-    QMapLibre::Coordinates m_polygonPoints;
+    // 任务区域绘制状态
+    QMapLibre::Coordinates m_taskRegionPoints;
 
     // 无人机模式状态
     bool m_isInNoFlyZone = false;

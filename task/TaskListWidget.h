@@ -15,10 +15,7 @@
 #include <QFrame>
 #include <QMap>
 #include <QMouseEvent>
-#include <QPropertyAnimation>
 #include <QEnterEvent>
-
-class QGraphicsOpacityEffect;
 
 /**
  * @brief 任务列表项 Widget
@@ -61,7 +58,6 @@ public:
 
     void setCollapsible(bool collapsible);
     bool isCollapsed() const { return m_collapsed; }
-    bool isPinned() const { return m_pinned; }
 
 public slots:
     void refreshTaskList();
@@ -81,9 +77,12 @@ private slots:
     void onTaskSelected(int taskId);
     void onTaskDeleteRequested(int taskId);
     void onTaskEditRequested(int taskId);
-    void onPinToggled();
     void onExportTasks();
     void onImportTasks();
+    void onRegionButtonClicked();    // 【任务区域】按钮点击
+    void onTaskPlanButtonClicked();  // 【任务方案】按钮点击
+    void onActionButtonClicked();    // 【行动方案】按钮点击
+    void onRegionListChanged();      // 区域列表变化（创建/删除）
 
 protected:
     void enterEvent(QEnterEvent *event) override;
@@ -94,26 +93,30 @@ private:
     void addTaskItem(Task *task);
     void removeTaskItem(int taskId);
     void highlightCurrentTask(int taskId);
-    void updatePinButtonIcon();
-    void updateStyleForCollapsedState();
+    void refreshRegionList();  // 刷新区域列表
+    double calculateTaskRegionArea(const QMapLibre::Coordinates &coords);  // 计算任务区域面积（km²）
 
 private:
     TaskManager *m_taskManager;
     QVBoxLayout *m_taskListLayout;
     QPushButton *m_createButton;
-    QPushButton *m_pinButton;
     QPushButton *m_exportButton;
     QPushButton *m_importButton;
+    QPushButton *m_regionButton;    // 【任务区域】按钮
+    QPushButton *m_taskPlanButton;  // 【任务方案】按钮
+    QPushButton *m_actionButton;    // 【行动方案】按钮
+    QPushButton *m_closeButton;     // 关闭按钮（在展开内容上）
+    QWidget *m_collapsedBar;        // 左侧常驻小列
+    QWidget *m_mainContent;         // 展开状态的主内容（任务列表）
+    QWidget *m_regionListWidget;    // 区域列表窗口
+    QVBoxLayout *m_regionContentLayout;  // 区域列表内容布局
     QMap<int, TaskItemWidget*> m_taskWidgets;
     int m_currentTaskId;
 
     bool m_collapsible = false;
     bool m_collapsed = false;
-    bool m_pinned = false;
     int m_expandedWidth = 350;
-    int m_collapsedWidth = 50;  // 增加到50px，更容易触发
-
-    QGraphicsOpacityEffect *m_opacityEffect = nullptr;  // 透明度效果
+    int m_collapsedWidth = 40;    // 常驻小列宽度
 };
 
 #endif // TASKLISTWIDGET_H

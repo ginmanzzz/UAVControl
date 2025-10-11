@@ -3,10 +3,9 @@
 
 #include "TaskListWidget.h"
 #include "TaskDialog.h"
+#include "map_region/Region.h"
 #include <QDebug>
-#include <QTimer>
 #include <QApplication>
-#include <QGraphicsOpacityEffect>
 #include <QFileDialog>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -148,22 +147,103 @@ TaskListWidget::TaskListWidget(TaskManager *taskManager, QWidget *parent)
     connect(m_taskManager, &TaskManager::currentTaskChanged,
             this, &TaskListWidget::onCurrentTaskChanged);
 
-    // 设置默认宽度
-    setMinimumWidth(m_expandedWidth);
-    setMaximumWidth(m_expandedWidth);
+    // 连接区域管理器信号，自动刷新区域列表
+    connect(m_taskManager->regionManager(), &RegionManager::regionCreated,
+            this, &TaskListWidget::onRegionListChanged);
+    connect(m_taskManager->regionManager(), &RegionManager::regionRemoved,
+            this, &TaskListWidget::onRegionListChanged);
+
+    // 设置默认宽度（展开状态：主内容 + 收缩条）
+    setFixedWidth(m_expandedWidth + m_collapsedWidth);
 }
 
 void TaskListWidget::setupUI()
 {
-    auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);  // 去除外边距，让组件填满整个面板
-    mainLayout->setSpacing(0);  // 去除间距，让组件紧密连接
+    auto *mainLayout = new QHBoxLayout(this);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
 
-    // 标题栏（包含标题和Pin按钮）
-    auto *headerWidget = new QWidget(this);
+    // ============ 收缩条（常驻小列）============
+    m_collapsedBar = new QWidget(this);
+    m_collapsedBar->setFixedWidth(m_collapsedWidth);
+    m_collapsedBar->setStyleSheet(
+        "QWidget {"
+        "  background-color: rgba(224, 224, 224, 180);"  // 浅灰色，70%不透明度
+        "}"
+    );
+
+    auto *collapsedLayout = new QVBoxLayout(m_collapsedBar);
+    collapsedLayout->setContentsMargins(0, 0, 0, 0);
+    collapsedLayout->setSpacing(8);  // 按钮之间的间距
+
+    QString buttonStyle =
+        "QPushButton {"
+        "  background-color: rgba(100, 100, 100, 150);"
+        "  border: 1px solid rgba(80, 80, 80, 200);"
+        "  border-radius: 4px;"
+        "  color: white;"
+        "  font-size: 11px;"
+        "  font-weight: bold;"
+        "  padding: 2px;"
+        "}"
+        "QPushButton:hover {"
+        "  background-color: rgba(80, 80, 80, 180);"
+        "}";
+
+    collapsedLayout->addSpacing(10);  // 顶部留白
+
+    // 【任务区域】按钮
+    m_regionButton = new QPushButton("任务\n区域", m_collapsedBar);
+    m_regionButton->setFixedSize(m_collapsedWidth - 4, 50);
+    m_regionButton->setStyleSheet(buttonStyle);
+    m_regionButton->setToolTip("查看任务区域");
+    m_regionButton->setCursor(Qt::PointingHandCursor);
+    connect(m_regionButton, &QPushButton::clicked, this, &TaskListWidget::onRegionButtonClicked);
+    collapsedLayout->addWidget(m_regionButton, 0, Qt::AlignCenter);
+
+    // 【任务方案】按钮
+    m_taskPlanButton = new QPushButton("任务\n方案", m_collapsedBar);
+    m_taskPlanButton->setFixedSize(m_collapsedWidth - 4, 50);
+    m_taskPlanButton->setStyleSheet(buttonStyle);
+    m_taskPlanButton->setToolTip("查看任务方案");
+    m_taskPlanButton->setCursor(Qt::PointingHandCursor);
+    connect(m_taskPlanButton, &QPushButton::clicked, this, &TaskListWidget::onTaskPlanButtonClicked);
+    collapsedLayout->addWidget(m_taskPlanButton, 0, Qt::AlignCenter);
+
+    // 【行动方案】按钮
+    m_actionButton = new QPushButton("行动\n方案", m_collapsedBar);
+    m_actionButton->setFixedSize(m_collapsedWidth - 4, 50);
+    m_actionButton->setStyleSheet(buttonStyle);
+    m_actionButton->setToolTip("查看行动方案");
+    m_actionButton->setCursor(Qt::PointingHandCursor);
+    connect(m_actionButton, &QPushButton::clicked, this, &TaskListWidget::onActionButtonClicked);
+    collapsedLayout->addWidget(m_actionButton, 0, Qt::AlignCenter);
+
+    // 剩余空间填充
+    collapsedLayout->addStretch();
+
+    mainLayout->addWidget(m_collapsedBar);
+
+    // ============ 主内容区域（展开状态）============
+    m_mainContent = new QWidget(this);
+    m_mainContent->setFixedWidth(m_expandedWidth);
+    m_mainContent->setStyleSheet(
+        "QWidget {"
+        "  background-color: #fafafa;"
+        "  border-radius: 8px;"
+        "  border: 1px solid #ccc;"
+        "}"
+    );
+
+    auto *mainContentLayout = new QVBoxLayout(m_mainContent);
+    mainContentLayout->setContentsMargins(0, 0, 0, 0);
+    mainContentLayout->setSpacing(0);
+
+    // 标题栏（包含标题和关闭按钮）
+    auto *headerWidget = new QWidget(m_mainContent);
     headerWidget->setStyleSheet(
         "QWidget {"
-        "  background-color: #2196F3;"  // 蓝色背景
+        "  background-color: #2196F3;"
         "  border-top-left-radius: 8px;"
         "  border-top-right-radius: 8px;"
         "}"
@@ -176,39 +256,40 @@ void TaskListWidget::setupUI()
     titleLabel->setStyleSheet(
         "font-size: 15px;"
         "font-weight: bold;"
-        "color: white;"  // 白色文字
+        "color: white;"
         "background: transparent;"
     );
 
-    // Pin按钮
-    m_pinButton = new QPushButton("📌", headerWidget);
-    m_pinButton->setFixedSize(32, 32);
-    m_pinButton->setStyleSheet(
+    // 关闭按钮
+    m_closeButton = new QPushButton("✕", headerWidget);
+    m_closeButton->setFixedSize(32, 32);
+    m_closeButton->setStyleSheet(
         "QPushButton {"
         "  background-color: rgba(255, 255, 255, 0.2);"
         "  border: 1px solid rgba(255, 255, 255, 0.3);"
         "  border-radius: 4px;"
-        "  font-size: 16px;"
+        "  font-size: 18px;"
         "  color: white;"
         "}"
         "QPushButton:hover {"
-        "  background-color: rgba(255, 255, 255, 0.3);"
+        "  background-color: rgba(244, 67, 54, 0.8);"
         "}"
     );
-    m_pinButton->setToolTip("固定侧边栏");
-    connect(m_pinButton, &QPushButton::clicked, this, &TaskListWidget::onPinToggled);
+    m_closeButton->setToolTip("收起任务列表");
+    m_closeButton->setCursor(Qt::PointingHandCursor);
+    connect(m_closeButton, &QPushButton::clicked, this, &TaskListWidget::collapse);
 
     headerLayout->addWidget(titleLabel, 1);
-    headerLayout->addWidget(m_pinButton);
+    headerLayout->addWidget(m_closeButton);
 
-    mainLayout->addWidget(headerWidget);
+    mainContentLayout->addWidget(headerWidget);
 
-    // 内容容器（包含创建按钮、列表等，带内边距）
-    auto *contentWidget = new QWidget(this);
+    // 内容容器
+    auto *contentWidget = new QWidget(m_mainContent);
     contentWidget->setStyleSheet("background-color: #fafafa;");
     auto *contentLayout = new QVBoxLayout(contentWidget);
-    contentLayout->setContentsMargins(12, 12, 12, 12);  // 内容区域的内边距
-    contentLayout->setSpacing(8);  // 内容组件之间的间距
+    contentLayout->setContentsMargins(12, 12, 12, 12);
+    contentLayout->setSpacing(8);
 
     // 创建任务按钮
     m_createButton = new QPushButton("+ 创建新任务", contentWidget);
@@ -305,28 +386,110 @@ void TaskListWidget::setupUI()
     auto *scrollWidget = new QWidget();
     m_taskListLayout = new QVBoxLayout(scrollWidget);
     m_taskListLayout->setContentsMargins(0, 0, 0, 0);
-    m_taskListLayout->setSpacing(4);  // 减小任务项之间的间距
+    m_taskListLayout->setSpacing(4);
     m_taskListLayout->addStretch();
 
     scrollArea->setWidget(scrollWidget);
     contentLayout->addWidget(scrollArea, 1);
 
-    // 将内容容器添加到主布局
-    mainLayout->addWidget(contentWidget, 1);
+    mainContentLayout->addWidget(contentWidget, 1);
 
-    // 设置整体样式
+    mainLayout->addWidget(m_mainContent);
+
+    // 设置整体样式（不透明）
     setStyleSheet(
         "TaskListWidget {"
+        "  background-color: transparent;"
+        "}"
+    );
+
+    // ============ 区域列表窗口 ============
+    // 注意：使用 parentWidget() 作为父widget，这样窗口不会被限制在TaskListWidget内
+    m_regionListWidget = new QWidget(parentWidget());
+    m_regionListWidget->setFixedSize(300, 400);
+    m_regionListWidget->setStyleSheet(
+        "QWidget {"
         "  background-color: #fafafa;"
         "  border-radius: 8px;"
         "  border: 1px solid #ccc;"
         "}"
     );
+    m_regionListWidget->hide();  // 默认隐藏
 
-    // 创建透明度效果
-    m_opacityEffect = new QGraphicsOpacityEffect(this);
-    m_opacityEffect->setOpacity(1.0);  // 初始完全不透明
-    setGraphicsEffect(m_opacityEffect);
+    auto *regionLayout = new QVBoxLayout(m_regionListWidget);
+    regionLayout->setContentsMargins(0, 0, 0, 0);
+    regionLayout->setSpacing(0);
+
+    // 标题栏
+    auto *regionHeaderWidget = new QWidget(m_regionListWidget);
+    regionHeaderWidget->setStyleSheet(
+        "QWidget {"
+        "  background-color: #2196F3;"
+        "  border-top-left-radius: 8px;"
+        "  border-top-right-radius: 8px;"
+        "}"
+    );
+    auto *regionHeaderLayout = new QHBoxLayout(regionHeaderWidget);
+    regionHeaderLayout->setContentsMargins(12, 10, 12, 10);
+    regionHeaderLayout->setSpacing(8);
+
+    auto *regionTitleLabel = new QLabel("任务区域列表", regionHeaderWidget);
+    regionTitleLabel->setStyleSheet(
+        "font-size: 15px;"
+        "font-weight: bold;"
+        "color: white;"
+        "background: transparent;"
+    );
+
+    // 关闭按钮
+    auto *regionCloseButton = new QPushButton("✕", regionHeaderWidget);
+    regionCloseButton->setFixedSize(32, 32);
+    regionCloseButton->setStyleSheet(
+        "QPushButton {"
+        "  background-color: rgba(255, 255, 255, 0.2);"
+        "  border: 1px solid rgba(255, 255, 255, 0.3);"
+        "  border-radius: 4px;"
+        "  font-size: 18px;"
+        "  color: white;"
+        "}"
+        "QPushButton:hover {"
+        "  background-color: rgba(244, 67, 54, 0.8);"
+        "}"
+    );
+    regionCloseButton->setToolTip("关闭区域列表");
+    regionCloseButton->setCursor(Qt::PointingHandCursor);
+    connect(regionCloseButton, &QPushButton::clicked, m_regionListWidget, &QWidget::hide);
+
+    regionHeaderLayout->addWidget(regionTitleLabel, 1);
+    regionHeaderLayout->addWidget(regionCloseButton);
+
+    regionLayout->addWidget(regionHeaderWidget);
+
+    // 区域列表内容（滚动区域）
+    auto *regionScrollArea = new QScrollArea(m_regionListWidget);
+    regionScrollArea->setWidgetResizable(true);
+    regionScrollArea->setStyleSheet(
+        "QScrollArea {"
+        "  border: none;"
+        "  background-color: transparent;"
+        "}"
+    );
+
+    auto *regionScrollWidget = new QWidget();
+    regionScrollWidget->setStyleSheet("background-color: #fafafa;");
+    m_regionContentLayout = new QVBoxLayout(regionScrollWidget);
+    m_regionContentLayout->setContentsMargins(12, 12, 12, 12);
+    m_regionContentLayout->setSpacing(8);
+
+    // 添加占位文字
+    auto *placeholderLabel = new QLabel("暂无任务区域", regionScrollWidget);
+    placeholderLabel->setAlignment(Qt::AlignCenter);
+    placeholderLabel->setStyleSheet("color: #999; padding: 20px;");
+    m_regionContentLayout->addWidget(placeholderLabel);
+    m_regionContentLayout->addStretch();
+
+    regionScrollArea->setWidget(regionScrollWidget);
+    regionLayout->addWidget(regionScrollArea, 1);
 }
 
 void TaskListWidget::refreshTaskList()
@@ -501,66 +664,16 @@ void TaskListWidget::setCollapsible(bool collapsible)
     if (m_collapsible) {
         // 初始化为收缩状态
         m_collapsed = true;
-        setMinimumWidth(m_collapsedWidth);
-        setMaximumWidth(m_collapsedWidth);
-        resize(m_collapsedWidth, height());  // 立即调整大小
-
-        // 启用鼠标追踪
-        setMouseTracking(true);
-        setAttribute(Qt::WA_Hover, true);  // 启用 hover 事件
-
-        // 在收缩状态下，改变样式以提供视觉提示
-        updateStyleForCollapsedState();
-
-        qDebug() << "TaskListWidget 设置为可收缩模式，当前宽度:" << width();
+        m_mainContent->hide();
+        m_collapsedBar->show();
+        setFixedWidth(m_collapsedWidth);
+        qDebug() << "TaskListWidget 设置为可收缩模式";
     } else {
         // 恢复展开状态
         m_collapsed = false;
-        setMinimumWidth(m_expandedWidth);
-        setMaximumWidth(m_expandedWidth);
-        resize(m_expandedWidth, height());
-    }
-}
-
-void TaskListWidget::updateStyleForCollapsedState()
-{
-    if (m_collapsed) {
-        // 收缩状态：隐藏所有子控件，只显示一个触发条
-        for (QObject *child : children()) {
-            if (QWidget *widget = qobject_cast<QWidget*>(child)) {
-                widget->hide();
-            }
-        }
-
-        // 收缩状态：显示一个带有箭头提示的条
-        setStyleSheet(
-            "TaskListWidget {"
-            "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(33, 150, 243, 200), stop:1 rgba(33, 150, 243, 100));"
-            "  border-top-right-radius: 8px;"
-            "  border-bottom-right-radius: 8px;"
-            "  border-right: 3px solid #2196F3;"
-            "}"
-        );
-
-        qDebug() << "TaskListWidget 收缩状态：子控件已隐藏";
-    } else {
-        // 展开状态：显示所有子控件
-        for (QObject *child : children()) {
-            if (QWidget *widget = qobject_cast<QWidget*>(child)) {
-                widget->show();
-            }
-        }
-
-        // 展开状态：恢复原样式
-        setStyleSheet(
-            "TaskListWidget {"
-            "  background-color: #fafafa;"
-            "  border-radius: 8px;"
-            "  border: 1px solid #ccc;"
-            "}"
-        );
-
-        qDebug() << "TaskListWidget 展开状态：子控件已显示";
+        m_collapsedBar->hide();
+        m_mainContent->show();
+        setFixedWidth(m_expandedWidth + m_collapsedWidth);
     }
 }
 
@@ -571,70 +684,28 @@ void TaskListWidget::expand()
         return;
     }
 
-    qDebug() << "TaskListWidget::expand() - 开始展开动画";
+    qDebug() << "TaskListWidget::expand() - 立即展开";
     m_collapsed = false;
-    updateStyleForCollapsedState();  // 更新样式
 
-    auto *animation = new QPropertyAnimation(this, "minimumWidth");
-    animation->setDuration(200);
-    animation->setStartValue(m_collapsedWidth);
-    animation->setEndValue(m_expandedWidth);
-    animation->setEasingCurve(QEasingCurve::OutCubic);
-
-    auto *animation2 = new QPropertyAnimation(this, "maximumWidth");
-    animation2->setDuration(200);
-    animation2->setStartValue(m_collapsedWidth);
-    animation2->setEndValue(m_expandedWidth);
-    animation2->setEasingCurve(QEasingCurve::OutCubic);
-
-    // 展开完成后，如果鼠标在窗口内，设为完全不透明；否则设为半透明
-    connect(animation, &QPropertyAnimation::finished, this, [this]() {
-        if (m_opacityEffect) {
-            if (underMouse()) {
-                m_opacityEffect->setOpacity(1.0);
-                qDebug() << "展开完成 - 鼠标在窗口内，设置透明度为 100%";
-            } else {
-                m_opacityEffect->setOpacity(0.65);
-                qDebug() << "展开完成 - 鼠标在窗口外，设置透明度为 65%";
-            }
-        }
-    });
-
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-    animation2->start(QAbstractAnimation::DeleteWhenStopped);
+    // 立即显示主内容，保持收缩条可见
+    m_mainContent->show();
+    setFixedWidth(m_expandedWidth + m_collapsedWidth);
 
     emit expandStateChanged(true);
 }
 
 void TaskListWidget::collapse()
 {
-    if (m_collapsed || !m_collapsible || m_pinned) return;
+    if (m_collapsed || !m_collapsible) {
+        return;
+    }
 
+    qDebug() << "TaskListWidget::collapse() - 立即收缩";
     m_collapsed = true;
 
-    auto *animation = new QPropertyAnimation(this, "minimumWidth");
-    animation->setDuration(200);
-    animation->setStartValue(m_expandedWidth);
-    animation->setEndValue(m_collapsedWidth);
-    animation->setEasingCurve(QEasingCurve::InCubic);
-
-    auto *animation2 = new QPropertyAnimation(this, "maximumWidth");
-    animation2->setDuration(200);
-    animation2->setStartValue(m_expandedWidth);
-    animation2->setEndValue(m_collapsedWidth);
-    animation2->setEasingCurve(QEasingCurve::InCubic);
-
-    // 动画完成后再更新样式和隐藏子控件，并设置为完全不透明（收缩状态下应完全可见）
-    connect(animation, &QPropertyAnimation::finished, this, [this]() {
-        updateStyleForCollapsedState();
-        if (m_opacityEffect) {
-            m_opacityEffect->setOpacity(1.0);  // 收缩状态下，蓝色触发条应该完全可见
-            qDebug() << "收缩完成 - 设置透明度为 100%";
-        }
-    });
-
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-    animation2->start(QAbstractAnimation::DeleteWhenStopped);
+    // 立即隐藏主内容，只保留收缩条
+    m_mainContent->hide();
+    setFixedWidth(m_collapsedWidth);
 
     emit expandStateChanged(false);
 }
@@ -642,88 +713,60 @@ void TaskListWidget::collapse()
 void TaskListWidget::enterEvent(QEnterEvent *event)
 {
     QWidget::enterEvent(event);
-    qDebug() << "TaskListWidget::enterEvent() - 鼠标进入，collapsible:" << m_collapsible << "pinned:" << m_pinned << "collapsed:" << m_collapsed;
-
-    // 鼠标进入时，设置为完全不透明
-    if (!m_collapsed && m_opacityEffect) {
-        m_opacityEffect->setOpacity(1.0);
-        qDebug() << "设置透明度为 100% (不透明)";
-    }
-
-    if (m_collapsible && !m_pinned) {
-        expand();
-    }
+    // 移除自动展开行为，现在需要点击按钮才能展开
 }
 
 void TaskListWidget::leaveEvent(QEvent *event)
 {
     QWidget::leaveEvent(event);
-
-    // 鼠标离开时，设置为半透明（65%不透明度）
-    if (!m_collapsed && m_opacityEffect) {
-        m_opacityEffect->setOpacity(0.65);
-        qDebug() << "设置透明度为 65% (半透明)";
-    }
-
-    if (m_collapsible && !m_pinned) {
-        // 延迟收缩，给用户时间移动鼠标回来
-        QTimer::singleShot(300, this, [this]() {
-            // 如果有任何模态对话框打开，不收缩
-            if (QApplication::activeModalWidget()) {
-                qDebug() << "TaskListWidget::leaveEvent - 检测到模态对话框，不收缩";
-                return;
-            }
-
-            if (!underMouse() && !m_pinned && m_collapsible) {
-                collapse();
-            }
-        });
-    }
+    // 移除自动收缩行为，现在需要点击关闭按钮才能收缩
 }
 
-void TaskListWidget::onPinToggled()
+void TaskListWidget::onRegionButtonClicked()
 {
-    m_pinned = !m_pinned;
-    updatePinButtonIcon();
+    qDebug() << "【任务区域】按钮被点击";
 
-    if (m_pinned) {
-        // 固定时展开
-        expand();
-    }
+    // 关闭任务方案窗口
+    collapse();
+
+    // 刷新区域列表
+    refreshRegionList();
+
+    // 显示区域列表窗口
+    m_regionListWidget->show();
+    m_regionListWidget->raise();
+
+    // 定位到地图左上角（小列右侧）
+    m_regionListWidget->move(m_collapsedWidth + 10, 10);
 }
 
-void TaskListWidget::updatePinButtonIcon()
+void TaskListWidget::onTaskPlanButtonClicked()
 {
-    if (m_pinned) {
-        m_pinButton->setText("📍");
-        m_pinButton->setToolTip("取消固定");
-        m_pinButton->setStyleSheet(
-            "QPushButton {"
-            "  background-color: rgba(255, 255, 255, 0.4);"
-            "  border: 1px solid rgba(255, 255, 255, 0.6);"
-            "  border-radius: 4px;"
-            "  font-size: 16px;"
-            "  color: white;"
-            "}"
-            "QPushButton:hover {"
-            "  background-color: rgba(255, 255, 255, 0.5);"
-            "}"
-        );
-    } else {
-        m_pinButton->setText("📌");
-        m_pinButton->setToolTip("固定侧边栏");
-        m_pinButton->setStyleSheet(
-            "QPushButton {"
-            "  background-color: rgba(255, 255, 255, 0.2);"
-            "  border: 1px solid rgba(255, 255, 255, 0.3);"
-            "  border-radius: 4px;"
-            "  font-size: 16px;"
-            "  color: white;"
-            "}"
-            "QPushButton:hover {"
-            "  background-color: rgba(255, 255, 255, 0.3);"
-            "}"
-        );
+    qDebug() << "【任务方案】按钮被点击";
+
+    // 关闭区域列表窗口
+    m_regionListWidget->hide();
+
+    // 显示任务列表（原来的展开功能）
+    expand();
+}
+
+void TaskListWidget::onActionButtonClicked()
+{
+    qDebug() << "【行动方案】按钮被点击";
+
+    // 关闭其他窗口
+    collapse();
+    m_regionListWidget->hide();
+
+    // TODO: 显示行动方案窗口
+}
+
+void TaskListWidget::onRegionListChanged()
+{
+    // 只有当区域列表窗口可见时才刷新
+    if (m_regionListWidget && m_regionListWidget->isVisible()) {
+        refreshRegionList();
     }
 }
 
@@ -761,56 +804,59 @@ void TaskListWidget::onExportTasks()
         taskObj["description"] = task->description();
         taskObj["visible"] = task->isVisible();
 
-        // 序列化任务中的所有元素
-        QJsonArray elementsArray;
-        for (const MapElement &element : task->elements()) {
-            QJsonObject elemObj;
-            elemObj["type"] = static_cast<int>(element.type);
-            elemObj["annotationId"] = static_cast<qint64>(element.annotationId);
-            elemObj["terrainType"] = static_cast<int>(element.terrainType);
+        // 序列化任务中的所有区域
+        QJsonArray regionsArray;
+        for (int regionId : task->regionIds()) {
+            Region *region = m_taskManager->regionManager()->getRegion(regionId);
+            if (!region) continue;
+
+            QJsonObject regionObj;
+            regionObj["type"] = static_cast<int>(region->type());
+            regionObj["annotationId"] = static_cast<qint64>(region->annotationId());
+            regionObj["terrainType"] = static_cast<int>(region->terrainType());
 
             // 根据类型保存坐标数据
-            switch (element.type) {
-            case MapElement::LoiterPoint:
-            case MapElement::UAV:
+            switch (region->type()) {
+            case RegionType::LoiterPoint:
+            case RegionType::UAV:
                 {
                     QJsonObject coordObj;
-                    coordObj["lat"] = element.coordinate.first;
-                    coordObj["lon"] = element.coordinate.second;
-                    elemObj["coordinate"] = coordObj;
+                    coordObj["lat"] = region->coordinate().first;
+                    coordObj["lon"] = region->coordinate().second;
+                    regionObj["coordinate"] = coordObj;
                 }
-                if (element.type == MapElement::UAV) {
-                    elemObj["color"] = element.color;
+                if (region->type() == RegionType::UAV) {
+                    regionObj["color"] = region->color();
                 }
                 break;
 
-            case MapElement::NoFlyZone:
+            case RegionType::NoFlyZone:
                 {
                     QJsonObject centerObj;
-                    centerObj["lat"] = element.coordinate.first;
-                    centerObj["lon"] = element.coordinate.second;
-                    elemObj["center"] = centerObj;
-                    elemObj["radius"] = element.radius;
+                    centerObj["lat"] = region->coordinate().first;
+                    centerObj["lon"] = region->coordinate().second;
+                    regionObj["center"] = centerObj;
+                    regionObj["radius"] = region->radius();
                 }
                 break;
 
-            case MapElement::Polygon:
+            case RegionType::Polygon:
                 {
                     QJsonArray coordsArray;
-                    for (const auto &coord : element.vertices) {
+                    for (const auto &coord : region->vertices()) {
                         QJsonObject coordObj;
                         coordObj["lat"] = coord.first;
                         coordObj["lon"] = coord.second;
                         coordsArray.append(coordObj);
                     }
-                    elemObj["coordinates"] = coordsArray;
+                    regionObj["coordinates"] = coordsArray;
                 }
                 break;
             }
 
-            elementsArray.append(elemObj);
+            regionsArray.append(regionObj);
         }
-        taskObj["elements"] = elementsArray;
+        taskObj["regions"] = regionsArray;
 
         tasksArray.append(taskObj);
     }
@@ -989,56 +1035,53 @@ void TaskListWidget::onImportTasks()
 
         newTask->setVisible(taskVisible);
 
-        // 导入元素
-        QJsonArray elementsArray = taskObj["elements"].toArray();
-        for (const QJsonValue &elemValue : elementsArray) {
-            if (!elemValue.isObject()) continue;
+        // 导入区域
+        QJsonArray regionsArray = taskObj["regions"].toArray();
+        for (const QJsonValue &regionValue : regionsArray) {
+            if (!regionValue.isObject()) continue;
 
-            QJsonObject elemObj = elemValue.toObject();
-            MapElement::Type type = static_cast<MapElement::Type>(elemObj["type"].toInt());
-            MapElement::TerrainType terrainType = static_cast<MapElement::TerrainType>(elemObj["terrainType"].toInt());
+            QJsonObject regionObj = regionValue.toObject();
+            Region::Type type = static_cast<Region::Type>(regionObj["type"].toInt());
+            Region::TerrainType terrainType = static_cast<Region::TerrainType>(regionObj["terrainType"].toInt());
 
             switch (type) {
-            case MapElement::LoiterPoint: {
-                QJsonObject coordObj = elemObj["coordinate"].toObject();
+            case RegionType::LoiterPoint: {
+                QJsonObject coordObj = regionObj["coordinate"].toObject();
                 double lat = coordObj["lat"].toDouble();
                 double lon = coordObj["lon"].toDouble();
                 auto id = m_taskManager->addLoiterPointToTask(taskId, lat, lon);
                 if (id > 0) {
-                    MapElement *element = newTask->findElement(id);
-                    if (element) element->terrainType = terrainType;
+                    m_taskManager->regionManager()->updateRegionTerrainType(id, terrainType);
                 }
                 break;
             }
 
-            case MapElement::NoFlyZone: {
-                QJsonObject centerObj = elemObj["center"].toObject();
+            case RegionType::NoFlyZone: {
+                QJsonObject centerObj = regionObj["center"].toObject();
                 double lat = centerObj["lat"].toDouble();
                 double lon = centerObj["lon"].toDouble();
-                double radius = elemObj["radius"].toDouble();
+                double radius = regionObj["radius"].toDouble();
                 auto id = m_taskManager->addNoFlyZoneToTask(taskId, lat, lon, radius);
                 if (id > 0) {
-                    MapElement *element = newTask->findElement(id);
-                    if (element) element->terrainType = terrainType;
+                    m_taskManager->regionManager()->updateRegionTerrainType(id, terrainType);
                 }
                 break;
             }
 
-            case MapElement::UAV: {
-                QJsonObject coordObj = elemObj["coordinate"].toObject();
+            case RegionType::UAV: {
+                QJsonObject coordObj = regionObj["coordinate"].toObject();
                 double lat = coordObj["lat"].toDouble();
                 double lon = coordObj["lon"].toDouble();
-                QString color = elemObj["color"].toString("black");
+                QString color = regionObj["color"].toString("black");
                 auto id = m_taskManager->addUAVToTask(taskId, lat, lon, color);
                 if (id > 0) {
-                    MapElement *element = newTask->findElement(id);
-                    if (element) element->terrainType = terrainType;
+                    m_taskManager->regionManager()->updateRegionTerrainType(id, terrainType);
                 }
                 break;
             }
 
-            case MapElement::Polygon: {
-                QJsonArray coordsArray = elemObj["coordinates"].toArray();
+            case RegionType::Polygon: {
+                QJsonArray coordsArray = regionObj["coordinates"].toArray();
                 QMapLibre::Coordinates coords;
                 for (const QJsonValue &coordValue : coordsArray) {
                     QJsonObject coordObj = coordValue.toObject();
@@ -1047,10 +1090,9 @@ void TaskListWidget::onImportTasks()
                     coords.append(QMapLibre::Coordinate(lat, lon));
                 }
                 if (coords.size() >= 3) {
-                    auto id = m_taskManager->addPolygonToTask(taskId, coords);
+                    auto id = m_taskManager->addTaskRegionToTask(taskId, coords);
                     if (id > 0) {
-                        MapElement *element = newTask->findElement(id);
-                        if (element) element->terrainType = terrainType;
+                        m_taskManager->regionManager()->updateRegionTerrainType(id, terrainType);
                     }
                 }
                 break;
@@ -1059,8 +1101,8 @@ void TaskListWidget::onImportTasks()
         }
 
         importedCount++;
-        qDebug() << QString("导入任务: ID=%1, 名称=%2, 元素数=%3")
-                    .arg(taskId).arg(taskName).arg(elementsArray.size());
+        qDebug() << QString("导入任务: ID=%1, 名称=%2, 区域数=%3")
+                    .arg(taskId).arg(taskName).arg(regionsArray.size());
         }  // 关闭大括号
     }
 
@@ -1069,4 +1111,103 @@ void TaskListWidget::onImportTasks()
                         .arg(importedCount).arg(skippedCount);
     QMessageBox::information(this, "导入结果", resultMsg);
     qDebug() << resultMsg;
+}
+
+void TaskListWidget::refreshRegionList()
+{
+    // 清空现有列表
+    QLayoutItem *item;
+    while ((item = m_regionContentLayout->takeAt(0)) != nullptr) {
+        if (item->widget()) {
+            item->widget()->deleteLater();
+        }
+        delete item;
+    }
+
+    // 获取所有区域
+    const QMap<int, Region*>& allRegions = m_taskManager->regionManager()->getAllRegions();
+
+    // 筛选任务区域
+    QVector<Region*> polygons;
+    for (Region *region : allRegions) {
+        if (region && region->type() == RegionType::Polygon) {
+            polygons.append(region);
+        }
+    }
+
+    if (polygons.isEmpty()) {
+        // 显示占位文字
+        auto *placeholderLabel = new QLabel("暂无任务区域");
+        placeholderLabel->setAlignment(Qt::AlignCenter);
+        placeholderLabel->setStyleSheet("color: #999; padding: 20px;");
+        m_regionContentLayout->addWidget(placeholderLabel);
+    } else {
+        // 显示任务区域列表
+        for (Region *polygon : polygons) {
+            // 计算面积
+            double areaKm2 = calculateTaskRegionArea(polygon->vertices());
+
+            // 创建区域项
+            auto *regionItem = new QFrame();
+            regionItem->setStyleSheet(
+                "QFrame {"
+                "  background-color: white;"
+                "  border: 1px solid #ddd;"
+                "  border-radius: 4px;"
+                "  padding: 8px;"
+                "}"
+                "QFrame:hover {"
+                "  background-color: #f5f5f5;"
+                "}"
+            );
+
+            auto *itemLayout = new QVBoxLayout(regionItem);
+            itemLayout->setContentsMargins(8, 6, 8, 6);
+            itemLayout->setSpacing(4);
+
+            // 区域ID
+            auto *idLabel = new QLabel(QString("区域 ID: %1").arg(polygon->id()));
+            idLabel->setStyleSheet("font-weight: bold; font-size: 12px;");
+
+            // 区域面积
+            auto *areaLabel = new QLabel(QString("面积: %1 km²").arg(areaKm2, 0, 'f', 2));
+            areaLabel->setStyleSheet("color: #666; font-size: 11px;");
+
+            itemLayout->addWidget(idLabel);
+            itemLayout->addWidget(areaLabel);
+
+            m_regionContentLayout->addWidget(regionItem);
+        }
+    }
+
+    m_regionContentLayout->addStretch();
+}
+
+double TaskListWidget::calculateTaskRegionArea(const QMapLibre::Coordinates &coords)
+{
+    if (coords.size() < 3) {
+        return 0.0;
+    }
+
+    // 使用 Shoelace 公式计算多边形面积（球面近似）
+    // 地球半径（公里）
+    const double EARTH_RADIUS_KM = 6371.0;
+
+    double area = 0.0;
+    int n = coords.size();
+
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+
+        double lat1 = coords[i].first * M_PI / 180.0;  // 转换为弧度
+        double lon1 = coords[i].second * M_PI / 180.0;
+        double lat2 = coords[j].first * M_PI / 180.0;
+        double lon2 = coords[j].second * M_PI / 180.0;
+
+        area += (lon2 - lon1) * (2.0 + std::sin(lat1) + std::sin(lat2));
+    }
+
+    area = std::abs(area) * EARTH_RADIUS_KM * EARTH_RADIUS_KM / 2.0;
+
+    return area;
 }

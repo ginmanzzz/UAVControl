@@ -5,55 +5,13 @@
 #define TASK_H
 
 #include <QString>
-#include <QVector>
-#include <QMapLibre/Types>
+#include <QSet>
 
 /**
- * @brief 地图元素 - 单个地图标记
- */
-struct MapElement {
-    enum Type {
-        LoiterPoint,    // 盘旋点
-        NoFlyZone,      // 禁飞区
-        UAV,            // 无人机
-        Polygon         // 多边形区域
-    };
-
-    enum TerrainType {
-        Plain = 0,      // 平原
-        Hills = 1,      // 丘陵
-        Mountain = 2,   // 山地
-        HighMountain = 3 // 高山地
-    };
-
-    Type type;
-    QMapLibre::AnnotationID annotationId;  // 地图标注ID
-    QMapLibre::Coordinate coordinate;      // 位置（对于区域类型：中心点）
-    double radius;                         // 禁飞区半径（米）
-    QString color;                         // UAV颜色
-    QMapLibre::Coordinates vertices;       // 多边形顶点
-    TerrainType terrainType;               // 地形特征（用于多边形和禁飞区）
-
-    MapElement()
-        : type(LoiterPoint)
-        , annotationId(0)
-        , radius(0.0)
-        , terrainType(Plain)
-    {}
-
-    static QString terrainTypeToString(TerrainType type) {
-        switch (type) {
-            case Plain: return "平原";
-            case Hills: return "丘陵";
-            case Mountain: return "山地";
-            case HighMountain: return "高山地";
-            default: return "未知";
-        }
-    }
-};
-
-/**
- * @brief 任务类 - 包含一组地图标记
+ * @brief 任务类 - 引用地图标记区域（不拥有）
+ *
+ * Task 只存储 Region 的ID引用，不直接持有区域对象
+ * 使用 QSet 哈希表存储，提供 O(1) 的查找效率
  */
 class Task {
 public:
@@ -66,53 +24,74 @@ public:
         , m_visible(true)
     {}
 
-    // Getters
+    // ==================== 基本属性 ====================
+
     int id() const { return m_id; }
     QString name() const { return m_name; }
     QString description() const { return m_description; }
     bool isVisible() const { return m_visible; }
-    const QVector<MapElement>& elements() const { return m_elements; }
-    QVector<MapElement>& elements() { return m_elements; }
 
-    // Setters
     void setId(int id) { m_id = id; }
     void setName(const QString &name) { m_name = name; }
     void setDescription(const QString &description) { m_description = description; }
     void setVisible(bool visible) { m_visible = visible; }
 
-    // 元素管理
-    void addElement(const MapElement &element) {
-        m_elements.append(element);
+    // ==================== 区域关联（新架构）====================
+
+    /**
+     * @brief 获取关联的区域ID集合
+     */
+    const QSet<int>& regionIds() const { return m_regionIds; }
+
+    /**
+     * @brief 添加区域到任务
+     * @param regionId 区域ID
+     */
+    void addRegion(int regionId) {
+        m_regionIds.insert(regionId);
     }
 
-    void removeElement(QMapLibre::AnnotationID annotationId) {
-        for (int i = 0; i < m_elements.size(); ++i) {
-            if (m_elements[i].annotationId == annotationId) {
-                m_elements.removeAt(i);
-                return;
-            }
-        }
+    /**
+     * @brief 从任务移除区域
+     * @param regionId 区域ID
+     * @return 成功返回 true
+     */
+    bool removeRegion(int regionId) {
+        return m_regionIds.remove(regionId) > 0;
     }
 
-    void clearElements() {
-        m_elements.clear();
+    /**
+     * @brief 检查任务是否包含某个区域
+     * @param regionId 区域ID
+     * @return 包含返回 true
+     */
+    bool hasRegion(int regionId) const {
+        return m_regionIds.contains(regionId);
     }
 
-    MapElement* findElement(QMapLibre::AnnotationID annotationId) {
-        for (int i = 0; i < m_elements.size(); ++i) {
-            if (m_elements[i].annotationId == annotationId) {
-                return &m_elements[i];
-            }
-        }
-        return nullptr;
+    /**
+     * @brief 清除所有区域关联
+     */
+    void clearRegions() {
+        m_regionIds.clear();
+    }
+
+    /**
+     * @brief 获取关联的区域数量
+     */
+    int regionCount() const {
+        return m_regionIds.size();
     }
 
 private:
+    // 基本属性
     int m_id;
     QString m_name;
     QString m_description;
     bool m_visible;
-    QVector<MapElement> m_elements;
+
+    // 区域ID集合（哈希表，O(1)查找）
+    QSet<int> m_regionIds;
 };
 
 #endif // TASK_H

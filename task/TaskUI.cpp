@@ -93,7 +93,7 @@ void TaskUI::resizeEvent(QResizeEvent *event) {
 }
 
 void TaskUI::keyPressEvent(QKeyEvent *event) {
-    if (event->key() == Qt::Key_Escape && m_currentMode == MODE_POLYGON) {
+    if (event->key() == Qt::Key_Escape && m_currentMode == MODE_TASK_REGION) {
         qDebug() << "按下ESC，取消多边形绘制";
         returnToNormalMode();
     }
@@ -163,16 +163,16 @@ void TaskUI::setupUI() {
         noFlyBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
     }
 
-    // 创建多边形按钮
-    auto *polygonBtn = new TooltipButton("绘制多边形", buttonContainer);
-    polygonBtn->setStyleSheet(iconButtonStyle);
-    QIcon polygonIcon("image/polygon.png");
-    if (!polygonIcon.isNull()) {
-        polygonBtn->setIcon(polygonIcon);
-        polygonBtn->setIconSize(QSize(32, 32));
+    // 创建任务区域按钮
+    auto *taskRegionBtn = new TooltipButton("绘制任务区域", buttonContainer);
+    taskRegionBtn->setStyleSheet(iconButtonStyle);
+    QIcon taskRegionIcon("image/polygon.png");
+    if (!taskRegionIcon.isNull()) {
+        taskRegionBtn->setIcon(taskRegionIcon);
+        taskRegionBtn->setIconSize(QSize(32, 32));
     } else {
-        polygonBtn->setText("⬡");
-        polygonBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
+        taskRegionBtn->setText("⬡");
+        taskRegionBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
     }
 
     // 创建无人机按钮组（按钮 + 颜色选择）
@@ -277,20 +277,20 @@ void TaskUI::setupUI() {
 
     connect(loiterBtn, &QPushButton::clicked, this, &TaskUI::startPlaceLoiter);
     connect(noFlyBtn, &QPushButton::clicked, this, &TaskUI::startPlaceNoFly);
-    connect(polygonBtn, &QPushButton::clicked, this, &TaskUI::startDrawPolygon);
+    connect(taskRegionBtn, &QPushButton::clicked, this, &TaskUI::startDrawTaskRegion);
     connect(uavBtn, &QPushButton::clicked, this, &TaskUI::startPlaceUAV);
     connect(clearBtn, &QPushButton::clicked, this, &TaskUI::clearAll);
 
     buttonLayout->addWidget(loiterBtn);
     buttonLayout->addWidget(noFlyBtn);
-    buttonLayout->addWidget(polygonBtn);
+    buttonLayout->addWidget(taskRegionBtn);
     buttonLayout->addWidget(uavContainer);
     buttonLayout->addStretch();
     buttonLayout->addWidget(clearBtn);
 
     buttonContainer->setStyleSheet("background: transparent;");
     m_buttonContainer = buttonContainer;
-    m_buttonContainer->hide();
+    m_buttonContainer->show();  // 按钮常驻显示，支持创建独立区域
 }
 
 void TaskUI::setupMap() {
@@ -316,7 +316,8 @@ void TaskUI::setupMap() {
     m_mapWidget->map()->setStyleJson(amapStyle);
 
     m_painter = new MapPainter(m_mapWidget->map(), this);
-    m_taskManager = new TaskManager(m_painter, this);
+    m_regionManager = new RegionManager(m_painter, this);
+    m_taskManager = new TaskManager(m_regionManager, this);
 
     m_taskListWidget = new TaskListWidget(m_taskManager, m_mapWidget);
     m_taskListWidget->setCollapsible(true);
@@ -324,12 +325,13 @@ void TaskUI::setupMap() {
 
     updateOverlayPositions();
 
-    m_detailWidget = new ElementDetailWidget(this);
+    m_detailWidget = new RegionDetailWidget(this);
+    m_detailWidget->setTaskManager(m_taskManager);  // 设置TaskManager引用
 
-    connect(m_detailWidget, &ElementDetailWidget::terrainChanged,
-            this, &TaskUI::onElementTerrainChanged);
-    connect(m_detailWidget, &ElementDetailWidget::deleteRequested,
-            this, &TaskUI::onElementDeleteRequested);
+    connect(m_detailWidget, &RegionDetailWidget::terrainChanged,
+            this, &TaskUI::onRegionTerrainChanged);
+    connect(m_detailWidget, &RegionDetailWidget::deleteRequested,
+            this, &TaskUI::onRegionDeleteRequested);
 
     connect(m_mapWidget, &InteractiveMapWidget::mapClicked,
             this, &TaskUI::onMapClicked);
@@ -357,92 +359,83 @@ void TaskUI::updateOverlayPositions() {
 
     if (m_taskListWidget && m_mapWidget) {
         int width = m_taskListWidget->width();
-        int height = m_mapWidget->height() * 0.55;
-        int y = (m_mapWidget->height() - height) / 2;
-        m_taskListWidget->setGeometry(0, y, width, height);
+        int height = m_mapWidget->height();  // 贯穿整个地图高度
+        m_taskListWidget->setGeometry(0, 0, width, height);
         m_taskListWidget->raise();
     }
 }
 
 void TaskUI::onCurrentTaskChanged(int taskId) {
+    // 按钮常驻显示，无需任务即可创建区域
+    m_buttonContainer->show();
+
     if (taskId > 0 && m_taskManager->currentTask()) {
-        m_buttonContainer->show();
-        qDebug() << QString("任务 #%1 已选中，显示操作按钮").arg(taskId);
+        qDebug() << QString("任务 #%1 已选中").arg(taskId);
     } else {
-        m_buttonContainer->hide();
-        qDebug() << "未选中任务，隐藏操作按钮";
+        qDebug() << "未选中任务（可创建独立区域）";
     }
 }
 
-void TaskUI::onElementTerrainChanged(QMapLibre::AnnotationID annotationId, MapElement::TerrainType newTerrain) {
-    Task *ownerTask = nullptr;
-    MapElement *element = nullptr;
-
-    for (Task *task : m_taskManager->getAllTasks()) {
-        MapElement *found = task->findElement(annotationId);
-        if (found) {
-            ownerTask = task;
-            element = found;
-            break;
-        }
-    }
-
-    if (!element || !ownerTask) {
-        qWarning() << "未找到对应的元素";
+void TaskUI::onRegionTerrainChanged(QMapLibre::AnnotationID annotationId, TerrainType newTerrain) {
+    Region *region = m_regionManager->findRegionByAnnotationId(annotationId);
+    if (!region) {
+        qWarning() << "未找到对应的区域";
         return;
     }
 
-    element->terrainType = newTerrain;
-    qDebug() << QString("已更新元素 ID:%1 的地形特征为: %2")
-                .arg(annotationId)
-                .arg(MapElement::terrainTypeToString(newTerrain));
+    m_regionManager->updateRegionTerrainType(region->id(), static_cast<Region::TerrainType>(newTerrain));
+    qDebug() << QString("已更新区域 ID:%1 的地形特征").arg(annotationId);
 }
 
-void TaskUI::onElementDeleteRequested(QMapLibre::AnnotationID annotationId) {
-    Task *ownerTask = nullptr;
-    MapElement *element = nullptr;
-
-    for (Task *task : m_taskManager->getAllTasks()) {
-        MapElement *found = task->findElement(annotationId);
-        if (found) {
-            ownerTask = task;
-            element = found;
-            break;
-        }
-    }
-
-    if (!ownerTask || !element) {
-        QMessageBox::warning(this, "错误", "未找到对应的元素");
+void TaskUI::onRegionDeleteRequested(QMapLibre::AnnotationID annotationId) {
+    Region *region = m_regionManager->findRegionByAnnotationId(annotationId);
+    if (!region) {
+        QMessageBox::warning(this, "错误", "未找到对应的区域");
         return;
     }
 
-    QString elementTypeName;
-    switch (element->type) {
-        case MapElement::LoiterPoint:
-            elementTypeName = "盘旋点";
-            break;
-        case MapElement::NoFlyZone:
-            elementTypeName = "禁飞区域";
-            break;
-        case MapElement::UAV:
-            elementTypeName = "无人机";
-            break;
-        case MapElement::Polygon:
-            elementTypeName = "多边形区域";
-            break;
-    }
+    QString regionTypeName = Region::typeToString(region->type());
+    int regionId = region->id();
+
+    // 获取引用计数和引用任务列表
+    int refCount = m_taskManager->getRegionReferenceCount(regionId);
+    QVector<Task*> referencingTasks = m_taskManager->getTasksReferencingRegion(regionId);
 
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("确认删除");
     msgBox.setIcon(QMessageBox::Question);
-    msgBox.setText(QString("确定要删除此%1吗？").arg(elementTypeName));
+
+    // 根据引用情况显示不同的提示
+    if (refCount == 0) {
+        // 独立区域，直接删除
+        msgBox.setText(QString("确定要删除此%1吗？\n\n这是一个独立区域，删除后将从地图上永久移除。").arg(regionTypeName));
+    } else if (refCount == 1) {
+        // 被一个任务引用
+        msgBox.setText(QString("确定要删除此%1吗？\n\n该区域被任务 #%2 (%3) 引用。\n删除后将从地图上永久移除。")
+                       .arg(regionTypeName)
+                       .arg(referencingTasks[0]->id())
+                       .arg(referencingTasks[0]->name()));
+    } else {
+        // 被多个任务引用
+        QString taskList;
+        for (Task *task : referencingTasks) {
+            if (!taskList.isEmpty()) taskList += ", ";
+            taskList += QString("#%1 (%2)").arg(task->id()).arg(task->name());
+        }
+        msgBox.setText(QString("确定要删除此%1吗？\n\n该区域被 %2 个任务引用：%3\n删除后将从地图上永久移除，并从所有任务中移除。")
+                       .arg(regionTypeName)
+                       .arg(refCount)
+                       .arg(taskList));
+        msgBox.setInformativeText("警告：多个任务正在使用此区域！");
+    }
+
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     msgBox.setDefaultButton(QMessageBox::No);
 
     if (msgBox.exec() == QMessageBox::Yes) {
-        m_painter->removeAnnotation(annotationId);
-        ownerTask->removeElement(annotationId);
-        qDebug() << QString("已删除%1 ID:%2").arg(elementTypeName).arg(annotationId);
+        // 真正删除region（RegionManager会自动通知TaskManager清理引用）
+        m_regionManager->removeRegion(regionId);
+        qDebug() << QString("已删除%1 ID:%2 (引用计数: %3)").arg(regionTypeName).arg(annotationId).arg(refCount);
     }
 }
 
@@ -455,10 +448,10 @@ void TaskUI::onMapClicked(const QMapLibre::Coordinate &coord) {
 
     if (m_currentMode == MODE_NORMAL) {
         double threshold = getZoomDependentThreshold(100.0);
-        const ElementInfo* element = m_taskManager->findVisibleElementNear(coord, threshold);
+        const RegionInfo* element = m_taskManager->findVisibleElementNear(coord, threshold);
         if (element) {
             QPoint screenPos = QCursor::pos();
-            m_detailWidget->showElement(element, screenPos);
+            m_detailWidget->showRegion(element, screenPos);
             qDebug() << "点击到可见任务的元素，显示详情";
         } else {
             m_detailWidget->hide();
@@ -473,8 +466,8 @@ void TaskUI::onMapClicked(const QMapLibre::Coordinate &coord) {
     case MODE_NOFLY:
         handleNoFlyZoneClick(coord.first, coord.second);
         break;
-    case MODE_POLYGON:
-        handlePolygonClick(coord.first, coord.second);
+    case MODE_TASK_REGION:
+        handleTaskRegionClick(coord.first, coord.second);
         break;
     case MODE_UAV:
         addUAVAt(coord.first, coord.second);
@@ -490,7 +483,7 @@ void TaskUI::onMapMouseMoved(const QMapLibre::Coordinate &coord) {
     }
 
     if (m_currentMode == MODE_UAV) {
-        bool inNoFlyZone = m_taskManager->isInCurrentTaskNoFlyZone(coord);
+        bool inNoFlyZone = m_taskManager->isInAnyNoFlyZone(coord);
 
         if (inNoFlyZone != m_isInNoFlyZone) {
             m_isInNoFlyZone = inNoFlyZone;
@@ -516,8 +509,8 @@ void TaskUI::onMapMouseMoved(const QMapLibre::Coordinate &coord) {
                                    .arg(radius, 0, 'f', 1),
                                    "rgba(255, 243, 205, 220)");
     }
-    else if (m_currentMode == MODE_POLYGON && !m_polygonPoints.isEmpty()) {
-        m_painter->updateDynamicLine(m_polygonPoints.last(), coord);
+    else if (m_currentMode == MODE_TASK_REGION && !m_taskRegionPoints.isEmpty()) {
+        m_painter->updateDynamicLine(m_taskRegionPoints.last(), coord);
     }
 }
 
@@ -531,64 +524,71 @@ void TaskUI::onMapRightClicked() {
     } else if (m_currentMode == MODE_UAV) {
         qDebug() << "右键取消无人机放置";
         returnToNormalMode();
-    } else if (m_currentMode == MODE_POLYGON) {
-        handlePolygonUndo();
+    } else if (m_currentMode == MODE_TASK_REGION) {
+        handleTaskRegionUndo();
     }
 }
 
 void TaskUI::startPlaceLoiter() {
-    if (!m_taskManager->currentTask()) {
-        QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-        return;
-    }
-
     m_currentMode = MODE_LOITER;
     m_mapWidget->setClickEnabled(true);
     m_mapWidget->setCustomCursor("image/pin.png");
-    m_mapWidget->setStatusText("放置盘旋点 - 点击地图任意位置（右键取消）", "rgba(212, 237, 218, 220)");
-    qDebug() << "开始单次放置盘旋点";
+
+    if (m_taskManager->currentTask()) {
+        m_mapWidget->setStatusText(QString("放置盘旋点到任务 #%1 - 点击地图任意位置（右键取消）")
+                                   .arg(m_taskManager->currentTaskId()), "rgba(212, 237, 218, 220)");
+        qDebug() << QString("开始放置盘旋点到任务 #%1").arg(m_taskManager->currentTaskId());
+    } else {
+        m_mapWidget->setStatusText("放置独立盘旋点 - 点击地图任意位置（右键取消）", "rgba(212, 237, 218, 220)");
+        qDebug() << "开始放置独立盘旋点";
+    }
 }
 
 void TaskUI::startPlaceNoFly() {
-    if (!m_taskManager->currentTask()) {
-        QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-        return;
-    }
-
     m_currentMode = MODE_NOFLY;
     m_mapWidget->setClickEnabled(true);
     resetNoFlyZoneDrawing();
-    m_mapWidget->setStatusText("放置禁飞区域 - 点击中心点，移动鼠标确定半径（右键取消）", "rgba(255, 243, 205, 220)");
-    qDebug() << "开始单次放置禁飞区域";
+
+    if (m_taskManager->currentTask()) {
+        m_mapWidget->setStatusText(QString("放置禁飞区到任务 #%1 - 点击中心点，移动鼠标确定半径（右键取消）")
+                                   .arg(m_taskManager->currentTaskId()), "rgba(255, 243, 205, 220)");
+        qDebug() << QString("开始放置禁飞区到任务 #%1").arg(m_taskManager->currentTaskId());
+    } else {
+        m_mapWidget->setStatusText("放置独立禁飞区 - 点击中心点，移动鼠标确定半径（右键取消）", "rgba(255, 243, 205, 220)");
+        qDebug() << "开始放置独立禁飞区";
+    }
 }
 
 void TaskUI::startPlaceUAV() {
-    if (!m_taskManager->currentTask()) {
-        QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-        return;
-    }
-
     m_currentMode = MODE_UAV;
     m_isInNoFlyZone = false;
     m_mapWidget->setClickEnabled(true);
     m_mapWidget->setCustomCursor("image/uav.png", 12, 12);
 
     QString colorName = getColorName(m_currentUAVColor);
-    m_mapWidget->setStatusText(QString("放置无人机 (%1) - 点击地图任意位置（右键取消）").arg(colorName), "rgba(230, 230, 255, 220)");
-    qDebug() << "开始单次放置无人机 - 颜色:" << m_currentUAVColor;
+    if (m_taskManager->currentTask()) {
+        m_mapWidget->setStatusText(QString("放置无人机 (%1) 到任务 #%2 - 点击地图任意位置（右键取消）")
+                                   .arg(colorName).arg(m_taskManager->currentTaskId()), "rgba(230, 230, 255, 220)");
+        qDebug() << QString("开始放置无人机到任务 #%1 - 颜色: %2").arg(m_taskManager->currentTaskId()).arg(m_currentUAVColor);
+    } else {
+        m_mapWidget->setStatusText(QString("放置独立无人机 (%1) - 点击地图任意位置（右键取消）").arg(colorName), "rgba(230, 230, 255, 220)");
+        qDebug() << "开始放置独立无人机 - 颜色:" << m_currentUAVColor;
+    }
 }
 
-void TaskUI::startDrawPolygon() {
-    if (!m_taskManager->currentTask()) {
-        QMessageBox::warning(this, "未选择任务", "请先创建或选择一个任务！");
-        return;
-    }
-
-    m_currentMode = MODE_POLYGON;
+void TaskUI::startDrawTaskRegion() {
+    m_currentMode = MODE_TASK_REGION;
     m_mapWidget->setClickEnabled(true);
-    resetPolygonDrawing();
-    m_mapWidget->setStatusText("绘制多边形 - 点击添加顶点，点击起点闭合，右键回退，ESC取消", "rgba(255, 243, 205, 220)");
-    qDebug() << "开始绘制多边形";
+    resetTaskRegionDrawing();
+
+    if (m_taskManager->currentTask()) {
+        m_mapWidget->setStatusText(QString("绘制任务区域到任务 #%1 - 点击添加顶点，点击起点闭合，右键回退，ESC取消")
+                                   .arg(m_taskManager->currentTaskId()), "rgba(255, 243, 205, 220)");
+        qDebug() << QString("开始绘制任务区域到任务 #%1").arg(m_taskManager->currentTaskId());
+    } else {
+        m_mapWidget->setStatusText("绘制独立任务区域 - 点击添加顶点，点击起点闭合，右键回退，ESC取消", "rgba(255, 243, 205, 220)");
+        qDebug() << "开始绘制独立任务区域";
+    }
 }
 
 void TaskUI::clearAll() {
@@ -597,25 +597,49 @@ void TaskUI::clearAll() {
         return;
     }
 
-    if (!m_taskManager->currentTask()) {
-        QMessageBox::warning(this, "未选择任务", "请先选择一个任务！");
-        return;
-    }
-
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("确认清除");
     msgBox.setIcon(QMessageBox::Question);
-    msgBox.setText(QString("确定要清除任务 #%1 的所有地图标记吗？")
-                      .arg(m_taskManager->currentTaskId()));
-    msgBox.setInformativeText(QString("任务名称: %1").arg(m_taskManager->currentTask()->name()));
+
+    if (m_taskManager->currentTask()) {
+        // 有当前任务：清除当前任务的所有标记
+        msgBox.setText(QString("确定要清除任务 #%1 的所有地图标记吗？")
+                          .arg(m_taskManager->currentTaskId()));
+        msgBox.setInformativeText(QString("任务名称: %1").arg(m_taskManager->currentTask()->name()));
+    } else {
+        // 无当前任务：清除所有独立区域
+        msgBox.setText("确定要清除所有独立区域吗？");
+        msgBox.setInformativeText("将清除所有不属于任何任务的区域。");
+    }
+
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     msgBox.setDefaultButton(QMessageBox::No);
 
     if (msgBox.exec() == QMessageBox::Yes) {
-        m_taskManager->clearCurrentTask();
+        if (m_taskManager->currentTask()) {
+            // 清除当前任务的标记
+            m_taskManager->clearCurrentTask();
+            qDebug() << QString("已清除任务 #%1 的所有标注").arg(m_taskManager->currentTaskId());
+        } else {
+            // 清除所有独立区域（引用计数为0的区域）
+            const QMap<int, Region*>& allRegions = m_regionManager->getAllRegions();
+            QVector<int> independentRegionIds;
+
+            for (Region *region : allRegions) {
+                if (m_taskManager->getRegionReferenceCount(region->id()) == 0) {
+                    independentRegionIds.append(region->id());
+                }
+            }
+
+            for (int regionId : independentRegionIds) {
+                m_regionManager->removeRegion(regionId);
+            }
+
+            qDebug() << QString("已清除 %1 个独立区域").arg(independentRegionIds.size());
+        }
+
         resetNoFlyZoneDrawing();
-        resetPolygonDrawing();
-        qDebug() << QString("已清除任务 #%1 的所有标注").arg(m_taskManager->currentTaskId());
+        resetTaskRegionDrawing();
     }
 }
 
@@ -628,16 +652,16 @@ void TaskUI::addLoiterPointAt(double lat, double lon) {
 
 void TaskUI::addUAVAt(double lat, double lon) {
     QMapLibre::Coordinate coord(lat, lon);
-    if (m_taskManager->isInCurrentTaskNoFlyZone(coord)) {
+    if (m_taskManager->isInAnyNoFlyZone(coord)) {
         QMessageBox msgBox(this);
         msgBox.setWindowTitle("无法放置");
         msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setText("无法在当前任务的禁飞区域内放置无人机！");
+        msgBox.setText("无法在禁飞区域内放置无人机！");
         msgBox.setInformativeText("请选择禁飞区域以外的位置。");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.exec();
 
-        qDebug() << QString("尝试在当前任务的禁飞区内放置无人机 (%1, %2)，已阻止").arg(lat).arg(lon);
+        qDebug() << QString("尝试在禁飞区内放置无人机 (%1, %2)，已阻止").arg(lat).arg(lon);
         return;
     }
 
@@ -658,14 +682,14 @@ void TaskUI::handleNoFlyZoneClick(double lat, double lon) {
     } else {
         double radius = calculateDistance(m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, lat, lon);
 
-        QVector<const MapElement*> conflictUAVs = m_taskManager->checkNoFlyZoneConflictWithUAVs(
+        QVector<Region*> conflictUAVs = m_taskManager->checkNoFlyZoneConflictWithUAVs(
             m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, radius);
 
         if (!conflictUAVs.isEmpty()) {
             QMessageBox msgBox(this);
             msgBox.setWindowTitle("无法放置禁飞区");
             msgBox.setIcon(QMessageBox::Warning);
-            msgBox.setText(QString("该禁飞区域会覆盖 %1 架当前任务的无人机！").arg(conflictUAVs.size()));
+            msgBox.setText(QString("该禁飞区域会覆盖 %1 架无人机！").arg(conflictUAVs.size()));
             msgBox.setInformativeText("请调整禁飞区位置或半径，或先移除冲突的无人机。");
             msgBox.setStandardButtons(QMessageBox::Ok);
             msgBox.exec();
@@ -687,13 +711,7 @@ void TaskUI::handleNoFlyZoneClick(double lat, double lon) {
             auto id = m_taskManager->addNoFlyZone(m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, radius);
 
             if (id > 0) {
-                Task *currentTask = m_taskManager->currentTask();
-                if (currentTask) {
-                    MapElement *element = currentTask->findElement(id);
-                    if (element) {
-                        element->terrainType = static_cast<MapElement::TerrainType>(terrainType);
-                    }
-                }
+                m_regionManager->updateRegionTerrainType(id, static_cast<Region::TerrainType>(terrainType));
             }
 
             qDebug() << QString("创建禁飞区: 中心(%1, %2), 半径 %3m, 地形 %4, 任务 #%5, ID: %6")
@@ -706,13 +724,13 @@ void TaskUI::handleNoFlyZoneClick(double lat, double lon) {
     }
 }
 
-void TaskUI::handlePolygonClick(double lat, double lon) {
+void TaskUI::handleTaskRegionClick(double lat, double lon) {
     QMapLibre::Coordinate clickedPoint(lat, lon);
 
-    if (m_polygonPoints.size() >= 3) {
+    if (m_taskRegionPoints.size() >= 3) {
         double distanceToStart = calculateDistance(
             clickedPoint.first, clickedPoint.second,
-            m_polygonPoints.first().first, m_polygonPoints.first().second
+            m_taskRegionPoints.first().first, m_taskRegionPoints.first().second
         );
 
         double threshold = getZoomDependentThreshold(50.0);
@@ -724,61 +742,61 @@ void TaskUI::handlePolygonClick(double lat, double lon) {
 
         if (distanceToStart < threshold) {
             qDebug() << "点击起点，闭合多边形";
-            finishPolygon();
+            finishTaskRegion();
             return;
         }
     }
 
-    m_polygonPoints.append(clickedPoint);
+    m_taskRegionPoints.append(clickedPoint);
     qDebug() << QString("添加多边形顶点 #%1: (%2, %3)")
-                    .arg(m_polygonPoints.size())
+                    .arg(m_taskRegionPoints.size())
                     .arg(lat).arg(lon);
 
     m_painter->clearDynamicLine();
 
-    if (m_polygonPoints.size() >= 2) {
-        m_painter->drawPreviewLines(m_polygonPoints);
+    if (m_taskRegionPoints.size() >= 2) {
+        m_painter->drawPreviewLines(m_taskRegionPoints);
     }
 
     m_mapWidget->setStatusText(
-        QString("绘制多边形 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
-            .arg(m_polygonPoints.size()),
+        QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
+            .arg(m_taskRegionPoints.size()),
         "rgba(255, 243, 205, 220)"
     );
 }
 
-void TaskUI::handlePolygonUndo() {
-    if (m_polygonPoints.isEmpty()) {
+void TaskUI::handleTaskRegionUndo() {
+    if (m_taskRegionPoints.isEmpty()) {
         qDebug() << "没有顶点，取消多边形绘制";
         returnToNormalMode();
         return;
     }
 
-    m_polygonPoints.removeLast();
-    qDebug() << QString("回退一个顶点，剩余 %1 个").arg(m_polygonPoints.size());
+    m_taskRegionPoints.removeLast();
+    qDebug() << QString("回退一个顶点，剩余 %1 个").arg(m_taskRegionPoints.size());
 
-    if (m_polygonPoints.isEmpty()) {
-        m_painter->clearPolygonPreview();
+    if (m_taskRegionPoints.isEmpty()) {
+        m_painter->clearTaskRegionPreview();
         returnToNormalMode();
-    } else if (m_polygonPoints.size() == 1) {
-        m_painter->clearPolygonPreview();
+    } else if (m_taskRegionPoints.size() == 1) {
+        m_painter->clearTaskRegionPreview();
         m_mapWidget->setStatusText(
-            QString("绘制多边形 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
-                .arg(m_polygonPoints.size()),
+            QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
+                .arg(m_taskRegionPoints.size()),
             "rgba(255, 243, 205, 220)"
         );
     } else {
-        m_painter->drawPreviewLines(m_polygonPoints);
+        m_painter->drawPreviewLines(m_taskRegionPoints);
         m_mapWidget->setStatusText(
-            QString("绘制多边形 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
-                .arg(m_polygonPoints.size()),
+            QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
+                .arg(m_taskRegionPoints.size()),
             "rgba(255, 243, 205, 220)"
         );
     }
 }
 
-void TaskUI::finishPolygon() {
-    if (m_polygonPoints.size() < 3) {
+void TaskUI::finishTaskRegion() {
+    if (m_taskRegionPoints.size() < 3) {
         qWarning() << "多边形至少需要3个顶点";
         return;
     }
@@ -786,16 +804,10 @@ void TaskUI::finishPolygon() {
     RegionFeatureDialog featureDialog(this);
     if (featureDialog.exec() == QDialog::Accepted) {
         auto terrainType = featureDialog.getSelectedTerrain();
-        auto id = m_taskManager->addPolygon(m_polygonPoints);
+        auto id = m_taskManager->addTaskRegion(m_taskRegionPoints);
 
         if (id > 0) {
-            Task *currentTask = m_taskManager->currentTask();
-            if (currentTask) {
-                MapElement *element = currentTask->findElement(id);
-                if (element) {
-                    element->terrainType = static_cast<MapElement::TerrainType>(terrainType);
-                }
-            }
+            m_regionManager->updateRegionTerrainType(id, static_cast<Region::TerrainType>(terrainType));
         }
 
         qDebug() << QString("多边形绘制完成，地形 %1, 任务 #%2, ID: %3")
@@ -803,8 +815,8 @@ void TaskUI::finishPolygon() {
                     .arg(m_taskManager->currentTaskId()).arg(id);
     }
 
-    m_painter->clearPolygonPreview();
-    m_polygonPoints.clear();
+    m_painter->clearTaskRegionPreview();
+    m_taskRegionPoints.clear();
     returnToNormalMode();
 }
 
@@ -813,7 +825,7 @@ void TaskUI::returnToNormalMode() {
     m_mapWidget->setClickEnabled(true);
     m_mapWidget->restoreDefaultCursor();
     resetNoFlyZoneDrawing();
-    resetPolygonDrawing();
+    resetTaskRegionDrawing();
     m_mapWidget->setStatusText("普通浏览 - 点击元素查看详情，左键拖动，滚轮缩放");
     qDebug() << "返回普通浏览模式";
 }
@@ -826,10 +838,10 @@ void TaskUI::resetNoFlyZoneDrawing() {
     m_noFlyZoneCenter = QMapLibre::Coordinate(0, 0);
 }
 
-void TaskUI::resetPolygonDrawing() {
-    m_polygonPoints.clear();
+void TaskUI::resetTaskRegionDrawing() {
+    m_taskRegionPoints.clear();
     if (m_painter) {
-        m_painter->clearPolygonPreview();
+        m_painter->clearTaskRegionPreview();
         m_painter->clearDynamicLine();
     }
 }
