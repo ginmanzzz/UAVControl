@@ -213,6 +213,42 @@ QMapLibre::AnnotationID MapPainter::drawPreviewNoFlyZone(double latitude, double
     return m_previewAnnotationId;
 }
 
+QMapLibre::AnnotationID MapPainter::drawPreviewRectangle(const QMapLibre::Coordinates &coordinates)
+{
+    // 先清除之前的预览
+    clearPreview();
+
+    if (coordinates.size() < 4) {
+        qWarning() << "矩形至少需要4个顶点";
+        return 0;
+    }
+
+    // 创建填充标注（多边形）- 蓝色填充，无边框
+    QMapLibre::FillAnnotation previewRect;
+    previewRect.geometry.type = QMapLibre::ShapeAnnotationGeometry::PolygonType;
+
+    // 确保矩形闭合
+    QMapLibre::Coordinates closedCoords = coordinates;
+    if (closedCoords.first() != closedCoords.last()) {
+        closedCoords.append(closedCoords.first());
+    }
+
+    QMapLibre::CoordinatesCollection polygonCoords;
+    polygonCoords.append(closedCoords);
+    previewRect.geometry.geometry.append(polygonCoords);
+
+    // 设置样式：蓝色填充，无边框（设置边框颜色为透明）
+    previewRect.color = QColor(33, 150, 243, 100);      // 蓝色填充（Material Design Blue 500）
+    previewRect.outlineColor = QColor(0, 0, 0, 0);      // 完全透明的边框（无边框）
+    previewRect.opacity = 0.6f;
+
+    // 添加区域到地图
+    QVariant annotation = QVariant::fromValue(previewRect);
+    m_previewAnnotationId = m_map->addAnnotation(annotation);
+
+    return m_previewAnnotationId;
+}
+
 void MapPainter::clearPreview()
 {
     if (m_previewAnnotationId != 0) {

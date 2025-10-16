@@ -91,6 +91,13 @@ public:
     QMapLibre::AnnotationID drawPreviewNoFlyZone(double latitude, double longitude, double radiusInMeters);
 
     /**
+     * @brief 绘制预览矩形区域（用于鼠标移动时显示）
+     * @param coordinates 矩形的四个顶点坐标
+     * @return 预览标注 ID
+     */
+    QMapLibre::AnnotationID drawPreviewRectangle(const QMapLibre::Coordinates &coordinates);
+
+    /**
      * @brief 清除预览标注
      */
     void clearPreview();

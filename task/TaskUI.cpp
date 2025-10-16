@@ -613,7 +613,7 @@ void TaskUI::onMapMouseMoved(const QMapLibre::Coordinate &coord) {
         switch (m_taskRegionDrawMode) {
         case DRAW_MODE_RECTANGLE:
             if (m_rectangleFirstPointSet) {
-                // 矩形模式：显示动态矩形预览
+                // 矩形模式：显示动态矩形预览（蓝色填充，无边框）
                 double lat1 = m_rectangleFirstPoint.first;
                 double lon1 = m_rectangleFirstPoint.second;
                 double lat2 = coord.first;
@@ -625,7 +625,8 @@ void TaskUI::onMapMouseMoved(const QMapLibre::Coordinate &coord) {
                 rectPoints.append(QMapLibre::Coordinate(lat2, lon2));  // 右下
                 rectPoints.append(QMapLibre::Coordinate(lat2, lon1));  // 左下
 
-                m_painter->drawPreviewLines(rectPoints);
+                // 使用新的蓝色填充矩形预览方法
+                m_painter->drawPreviewRectangle(rectPoints);
 
                 double width = calculateDistance(lat1, lon1, lat1, lon2);
                 double height = calculateDistance(lat1, lon1, lat2, lon1);
