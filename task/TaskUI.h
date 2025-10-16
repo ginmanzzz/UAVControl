@@ -136,6 +136,7 @@ private:
     bool m_rectangleFirstPointSet = false;
     QMapLibre::Coordinate m_circleCenter;             // 圆形模式：圆心
     bool m_circleCenterSet = false;
+    double m_circleRadius = 0.0;                      // 圆形模式：半径（米）
 
     // 无人机模式状态
     bool m_isInNoFlyZone = false;

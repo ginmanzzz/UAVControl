@@ -134,6 +134,38 @@ Region* RegionManager::createTaskRegion(const QMapLibre::Coordinates &vertices, 
     return region;
 }
 
+Region* RegionManager::createCircularTaskRegion(const QMapLibre::Coordinate &center, double radius,
+                                                const QMapLibre::Coordinates &vertices, const QString &name) {
+    if (!m_painter) {
+        qWarning() << "RegionManager::createCircularTaskRegion: painter is null!";
+        return nullptr;
+    }
+
+    if (vertices.size() < 3) {
+        qWarning() << "RegionManager::createCircularTaskRegion: 顶点数不足（至少需要3个）";
+        return nullptr;
+    }
+
+    int regionId = generateNextId();
+    Region *region = new Region(regionId, RegionType::TaskRegion);
+    region->setName(name.isEmpty() ? QString("任务区域 %1").arg(regionId) : name);
+    region->setVertices(vertices);
+    region->setCoordinate(center);  // 使用传入的圆心
+    region->setRadius(radius);      // 保存半径信息
+    region->setTerrainType(TerrainType::Plain);  // 默认平原
+
+    // 在地图上绘制
+    drawRegion(region);
+
+    // 存储
+    m_regions.insert(regionId, region);
+
+    emit regionCreated(regionId);
+    qDebug() << "创建圆形任务区域: ID =" << regionId << ", 半径 =" << radius << "米, 顶点数 =" << vertices.size();
+
+    return region;
+}
+
 // ==================== 删除区域 ====================
 
 bool RegionManager::removeRegion(int regionId) {

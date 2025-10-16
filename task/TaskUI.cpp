@@ -957,7 +957,7 @@ void TaskUI::handleTaskRegionClick(double lat, double lon) {
             );
         } else {
             // 第二次点击：设置半径并完成圆形
-            double radius = calculateDistance(
+            m_circleRadius = calculateDistance(
                 m_circleCenter.first, m_circleCenter.second,
                 clickedPoint.first, clickedPoint.second
             );
@@ -969,8 +969,8 @@ void TaskUI::handleTaskRegionClick(double lat, double lon) {
 
             for (int i = 0; i < segments; ++i) {
                 double angle = 2.0 * M_PI * i / segments;
-                double dx = radius * std::cos(angle);
-                double dy = radius * std::sin(angle);
+                double dx = m_circleRadius * std::cos(angle);
+                double dy = m_circleRadius * std::sin(angle);
 
                 double lat_rad = m_circleCenter.first * M_PI / 180.0;
                 double lon_rad = m_circleCenter.second * M_PI / 180.0;
@@ -985,7 +985,7 @@ void TaskUI::handleTaskRegionClick(double lat, double lon) {
             }
 
             qDebug() << QString("圆形半径点: (%1, %2)，半径 %3m，圆形绘制完成")
-                        .arg(lat).arg(lon).arg(radius);
+                        .arg(lat).arg(lon).arg(m_circleRadius);
             finishTaskRegion();
         }
         break;
@@ -1108,19 +1108,34 @@ void TaskUI::finishTaskRegion() {
     RegionFeatureDialog featureDialog(this);
     if (featureDialog.exec() == QDialog::Accepted) {
         auto terrainType = featureDialog.getSelectedTerrain();
-        auto id = m_taskManager->addTaskRegion(m_taskRegionPoints);
+        QMapLibre::AnnotationID id = 0;
+
+        // 根据绘制模式选择不同的创建方法
+        if (m_taskRegionDrawMode == DRAW_MODE_CIRCLE && m_circleRadius > 0) {
+            // 圆形任务区域：传入圆心和半径
+            id = m_taskManager->addCircularTaskRegion(m_circleCenter, m_circleRadius, m_taskRegionPoints);
+            qDebug() << QString("圆形任务区域绘制完成，圆心: (%1, %2), 半径: %3m, 地形: %4, 任务 #%5, ID: %6")
+                        .arg(m_circleCenter.first, 0, 'f', 5)
+                        .arg(m_circleCenter.second, 0, 'f', 5)
+                        .arg(m_circleRadius)
+                        .arg(featureDialog.getTerrainName())
+                        .arg(m_taskManager->currentTaskId()).arg(id);
+        } else {
+            // 多边形任务区域（包括矩形和手绘）
+            id = m_taskManager->addTaskRegion(m_taskRegionPoints);
+            qDebug() << QString("多边形绘制完成，地形 %1, 任务 #%2, ID: %3")
+                        .arg(featureDialog.getTerrainName())
+                        .arg(m_taskManager->currentTaskId()).arg(id);
+        }
 
         if (id > 0) {
             m_regionManager->updateRegionTerrainType(id, static_cast<Region::TerrainType>(terrainType));
         }
-
-        qDebug() << QString("多边形绘制完成，地形 %1, 任务 #%2, ID: %3")
-                    .arg(featureDialog.getTerrainName())
-                    .arg(m_taskManager->currentTaskId()).arg(id);
     }
 
     m_painter->clearTaskRegionPreview();
     m_taskRegionPoints.clear();
+    m_circleRadius = 0.0;  // 重置圆形半径
     returnToNormalMode();
 }
 

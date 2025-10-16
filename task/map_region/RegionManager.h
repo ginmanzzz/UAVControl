@@ -59,12 +59,23 @@ public:
     Region* createNoFlyZone(double lat, double lon, double radius, const QString &name = QString());
 
     /**
-     * @brief 创建任务区域
+     * @brief 创建任务区域（多边形）
      * @param vertices 任务区域顶点
      * @param name 区域名称（可选）
      * @return 创建的区域指针
      */
     Region* createTaskRegion(const QMapLibre::Coordinates &vertices, const QString &name = QString());
+
+    /**
+     * @brief 创建任务区域（圆形）
+     * @param center 圆心坐标
+     * @param radius 半径（米）
+     * @param vertices 圆形近似的顶点（通常32个顶点）
+     * @param name 区域名称（可选）
+     * @return 创建的区域指针
+     */
+    Region* createCircularTaskRegion(const QMapLibre::Coordinate &center, double radius,
+                                     const QMapLibre::Coordinates &vertices, const QString &name = QString());
 
     // ==================== 删除区域 ====================
 

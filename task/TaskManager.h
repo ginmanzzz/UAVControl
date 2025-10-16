@@ -165,6 +165,8 @@ public:
     QMapLibre::AnnotationID addNoFlyZone(double lat, double lon, double radius);
     QMapLibre::AnnotationID addUAV(double lat, double lon, const QString &color);
     QMapLibre::AnnotationID addTaskRegion(const QMapLibre::Coordinates &coordinates);
+    QMapLibre::AnnotationID addCircularTaskRegion(const QMapLibre::Coordinate &center, double radius,
+                                                   const QMapLibre::Coordinates &vertices);
 
     QMapLibre::AnnotationID addLoiterPointToTask(int taskId, double lat, double lon);
     QMapLibre::AnnotationID addNoFlyZoneToTask(int taskId, double lat, double lon, double radius);
