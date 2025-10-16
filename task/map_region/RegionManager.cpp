@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "RegionManager.h"
+#include "RegionPropertyDialog.h"
 #include <QDebug>
 
 RegionManager::RegionManager(MapPainter *painter, QObject *parent)
@@ -30,7 +31,16 @@ Region* RegionManager::createLoiterPoint(double lat, double lon, const QString &
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::LoiterPoint);
-    region->setName(name.isEmpty() ? QString("盘旋点 %1").arg(regionId) : name);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::LoiterPoint, regionId);
+        regionName = promptForName(defaultName);
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
     region->setCoordinate(QMapLibre::Coordinate(lat, lon));
 
     // 在地图上绘制
@@ -77,7 +87,16 @@ Region* RegionManager::createNoFlyZone(double lat, double lon, double radius, co
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::NoFlyZone);
-    region->setName(name.isEmpty() ? QString("禁飞区 %1").arg(regionId) : name);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::NoFlyZone, regionId);
+        regionName = promptForName(defaultName);
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
     region->setCoordinate(QMapLibre::Coordinate(lat, lon));
     region->setRadius(radius);
     region->setTerrainType(TerrainType::Plain);  // 默认平原
@@ -107,7 +126,16 @@ Region* RegionManager::createTaskRegion(const QMapLibre::Coordinates &vertices, 
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::TaskRegion);
-    region->setName(name.isEmpty() ? QString("任务区域 %1").arg(regionId) : name);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
+        regionName = promptForName(defaultName);
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
     region->setVertices(vertices);
     region->setTerrainType(TerrainType::Plain);  // 默认平原
     region->setTaskRegionShape(TaskRegionShape::Polygon);  // 默认多边形
@@ -149,7 +177,16 @@ Region* RegionManager::createCircularTaskRegion(const QMapLibre::Coordinate &cen
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::TaskRegion);
-    region->setName(name.isEmpty() ? QString("任务区域 %1").arg(regionId) : name);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
+        regionName = promptForName(defaultName);
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
     region->setVertices(vertices);
     region->setCoordinate(center);  // 使用传入的圆心
     region->setRadius(radius);      // 保存半径信息
@@ -181,7 +218,16 @@ Region* RegionManager::createRectangularTaskRegion(const QMapLibre::Coordinates 
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::TaskRegion);
-    region->setName(name.isEmpty() ? QString("任务区域 %1").arg(regionId) : name);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
+        regionName = promptForName(defaultName);
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
     region->setVertices(vertices);
     region->setTerrainType(TerrainType::Plain);  // 默认平原
     region->setTaskRegionShape(TaskRegionShape::Rectangle);  // 矩形
@@ -421,4 +467,31 @@ void RegionManager::drawRegion(Region *region) {
     }
 
     region->setAnnotationId(annotationId);
+}
+
+QString RegionManager::generateDefaultName(RegionType type, int id)
+{
+    switch (type) {
+        case RegionType::LoiterPoint:
+            return QString("盘旋点%1").arg(id);
+        case RegionType::UAV:
+            return QString("无人机%1").arg(id);
+        case RegionType::NoFlyZone:
+            return QString("禁飞区%1").arg(id);
+        case RegionType::TaskRegion:
+            return QString("任务区域%1").arg(id);
+        default:
+            return QString("区域%1").arg(id);
+    }
+}
+
+QString RegionManager::promptForName(const QString &defaultName)
+{
+    RegionPropertyDialog dialog(defaultName);
+    if (dialog.exec() == QDialog::Accepted) {
+        QString name = dialog.getRegionName().trimmed();
+        return name.isEmpty() ? defaultName : name;
+    }
+    // 用户取消，返回默认名称
+    return defaultName;
 }

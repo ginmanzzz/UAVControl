@@ -4,7 +4,10 @@
 #include "RegionDetailWidget.h"
 #include "TaskManager.h"
 #include "Task.h"
+#include "map_region/RegionManager.h"
 #include <QtMath>
+#include <QLineEdit>
+#include <QHBoxLayout>
 
 RegionDetailWidget::RegionDetailWidget(QWidget *parent)
     : QWidget(parent)
@@ -68,6 +71,14 @@ void RegionDetailWidget::showRegion(const RegionInfo *info, const QPoint &screen
     }
 
     addTitle(title);
+
+    // 显示可编辑的名称（通过 RegionManager 获取）
+    if (m_regionManager) {
+        Region *region = m_regionManager->getRegion(info->regionId);
+        if (region) {
+            addEditableName(region->name());
+        }
+    }
 
     // 显示关联的任务列表
     if (m_taskManager) {
@@ -352,4 +363,51 @@ double RegionDetailWidget::calculateTaskRegionArea(const QMapLibre::Coordinates 
     }
 
     return fabs(area) / 2.0;
+}
+
+void RegionDetailWidget::addEditableName(const QString &currentName)
+{
+    auto *nameContainer = new QWidget(m_contentWidget);
+    auto *nameLayout = new QHBoxLayout(nameContainer);
+    nameLayout->setContentsMargins(0, 4, 0, 4);
+    nameLayout->setSpacing(4);
+
+    // 标签
+    auto *nameLabel = new QLabel("名称:", nameContainer);
+    nameLabel->setStyleSheet(
+        "font-size: 12px;"
+        "color: #666;"
+        "min-width: 50px;"
+    );
+    nameLayout->addWidget(nameLabel);
+
+    // 可编辑输入框
+    auto *nameEdit = new QLineEdit(currentName, nameContainer);
+    nameEdit->setStyleSheet(
+        "QLineEdit {"
+        "  border: 1px solid #ccc;"
+        "  border-radius: 3px;"
+        "  padding: 2px 4px;"
+        "  font-size: 12px;"
+        "  background-color: white;"
+        "}"
+        "QLineEdit:focus {"
+        "  border: 1px solid #2196F3;"
+        "}"
+    );
+
+    // 当用户编辑完成后（失去焦点或按回车）触发更新
+    connect(nameEdit, &QLineEdit::editingFinished, this, [this, nameEdit]() {
+        QString newName = nameEdit->text().trimmed();
+        if (!newName.isEmpty() && m_currentRegion && m_regionManager) {
+            if (m_regionManager->updateRegionName(m_currentRegion->regionId, newName)) {
+                emit nameChanged(m_currentRegion->regionId, newName);
+                qDebug() << "区域名称已更新: ID =" << m_currentRegion->regionId << ", 新名称 =" << newName;
+            }
+        }
+    });
+
+    nameLayout->addWidget(nameEdit, 1);
+
+    m_contentLayout->addWidget(nameContainer);
 }

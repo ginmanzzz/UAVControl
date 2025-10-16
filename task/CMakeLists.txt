@@ -16,8 +16,8 @@ set(TASK_SOURCES
     CreateTaskPlanDialog.cpp
     RegionDetailWidget.h
     RegionDetailWidget.cpp
-    RegionFeatureDialog.h
-    RegionFeatureDialog.cpp
+    map_region/RegionPropertyDialog.h
+    map_region/RegionPropertyDialog.cpp
 )
 
 # 收集map_region子模块的源文件

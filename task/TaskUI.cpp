@@ -429,11 +429,16 @@ void TaskUI::setupMap() {
 
     m_detailWidget = new RegionDetailWidget(this);
     m_detailWidget->setTaskManager(m_taskManager);  // 设置TaskManager引用
+    m_detailWidget->setRegionManager(m_regionManager);  // 设置RegionManager引用
 
     connect(m_detailWidget, &RegionDetailWidget::terrainChanged,
             this, &TaskUI::onRegionTerrainChanged);
     connect(m_detailWidget, &RegionDetailWidget::deleteRequested,
             this, &TaskUI::onRegionDeleteRequested);
+    connect(m_detailWidget, &RegionDetailWidget::nameChanged,
+            this, [this](int regionId, const QString &newName) {
+                qDebug() << "区域名称更改信号: ID =" << regionId << ", 新名称 =" << newName;
+            });
 
     connect(m_mapWidget, &InteractiveMapWidget::mapClicked,
             this, &TaskUI::onMapClicked);
@@ -890,7 +895,7 @@ void TaskUI::handleNoFlyZoneClick(double lat, double lon) {
 
         m_painter->clearPreview();
 
-        RegionFeatureDialog featureDialog(this);
+        RegionPropertyDialog featureDialog("临时禁飞区", static_cast<RegionPropertyDialog::TerrainType>(0), this);
         if (featureDialog.exec() == QDialog::Accepted) {
             auto terrainType = featureDialog.getSelectedTerrain();
             auto id = m_taskManager->addNoFlyZone(m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, radius);
@@ -1107,7 +1112,7 @@ void TaskUI::finishTaskRegion() {
         return;
     }
 
-    RegionFeatureDialog featureDialog(this);
+    RegionPropertyDialog featureDialog("临时任务区域", static_cast<RegionPropertyDialog::TerrainType>(0), this);
     if (featureDialog.exec() == QDialog::Accepted) {
         auto terrainType = featureDialog.getSelectedTerrain();
         QMapLibre::AnnotationID id = 0;

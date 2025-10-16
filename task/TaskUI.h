@@ -11,7 +11,7 @@
 #include "map_region/RegionManager.h"
 #include "TaskManager.h"
 #include "TaskLeftControlWidget.h"
-#include "RegionFeatureDialog.h"
+#include "map_region/RegionPropertyDialog.h"
 #include <QMapLibre/Map>
 #include <QMapLibre/Settings>
 

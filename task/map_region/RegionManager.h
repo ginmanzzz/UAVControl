@@ -213,6 +213,21 @@ private:
      */
     void drawRegion(Region *region);
 
+    /**
+     * @brief 生成默认区域名称
+     * @param type 区域类型
+     * @param id 区域ID
+     * @return 默认名称
+     */
+    QString generateDefaultName(RegionType type, int id);
+
+    /**
+     * @brief 弹出命名对话框让用户输入区域名称
+     * @param defaultName 默认名称
+     * @return 用户输入的名称（如果取消则返回默认名称）
+     */
+    QString promptForName(const QString &defaultName);
+
 private:
     MapPainter *m_painter;             // 地图绘制器（不拥有所有权）
     QMap<int, Region*> m_regions;     // regionId -> Region*（拥有所有权）

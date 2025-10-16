@@ -1,19 +1,20 @@
 // Copyright (C) 2023 MapLibre contributors
 // SPDX-License-Identifier: MIT
 
-#ifndef REGIONFEATUREDIALOG_H
-#define REGIONFEATUREDIALOG_H
+#ifndef REGIONPROPERTYDIALOG_H
+#define REGIONPROPERTYDIALOG_H
 
 #include <QDialog>
+#include <QLineEdit>
 #include <QComboBox>
 #include <QPushButton>
 #include <QLabel>
 
 /**
- * @brief 区域特征选择对话框
- * 用于选择多边形区域和禁飞区域的地形特征
+ * @brief 区域属性对话框
+ * 用于输入区域名称和选择地形特征
  */
-class RegionFeatureDialog : public QDialog {
+class RegionPropertyDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -24,21 +25,24 @@ public:
         HighMountain = 3 // 高山地
     };
 
-    explicit RegionFeatureDialog(QWidget *parent = nullptr);
-    explicit RegionFeatureDialog(TerrainType currentTerrain, QWidget *parent = nullptr);
+    explicit RegionPropertyDialog(const QString &defaultName, QWidget *parent = nullptr);
+    explicit RegionPropertyDialog(const QString &defaultName, TerrainType currentTerrain, QWidget *parent = nullptr);
 
+    QString getRegionName() const;
     TerrainType getSelectedTerrain() const;
     QString getTerrainName() const;
 
     static QString terrainTypeToString(TerrainType type);
 
 private:
-    void setupUI();
+    void setupUI(const QString &defaultName, bool showTerrain);
 
 private:
+    QLineEdit *m_nameEdit;
     QComboBox *m_terrainComboBox;
     QPushButton *m_confirmButton;
     QPushButton *m_cancelButton;
+    bool m_showTerrain;
 };
 
-#endif // REGIONFEATUREDIALOG_H
+#endif // REGIONPROPERTYDIALOG_H

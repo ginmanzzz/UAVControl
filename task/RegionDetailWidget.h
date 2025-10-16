@@ -14,6 +14,7 @@
 
 // 前向声明
 class TaskManager;
+class RegionManager;
 
 /**
  * @brief 区域详情浮动窗口
@@ -24,15 +25,18 @@ class RegionDetailWidget : public QWidget {
 public:
     explicit RegionDetailWidget(QWidget *parent = nullptr);
     void setTaskManager(TaskManager *taskManager) { m_taskManager = taskManager; }
+    void setRegionManager(RegionManager *regionManager) { m_regionManager = regionManager; }
     void showRegion(const RegionInfo *info, const QPoint &screenPos);
 
 signals:
     void terrainChanged(int regionId, TerrainType newTerrain);
     void deleteRequested(int regionId);
+    void nameChanged(int regionId, const QString &newName);
 
 private:
     void addTitle(const QString &text);
     void addInfoLine(const QString &label, const QString &value);
+    void addEditableName(const QString &currentName);
     void addTerrainLine(const QString &label, TerrainType currentTerrain);
     void addDeleteButton();
     QString getColorName(const QString &color) const;
@@ -40,6 +44,7 @@ private:
 
 private:
     TaskManager *m_taskManager = nullptr;
+    RegionManager *m_regionManager = nullptr;
     QWidget *m_contentWidget;
     QVBoxLayout *m_contentLayout;
     const RegionInfo *m_currentRegion;

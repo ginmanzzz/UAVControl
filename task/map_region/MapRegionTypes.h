@@ -51,6 +51,7 @@ struct RegionInfo {
     int regionId;                      // 区域ID（来自RegionManager）
     int taskId;                        // 所属任务ID
     QString taskName;                  // 所属任务名称
+    QString regionName;                // 区域名称
 };
 
 /**
