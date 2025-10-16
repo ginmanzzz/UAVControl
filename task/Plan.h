@@ -12,7 +12,7 @@ struct PlanTask {
     QString taskType;            // 任务类型（如：侦察、打击等）
     QString taskRegion;          // 任务区域
     QString targetType;          // 目标类型及特征
-    bool reserveCapacity;        // 是否预留20%能力
+    QString reserveCapacity;     // 预留20%能力（字符串形式，可输入任意内容）
 };
 
 /**

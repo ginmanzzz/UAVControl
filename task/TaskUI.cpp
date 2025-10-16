@@ -913,17 +913,19 @@ void TaskUI::openPlanDialog() {
 
     // 延迟创建 PlanDialog
     if (!m_planDialog) {
-        m_planDialog = new PlanDialog(this);
+        m_planDialog = new PlanDialog(this);  // TaskUI作为父窗口，随TaskUI显示/隐藏
 
         // 创建一个示例方案
         static Plan *samplePlan = new Plan(1, "示例方案");
         m_planDialog->setPlan(samplePlan);
     }
 
-    // 显示窗口并定位到地图左上角（左侧小列右方）
+    // 显示窗口并定位到左上角
     m_planDialog->show();
     m_planDialog->raise();
 
-    // 定位到地图左上角，左侧边栏（40px）右方 + 10px间距
-    m_planDialog->move(50, 10);
+    // 定位到左上角（带10px边距）
+    m_planDialog->setGeometry(50, 50, m_planDialog->width(), m_planDialog->height());
+
+    qDebug() << "方案窗口定位到左上角: (50, 50)";
 }

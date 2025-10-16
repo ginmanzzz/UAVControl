@@ -6,69 +6,39 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QDebug>
+#include <QPalette>
+#include <QGraphicsDropShadowEffect>
 
 PlanDialog::PlanDialog(QWidget *parent)
     : QWidget(parent)
 {
     setupUI();
-    // 无边框、无标题栏的浮动窗口
-    setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-    setAttribute(Qt::WA_DeleteOnClose, false);
-    // 不使用WA_TranslucentBackground，否则背景色会完全透明
+
+    // 设置白色背景
+    setAutoFillBackground(true);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window, Qt::white);
+    setPalette(pal);
 }
 
 void PlanDialog::setupUI()
 {
     setFixedSize(600, 400);
 
-    // 透明蓝紫色背景，简洁设计
+    // 统一的样式表 - 所有元素完全不透明
     setStyleSheet(
-        "QWidget#PlanDialog {"
-        "  background-color: rgba(103, 58, 183, 180);"  // 蓝紫色，半透明
+        "PlanDialog {"
+        "  background-color: white;"
+        "  border: 2px solid #2196F3;"
         "  border-radius: 6px;"
         "}"
-    );
-    setObjectName("PlanDialog");
-
-    auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(15, 12, 15, 12);
-    mainLayout->setSpacing(10);
-
-    // ============ 标题 + 关闭按钮 ============
-    auto *headerLayout = new QHBoxLayout();
-
-    auto *titleLabel = new QLabel("创建方案", this);
-    titleLabel->setStyleSheet(
-        "font-size: 15px;"
-        "font-weight: bold;"
-        "color: white;"
-        "background: transparent;"
-    );
-
-    auto *closeButton = new QPushButton("✕", this);
-    closeButton->setFixedSize(20, 20);
-    closeButton->setStyleSheet(
-        "QPushButton {"
-        "  background: transparent;"
-        "  border: none;"
-        "  color: white;"
-        "  font-size: 16px;"
+        "QLabel {"
+        "  background-color: white;"
+        "  color: #333;"
         "}"
-        "QPushButton:hover { color: #ffcccc; }"
-    );
-    connect(closeButton, &QPushButton::clicked, this, &QWidget::hide);
-
-    headerLayout->addWidget(titleLabel, 1);
-    headerLayout->addWidget(closeButton);
-    mainLayout->addLayout(headerLayout);
-
-    // ============ 新建任务按钮 ============
-    m_newTaskButton = new QPushButton("新建任务", this);
-    m_newTaskButton->setFixedHeight(28);
-    m_newTaskButton->setStyleSheet(
         "QPushButton {"
-        "  background-color: rgba(255, 255, 255, 200);"
-        "  color: #673AB7;"
+        "  background-color: #2196F3;"
+        "  color: white;"
         "  border: none;"
         "  border-radius: 4px;"
         "  padding: 4px 12px;"
@@ -76,42 +46,98 @@ void PlanDialog::setupUI()
         "  font-weight: bold;"
         "}"
         "QPushButton:hover {"
-        "  background-color: rgba(255, 255, 255, 230);"
+        "  background-color: #1976D2;"
         "}"
-    );
-    connect(m_newTaskButton, &QPushButton::clicked, this, &PlanDialog::onNewTask);
-    mainLayout->addWidget(m_newTaskButton, 0, Qt::AlignLeft);
-
-    // ============ 任务表格 ============
-    m_taskTable = new QTableWidget(0, 6, this);
-    m_taskTable->setHorizontalHeaderLabels({"任务编号", "任务类型", "任务区域", "目标类型及特征", "预留20%能力", "操作"});
-    m_taskTable->horizontalHeader()->setStyleSheet(
+        "QTableWidget {"
+        "  background-color: white;"
+        "  border: 1px solid #E0E0E0;"
+        "  gridline-color: #E0E0E0;"
+        "}"
+        "QTableWidget::item {"
+        "  background-color: white;"
+        "  color: #333;"
+        "  padding: 4px;"
+        "  font-size: 12px;"
+        "}"
+        "QTableWidget::item:selected {"
+        "  background-color: #BBDEFB;"
+        "}"
         "QHeaderView::section {"
-        "  background-color: rgba(255, 255, 255, 150);"
+        "  background-color: #E3F2FD;"
         "  color: #333;"
         "  padding: 5px;"
         "  border: none;"
         "  font-weight: bold;"
-        "  font-size: 11px;"
+        "  font-size: 12px;"
         "}"
     );
+
+    auto *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(15, 12, 15, 12);
+    mainLayout->setSpacing(0);
+
+    // ============ 标题 + 关闭按钮 ============
+    auto *headerWidget = new QWidget(this);
+    headerWidget->setStyleSheet("background-color: white;");
+    auto *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+
+    auto *titleLabel = new QLabel("创建方案", headerWidget);
+    titleLabel->setStyleSheet(
+        "font-size: 12px;"
+        "font-weight: bold;"
+        "color: #2196F3;"
+        "background-color: white;"
+    );
+
+    auto *closeButton = new QPushButton("✕", headerWidget);
+    closeButton->setFixedSize(20, 20);
+    closeButton->setStyleSheet(
+        "background-color: white;"
+        "color: #333;"
+        "font-size: 12px;"
+        "border: none;"
+    );
+    connect(closeButton, &QPushButton::clicked, this, &QWidget::hide);
+
+    headerLayout->addWidget(titleLabel, 1);
+    headerLayout->addWidget(closeButton);
+    mainLayout->addWidget(headerWidget);
+
+    // ============ 新建任务按钮 ============
+    auto *newTaskWidget = new QWidget(this);
+    newTaskWidget->setStyleSheet("background-color: white;");
+    auto *newTaskLayout = new QHBoxLayout(newTaskWidget);
+    newTaskLayout->setContentsMargins(0, 0, 0, 0);
+
+    m_newTaskButton = new QPushButton("新建任务", newTaskWidget);
+    m_newTaskButton->setFixedHeight(28);
+    m_newTaskButton->setStyleSheet(
+        "background-color: white;"
+        "color: black;"
+        "border: 1px solid #CCCCCC;"
+        "border-radius: 4px;"
+        "padding: 4px 12px;"
+        "font-size: 12px;"
+    );
+    // 添加阴影效果
+    auto *newTaskShadow = new QGraphicsDropShadowEffect(m_newTaskButton);
+    newTaskShadow->setBlurRadius(8);
+    newTaskShadow->setColor(QColor(0, 0, 0, 60));
+    newTaskShadow->setOffset(2, 2);
+    m_newTaskButton->setGraphicsEffect(newTaskShadow);
+    connect(m_newTaskButton, &QPushButton::clicked, this, &PlanDialog::onNewTask);
+
+    newTaskLayout->addWidget(m_newTaskButton);
+    newTaskLayout->addStretch();
+    mainLayout->addWidget(newTaskWidget);
+
+    // ============ 任务表格 ============
+    m_taskTable = new QTableWidget(0, 6, this);
+    m_taskTable->setHorizontalHeaderLabels({"任务编号", "任务类型", "任务区域", "目标类型及特征", "预留20%能力", "操作"});
     m_taskTable->verticalHeader()->setVisible(false);
     m_taskTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_taskTable->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
-    m_taskTable->setStyleSheet(
-        "QTableWidget {"
-        "  background-color: rgba(255, 255, 255, 200);"
-        "  border: none;"
-        "  gridline-color: rgba(0, 0, 0, 50);"
-        "}"
-        "QTableWidget::item {"
-        "  padding: 4px;"
-        "  color: #333;"
-        "}"
-        "QTableWidget::item:selected {"
-        "  background-color: rgba(103, 58, 183, 100);"
-        "}"
-    );
 
     // 设置列宽（总宽度约570px，适应600px窗口）
     m_taskTable->setColumnWidth(0, 60);   // 任务编号
@@ -124,48 +150,53 @@ void PlanDialog::setupUI()
     mainLayout->addWidget(m_taskTable, 1);
 
     // ============ 底部按钮 ============
-    auto *buttonLayout = new QHBoxLayout();
+    auto *buttonWidget = new QWidget(this);
+    buttonWidget->setStyleSheet("background-color: white;");
+    auto *buttonLayout = new QHBoxLayout(buttonWidget);
+    buttonLayout->setContentsMargins(0, 0, 0, 0);
     buttonLayout->addStretch();
 
-    m_confirmButton = new QPushButton("确定", this);
+    m_confirmButton = new QPushButton("确定", buttonWidget);
     m_confirmButton->setFixedSize(80, 28);
     m_confirmButton->setStyleSheet(
-        "QPushButton {"
-        "  background-color: rgba(255, 255, 255, 200);"
-        "  color: #673AB7;"
-        "  border: none;"
-        "  border-radius: 4px;"
-        "  font-size: 12px;"
-        "  font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "  background-color: rgba(255, 255, 255, 230);"
-        "}"
+        "background-color: white;"
+        "color: black;"
+        "border: 1px solid #CCCCCC;"
+        "border-radius: 4px;"
+        "padding: 4px 12px;"
+        "font-size: 12px;"
     );
+    // 添加阴影效果
+    auto *confirmShadow = new QGraphicsDropShadowEffect(m_confirmButton);
+    confirmShadow->setBlurRadius(8);
+    confirmShadow->setColor(QColor(0, 0, 0, 60));
+    confirmShadow->setOffset(2, 2);
+    m_confirmButton->setGraphicsEffect(confirmShadow);
     connect(m_confirmButton, &QPushButton::clicked, this, &PlanDialog::onConfirm);
 
-    m_cancelButton = new QPushButton("取消", this);
+    m_cancelButton = new QPushButton("取消", buttonWidget);
     m_cancelButton->setFixedSize(80, 28);
     m_cancelButton->setStyleSheet(
-        "QPushButton {"
-        "  background-color: rgba(255, 255, 255, 120);"
-        "  color: white;"
-        "  border: none;"
-        "  border-radius: 4px;"
-        "  font-size: 12px;"
-        "  font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "  background-color: rgba(255, 255, 255, 150);"
-        "}"
+        "background-color: white;"
+        "color: black;"
+        "border: 1px solid #CCCCCC;"
+        "border-radius: 4px;"
+        "padding: 4px 12px;"
+        "font-size: 12px;"
     );
+    // 添加阴影效果
+    auto *cancelShadow = new QGraphicsDropShadowEffect(m_cancelButton);
+    cancelShadow->setBlurRadius(8);
+    cancelShadow->setColor(QColor(0, 0, 0, 60));
+    cancelShadow->setOffset(2, 2);
+    m_cancelButton->setGraphicsEffect(cancelShadow);
     connect(m_cancelButton, &QPushButton::clicked, this, &PlanDialog::onCancel);
 
     buttonLayout->addWidget(m_confirmButton);
     buttonLayout->addSpacing(8);
     buttonLayout->addWidget(m_cancelButton);
 
-    mainLayout->addLayout(buttonLayout);
+    mainLayout->addWidget(buttonWidget);
 }
 
 void PlanDialog::setPlan(Plan *plan)
@@ -199,16 +230,8 @@ void PlanDialog::loadPlanData()
         // 目标类型及特征
         m_taskTable->setItem(row, 3, new QTableWidgetItem(task.targetType));
 
-        // 预留20%能力（复选框）
-        auto *checkBoxWidget = new QWidget();
-        checkBoxWidget->setStyleSheet("background: transparent;");
-        auto *checkBoxLayout = new QHBoxLayout(checkBoxWidget);
-        checkBoxLayout->setContentsMargins(0, 0, 0, 0);
-        checkBoxLayout->setAlignment(Qt::AlignCenter);
-        auto *checkBox = new QCheckBox();
-        checkBox->setChecked(task.reserveCapacity);
-        checkBoxLayout->addWidget(checkBox);
-        m_taskTable->setCellWidget(row, 4, checkBoxWidget);
+        // 预留20%能力（可编辑文本）
+        m_taskTable->setItem(row, 4, new QTableWidgetItem(task.reserveCapacity));
 
         // 操作按钮（删除）
         auto *deleteButton = new QPushButton("删除");
@@ -219,7 +242,7 @@ void PlanDialog::loadPlanData()
             "  border: none;"
             "  border-radius: 3px;"
             "  padding: 3px 6px;"
-            "  font-size: 10px;"
+            "  font-size: 12px;"
             "}"
             "QPushButton:hover {"
             "  background-color: rgba(244, 67, 54, 220);"
@@ -264,13 +287,8 @@ void PlanDialog::savePlanData()
         task.targetType = targetItem ? targetItem->text() : "";
 
         // 预留20%能力
-        QWidget *checkBoxWidget = m_taskTable->cellWidget(row, 4);
-        if (checkBoxWidget) {
-            QCheckBox *checkBox = checkBoxWidget->findChild<QCheckBox*>();
-            task.reserveCapacity = checkBox ? checkBox->isChecked() : false;
-        } else {
-            task.reserveCapacity = false;
-        }
+        QTableWidgetItem *capacityItem = m_taskTable->item(row, 4);
+        task.reserveCapacity = capacityItem ? capacityItem->text() : "";
 
         m_plan->addTask(task);
     }
@@ -288,17 +306,7 @@ void PlanDialog::onNewTask()
     m_taskTable->setItem(row, 1, new QTableWidgetItem(""));
     m_taskTable->setItem(row, 2, new QTableWidgetItem(""));
     m_taskTable->setItem(row, 3, new QTableWidgetItem(""));
-
-    // 预留20%能力（复选框）
-    auto *checkBoxWidget = new QWidget();
-    checkBoxWidget->setStyleSheet("background: transparent;");
-    auto *checkBoxLayout = new QHBoxLayout(checkBoxWidget);
-    checkBoxLayout->setContentsMargins(0, 0, 0, 0);
-    checkBoxLayout->setAlignment(Qt::AlignCenter);
-    auto *checkBox = new QCheckBox();
-    checkBox->setChecked(false);
-    checkBoxLayout->addWidget(checkBox);
-    m_taskTable->setCellWidget(row, 4, checkBoxWidget);
+    m_taskTable->setItem(row, 4, new QTableWidgetItem(""));  // 预留20%能力（可编辑文本）
 
     // 删除按钮
     auto *deleteButton = new QPushButton("删除");
@@ -309,7 +317,7 @@ void PlanDialog::onNewTask()
         "  border: none;"
         "  border-radius: 3px;"
         "  padding: 3px 6px;"
-        "  font-size: 10px;"
+        "  font-size: 12px;"
         "}"
         "QPushButton:hover {"
         "  background-color: rgba(244, 67, 54, 220);"
