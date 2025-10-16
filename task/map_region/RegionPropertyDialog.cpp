@@ -123,8 +123,14 @@ void RegionPropertyDialog::setupUI(const QString &defaultName, bool showTerrain)
 
     mainLayout->addLayout(buttonLayout);
 
+    // 调整对话框大小以适应内容
+    adjustSize();
+
     // 设置焦点到名称输入框
     m_nameEdit->setFocus();
+
+    // 将对话框移动到屏幕中心
+    centerOnScreen();
 }
 
 QString RegionPropertyDialog::getRegionName() const
@@ -159,15 +165,13 @@ QString RegionPropertyDialog::terrainTypeToString(TerrainType type)
     }
 }
 
-void RegionPropertyDialog::showEvent(QShowEvent *event)
+void RegionPropertyDialog::centerOnScreen()
 {
-    QDialog::showEvent(event);
-    
     // 将对话框移动到屏幕中心
     if (QScreen *screen = QGuiApplication::primaryScreen()) {
         QRect screenGeometry = screen->geometry();
-        int x = (screenGeometry.width() - width()) / 2;
-        int y = (screenGeometry.height() - height()) / 2;
+        int x = screenGeometry.x() + (screenGeometry.width() - width()) / 2;
+        int y = screenGeometry.y() + (screenGeometry.height() - height()) / 2;
         move(x, y);
     }
 }

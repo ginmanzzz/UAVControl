@@ -487,7 +487,10 @@ QString RegionManager::generateDefaultName(RegionType type, int id)
 
 QString RegionManager::promptForName(const QString &defaultName)
 {
-    RegionPropertyDialog dialog(defaultName);
+    // 尝试获取父窗口（TaskUI）作为对话框的父窗口
+    QWidget *parentWidget = qobject_cast<QWidget*>(parent());
+
+    RegionPropertyDialog dialog(defaultName, parentWidget);
     if (dialog.exec() == QDialog::Accepted) {
         QString name = dialog.getRegionName().trimmed();
         return name.isEmpty() ? defaultName : name;
