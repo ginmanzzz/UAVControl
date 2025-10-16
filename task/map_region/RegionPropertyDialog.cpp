@@ -4,6 +4,8 @@
 #include "RegionPropertyDialog.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QScreen>
+#include <QGuiApplication>
 
 RegionPropertyDialog::RegionPropertyDialog(const QString &defaultName, QWidget *parent)
     : QDialog(parent), m_showTerrain(false)
@@ -154,5 +156,18 @@ QString RegionPropertyDialog::terrainTypeToString(TerrainType type)
         case Mountain: return "山地";
         case HighMountain: return "高山地";
         default: return "未知";
+    }
+}
+
+void RegionPropertyDialog::showEvent(QShowEvent *event)
+{
+    QDialog::showEvent(event);
+    
+    // 将对话框移动到屏幕中心
+    if (QScreen *screen = QGuiApplication::primaryScreen()) {
+        QRect screenGeometry = screen->geometry();
+        int x = (screenGeometry.width() - width()) / 2;
+        int y = (screenGeometry.height() - height()) / 2;
+        move(x, y);
     }
 }

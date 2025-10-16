@@ -34,6 +34,9 @@ public:
 
     static QString terrainTypeToString(TerrainType type);
 
+protected:
+    void showEvent(QShowEvent *event) override;
+
 private:
     void setupUI(const QString &defaultName, bool showTerrain);
 
