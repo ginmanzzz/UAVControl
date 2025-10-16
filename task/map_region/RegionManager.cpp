@@ -106,7 +106,7 @@ Region* RegionManager::createTaskRegion(const QMapLibre::Coordinates &vertices, 
     }
 
     int regionId = generateNextId();
-    Region *region = new Region(regionId, RegionType::Polygon);
+    Region *region = new Region(regionId, RegionType::TaskRegion);
     region->setName(name.isEmpty() ? QString("任务区域 %1").arg(regionId) : name);
     region->setVertices(vertices);
     region->setTerrainType(TerrainType::Plain);  // 默认平原
@@ -340,7 +340,7 @@ void RegionManager::drawRegion(Region *region) {
             );
             break;
 
-        case RegionType::Polygon:
+        case RegionType::TaskRegion:
             annotationId = m_painter->drawTaskRegionArea(region->vertices());
             break;
     }

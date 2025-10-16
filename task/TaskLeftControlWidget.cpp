@@ -753,7 +753,7 @@ void TaskLeftControlWidget::onExportTasks()
                 }
                 break;
 
-            case RegionType::Polygon:
+            case RegionType::TaskRegion:
                 {
                     QJsonArray coordsArray;
                     for (const auto &coord : region->vertices()) {
@@ -993,7 +993,7 @@ void TaskLeftControlWidget::onImportTasks()
                 break;
             }
 
-            case RegionType::Polygon: {
+            case RegionType::TaskRegion: {
                 QJsonArray coordsArray = regionObj["coordinates"].toArray();
                 QMapLibre::Coordinates coords;
                 for (const QJsonValue &coordValue : coordsArray) {
@@ -1043,7 +1043,7 @@ void TaskLeftControlWidget::refreshRegionList()
     // 筛选任务区域
     QVector<Region*> polygons;
     for (Region *region : allRegions) {
-        if (region && region->type() == RegionType::Polygon) {
+        if (region && region->type() == RegionType::TaskRegion) {
             polygons.append(region);
         }
     }

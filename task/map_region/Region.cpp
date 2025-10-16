@@ -29,7 +29,7 @@ QString Region::typeToString(Type type) {
             return "无人机";
         case RegionType::NoFlyZone:
             return "禁飞区";
-        case RegionType::Polygon:
+        case RegionType::TaskRegion:
             return "任务区域";
         default:
             return "未知";

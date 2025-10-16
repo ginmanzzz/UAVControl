@@ -316,7 +316,7 @@ QMapLibre::AnnotationID MapPainter::drawTaskRegionArea(const QMapLibre::Coordina
 
     // 保存元素信息
     RegionInfo info;
-    info.type = RegionType::Polygon;
+    info.type = RegionType::TaskRegion;
     info.vertices = coordinates;
     info.annotationId = id;
     m_regionInfo[id] = info;
@@ -595,7 +595,7 @@ const RegionInfo* MapPainter::findRegionNear(const QMapLibre::Coordinate &clickC
             }
             break;
 
-        case RegionType::Polygon:
+        case RegionType::TaskRegion:
             // 计算点到多边形的距离
             distance = distanceToPolygon(clickCoord, info.vertices);
             if (distance < minAreaDistance) {

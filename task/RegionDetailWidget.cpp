@@ -62,7 +62,7 @@ void RegionDetailWidget::showRegion(const RegionInfo *info, const QPoint &screen
         case RegionType::NoFlyZone:
             title = "🚫 禁飞区域";
             break;
-        case RegionType::Polygon:
+        case RegionType::TaskRegion:
             title = "🔷 任务区域";
             break;
     }
@@ -106,7 +106,7 @@ void RegionDetailWidget::showRegion(const RegionInfo *info, const QPoint &screen
             break;
         }
 
-        case RegionType::Polygon: {
+        case RegionType::TaskRegion: {
             addInfoLine("顶点数量", QString("%1").arg(info->vertices.size()));
             for (int i = 0; i < info->vertices.size(); ++i) {
                 addInfoLine(QString("顶点%1").arg(i + 1),

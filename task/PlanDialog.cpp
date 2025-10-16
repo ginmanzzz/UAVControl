@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QPalette>
 #include <QGraphicsDropShadowEffect>
+#include <QMessageBox>
 
 PlanDialog::PlanDialog(TaskManager *taskManager, QWidget *parent)
     : QWidget(parent), m_taskManager(taskManager)
@@ -299,6 +300,36 @@ void PlanDialog::savePlanData()
 
 void PlanDialog::onNewTask()
 {
+    // 检查地图上是否有任务区域
+    if (!m_taskManager) {
+        qDebug() << "TaskManager 为空";
+        return;
+    }
+
+    RegionManager *regionManager = m_taskManager->regionManager();
+    if (!regionManager) {
+        qDebug() << "RegionManager 为空";
+        return;
+    }
+
+    // 检查是否存在 Polygon 类型的区域（任务区域）
+    bool hasTaskRegion = false;
+    const QMap<int, Region*> &allRegions = regionManager->getAllRegions();
+    for (auto it = allRegions.constBegin(); it != allRegions.constEnd(); ++it) {
+        Region *region = it.value();
+        if (region && region->type() == RegionType::TaskRegion) {
+            hasTaskRegion = true;
+            break;
+        }
+    }
+
+    if (!hasTaskRegion) {
+        QMessageBox::warning(this, "提示",
+                           "地图上还没有任务区域，请先在地图上绘制任务区域！");
+        qDebug() << "没有任务区域，无法创建任务";
+        return;
+    }
+
     qDebug() << "打开任务创建对话框";
     openTaskDialog();
 }

@@ -14,7 +14,7 @@ enum class RegionType {
     LoiterPoint,  // 盘旋点
     UAV,          // 无人机
     NoFlyZone,    // 禁飞区
-    Polygon       // 多边形区域
+    TaskRegion    // 任务区域
 };
 
 /**
@@ -33,7 +33,7 @@ enum class TerrainType {
 struct RegionInfo {
     RegionType type;
     QMapLibre::Coordinate coordinate;  // 对于点类型：位置；对于区域类型：中心点
-    QMapLibre::Coordinates vertices;   // 对于多边形：所有顶点
+    QMapLibre::Coordinates vertices;   // 对于任务区域：所有顶点
     double radius;                     // 对于禁飞区：半径（米）
     QString color;                     // 对于 UAV：颜色
     QMapLibre::AnnotationID annotationId;  // 标注ID
