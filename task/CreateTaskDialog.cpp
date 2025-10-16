@@ -1,14 +1,17 @@
 // Copyright (C) 2023 MapLibre contributors
 // SPDX-License-Identifier: MIT
 
-#include "TaskDialog.h"
+#include "CreateTaskDialog.h"
 #include <QFormLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QIntValidator>
+#include <QComboBox>
+#include <QCheckBox>
+#include <QMessageBox>
 #include <QDebug>
 
-TaskDialog::TaskDialog(TaskManager *taskManager, QWidget *parent)
+CreateTaskDialog::CreateTaskDialog(TaskManager *taskManager, QWidget *parent)
     : QDialog(parent)
     , m_taskManager(taskManager)
     , m_editTask(nullptr)
@@ -19,7 +22,7 @@ TaskDialog::TaskDialog(TaskManager *taskManager, QWidget *parent)
     setupUI();
 }
 
-TaskDialog::TaskDialog(TaskManager *taskManager, Task *task, QWidget *parent)
+CreateTaskDialog::CreateTaskDialog(TaskManager *taskManager, Task *task, QWidget *parent)
     : QDialog(parent)
     , m_taskManager(taskManager)
     , m_editTask(task)
@@ -41,7 +44,7 @@ TaskDialog::TaskDialog(TaskManager *taskManager, Task *task, QWidget *parent)
     m_createButton->setText("保存");
 }
 
-void TaskDialog::setupUI()
+void CreateTaskDialog::setupUI()
 {
     setWindowTitle("创建新任务");
     setModal(true);
@@ -55,30 +58,23 @@ void TaskDialog::setupUI()
     auto *formLayout = new QFormLayout();
     formLayout->setSpacing(10);
 
-    // 任务ID输入
+    // 任务ID显示（系统自动分配，只读）
     m_taskIdInput = new QLineEdit(this);
-    m_taskIdInput->setPlaceholderText("输入任务ID（正整数）");
-    m_taskIdInput->setValidator(new QIntValidator(1, 999999, this));
-    connect(m_taskIdInput, &QLineEdit::textChanged, this, &TaskDialog::onTaskIdChanged);
+    m_taskIdInput->setReadOnly(true);
+    m_taskIdInput->setStyleSheet("background-color: #f5f5f5; color: #666;");
 
-    m_taskIdErrorLabel = new QLabel(this);
-    m_taskIdErrorLabel->setStyleSheet("color: #f44336; font-size: 11px;");
-    m_taskIdErrorLabel->setWordWrap(true);
-    m_taskIdErrorLabel->hide();
+    // 自动分配任务ID（使用TaskManager生成）
+    if (!m_isEditMode && m_taskManager) {
+        m_taskId = m_taskManager->generateNextTaskId();
+        m_taskIdInput->setText(QString::number(m_taskId));
+    }
 
-    auto *taskIdContainer = new QWidget(this);
-    auto *taskIdLayout = new QVBoxLayout(taskIdContainer);
-    taskIdLayout->setContentsMargins(0, 0, 0, 0);
-    taskIdLayout->setSpacing(4);
-    taskIdLayout->addWidget(m_taskIdInput);
-    taskIdLayout->addWidget(m_taskIdErrorLabel);
-
-    formLayout->addRow("任务ID:", taskIdContainer);
+    formLayout->addRow("任务ID:", m_taskIdInput);
 
     // 任务名称输入
     m_taskNameInput = new QLineEdit(this);
     m_taskNameInput->setPlaceholderText("输入任务名称");
-    connect(m_taskNameInput, &QLineEdit::textChanged, this, &TaskDialog::onTaskNameChanged);
+    connect(m_taskNameInput, &QLineEdit::textChanged, this, &CreateTaskDialog::onTaskNameChanged);
 
     m_taskNameErrorLabel = new QLabel(this);
     m_taskNameErrorLabel->setStyleSheet("color: #f44336; font-size: 11px;");
@@ -101,6 +97,45 @@ void TaskDialog::setupUI()
     m_descriptionInput->setMaximumHeight(150);
 
     formLayout->addRow("详细描述:", m_descriptionInput);
+
+    // 任务种类下拉框
+    m_taskTypeCombo = new QComboBox(this);
+    m_taskTypeCombo->addItems({"区域收缩", "区域掩护", "电子侦察", "协同攻击", "目标侦察"});
+    formLayout->addRow("任务种类:", m_taskTypeCombo);
+
+    // 任务区域下拉框
+    m_taskRegionCombo = new QComboBox(this);
+    m_taskRegionCombo->addItem("（请选择任务区域）", -1);  // 默认选项，值为-1
+
+    // 从 RegionManager 获取区域列表
+    if (m_taskManager && m_taskManager->regionManager()) {
+        auto regions = m_taskManager->regionManager()->getAllRegions();
+        for (Region *region : regions) {
+            // 显示：区域ID - 区域名称
+            QString displayText = QString("区域%1 - %2").arg(region->id()).arg(region->name());
+            m_taskRegionCombo->addItem(displayText, region->id());
+        }
+    }
+
+    // 当任务区域改变时重新验证
+    connect(m_taskRegionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &CreateTaskDialog::validateInputs);
+
+    formLayout->addRow("任务区域:", m_taskRegionCombo);
+
+    // 目标类型下拉框
+    m_targetTypeCombo = new QComboBox(this);
+    m_targetTypeCombo->addItems({"车辆", "雷达", "区域"});
+    formLayout->addRow("目标类型:", m_targetTypeCombo);
+
+    // 特征下拉框
+    m_targetFeatureCombo = new QComboBox(this);
+    m_targetFeatureCombo->addItems({"大", "中", "小"});
+    formLayout->addRow("特征:", m_targetFeatureCombo);
+
+    // 预留20%能力复选框
+    m_reserveCapacityCheck = new QCheckBox("预留20%能力", this);
+    formLayout->addRow("", m_reserveCapacityCheck);
 
     mainLayout->addLayout(formLayout);
 
@@ -141,7 +176,7 @@ void TaskDialog::setupUI()
         "}"
     );
     m_createButton->setEnabled(false);
-    connect(m_createButton, &QPushButton::clicked, this, &TaskDialog::onCreateClicked);
+    connect(m_createButton, &QPushButton::clicked, this, &CreateTaskDialog::onCreateClicked);
 
     buttonLayout->addWidget(m_cancelButton);
     buttonLayout->addWidget(m_createButton);
@@ -161,7 +196,7 @@ void TaskDialog::setupUI()
     );
 }
 
-void TaskDialog::onTaskIdChanged(const QString &text)
+void CreateTaskDialog::onTaskIdChanged(const QString &text)
 {
     // 编辑模式下，ID不可编辑，直接跳过验证
     if (m_isEditMode) {
@@ -197,7 +232,7 @@ void TaskDialog::onTaskIdChanged(const QString &text)
     validateInputs();
 }
 
-void TaskDialog::onTaskNameChanged(const QString &text)
+void CreateTaskDialog::onTaskNameChanged(const QString &text)
 {
     if (text.trimmed().isEmpty()) {
         m_taskNameErrorLabel->hide();
@@ -225,13 +260,15 @@ void TaskDialog::onTaskNameChanged(const QString &text)
     validateInputs();
 }
 
-void TaskDialog::validateInputs()
+void CreateTaskDialog::validateInputs()
 {
-    bool valid = isTaskIdValid() && isTaskNameValid();
+    // 任务ID由系统自动分配，不需要验证
+    // 需要验证：任务名称 和 任务区域
+    bool valid = isTaskNameValid() && isTaskRegionSelected();
     m_createButton->setEnabled(valid);
 }
 
-bool TaskDialog::isTaskIdValid() const
+bool CreateTaskDialog::isTaskIdValid() const
 {
     // 编辑模式下，ID已经存在且不可修改，总是有效
     if (m_isEditMode) {
@@ -253,7 +290,7 @@ bool TaskDialog::isTaskIdValid() const
     return m_taskManager->getTask(id) == nullptr;
 }
 
-bool TaskDialog::isTaskNameValid() const
+bool CreateTaskDialog::isTaskNameValid() const
 {
     QString name = m_taskNameInput->text().trimmed();
     if (name.isEmpty()) {
@@ -275,8 +312,15 @@ bool TaskDialog::isTaskNameValid() const
     return true;
 }
 
-void TaskDialog::onCreateClicked()
+void CreateTaskDialog::onCreateClicked()
 {
+    // 再次检查是否选择了任务区域（防御性编程）
+    if (!isTaskRegionSelected()) {
+        QMessageBox::warning(this, "未选择任务区域",
+                           "请先选择一个任务区域后再创建任务。");
+        return;
+    }
+
     m_taskId = m_taskIdInput->text().toInt();
     m_taskName = m_taskNameInput->text().trimmed();
     m_taskDescription = m_descriptionInput->toPlainText().trimmed();
@@ -286,17 +330,53 @@ void TaskDialog::onCreateClicked()
     accept();
 }
 
-int TaskDialog::getTaskId() const
+int CreateTaskDialog::getTaskId() const
 {
     return m_taskId;
 }
 
-QString TaskDialog::getTaskName() const
+QString CreateTaskDialog::getTaskName() const
 {
     return m_taskName;
 }
 
-QString TaskDialog::getTaskDescription() const
+QString CreateTaskDialog::getTaskDescription() const
 {
     return m_taskDescription;
+}
+
+QString CreateTaskDialog::getTaskType() const
+{
+    return m_taskTypeCombo ? m_taskTypeCombo->currentText() : QString();
+}
+
+QString CreateTaskDialog::getTaskRegion() const
+{
+    return m_taskRegionCombo ? m_taskRegionCombo->currentText() : QString();
+}
+
+QString CreateTaskDialog::getTargetType() const
+{
+    return m_targetTypeCombo ? m_targetTypeCombo->currentText() : QString();
+}
+
+QString CreateTaskDialog::getTargetFeature() const
+{
+    return m_targetFeatureCombo ? m_targetFeatureCombo->currentText() : QString();
+}
+
+bool CreateTaskDialog::getReserveCapacity() const
+{
+    return m_reserveCapacityCheck ? m_reserveCapacityCheck->isChecked() : false;
+}
+
+bool CreateTaskDialog::isTaskRegionSelected() const
+{
+    if (!m_taskRegionCombo) {
+        return false;
+    }
+
+    // 检查是否选择了有效的区域（不是"（请选择任务区域）"）
+    int regionId = m_taskRegionCombo->currentData().toInt();
+    return regionId != -1;
 }

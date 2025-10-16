@@ -1,8 +1,8 @@
 // Copyright (C) 2023 MapLibre contributors
 // SPDX-License-Identifier: MIT
 
-#ifndef TASKDIALOG_H
-#define TASKDIALOG_H
+#ifndef CREATETASKDIALOG_H
+#define CREATETASKDIALOG_H
 
 #include "TaskManager.h"
 #include <QDialog>
@@ -13,22 +13,27 @@
 #include <QVBoxLayout>
 
 /**
- * @brief 任务对话框 - 用于创建和编辑任务
+ * @brief 创建任务对话框 - 用于创建和编辑任务
  */
-class TaskDialog : public QDialog {
+class CreateTaskDialog : public QDialog {
     Q_OBJECT
 
 public:
     // 创建新任务的构造函数
-    explicit TaskDialog(TaskManager *taskManager, QWidget *parent = nullptr);
+    explicit CreateTaskDialog(TaskManager *taskManager, QWidget *parent = nullptr);
 
     // 编辑现有任务的构造函数
-    explicit TaskDialog(TaskManager *taskManager, Task *task, QWidget *parent = nullptr);
+    explicit CreateTaskDialog(TaskManager *taskManager, Task *task, QWidget *parent = nullptr);
 
     // 获取用户输入的数据
     int getTaskId() const;
     QString getTaskName() const;
     QString getTaskDescription() const;
+    QString getTaskType() const;
+    QString getTaskRegion() const;
+    QString getTargetType() const;
+    QString getTargetFeature() const;
+    bool getReserveCapacity() const;
 
 private slots:
     void onTaskIdChanged(const QString &text);
@@ -40,6 +45,7 @@ private:
     void setupUI();
     bool isTaskIdValid() const;
     bool isTaskNameValid() const;
+    bool isTaskRegionSelected() const;
 
 private:
     TaskManager *m_taskManager;
@@ -50,6 +56,11 @@ private:
     QLineEdit *m_taskIdInput;
     QLineEdit *m_taskNameInput;
     QTextEdit *m_descriptionInput;
+    class QComboBox *m_taskTypeCombo;       // 任务种类下拉框
+    class QComboBox *m_taskRegionCombo;     // 任务区域下拉框
+    class QComboBox *m_targetTypeCombo;     // 目标类型下拉框
+    class QComboBox *m_targetFeatureCombo;  // 特征下拉框
+    class QCheckBox *m_reserveCapacityCheck; // 预留20%能力复选框
     QLabel *m_taskIdErrorLabel;
     QLabel *m_taskNameErrorLabel;
     QPushButton *m_createButton;
@@ -60,4 +71,4 @@ private:
     QString m_taskDescription;
 };
 
-#endif // TASKDIALOG_H
+#endif // CREATETASKDIALOG_H

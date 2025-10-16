@@ -174,6 +174,11 @@ public:
     void clearCurrentTask();
     const RegionInfo* findVisibleElementNear(const QMapLibre::Coordinate &clickCoord, double threshold = 100.0) const;
 
+    /**
+     * @brief 生成下一个任务ID
+     */
+    int generateNextTaskId();
+
 signals:
     void taskCreated(int taskId);
     void taskRemoved(int taskId);
@@ -192,11 +197,6 @@ private:
      * @brief 更新任务的可见性
      */
     void updateTaskVisibility(Task *task);
-
-    /**
-     * @brief 生成下一个任务ID
-     */
-    int generateNextTaskId();
 
     // 旧版兼容方法
     void showTaskElements(Task *task);

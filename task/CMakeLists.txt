@@ -8,10 +8,10 @@ set(TASK_SOURCES
     TaskManager.cpp
     TaskUI.h
     TaskUI.cpp
-    TaskListWidget.h
-    TaskListWidget.cpp
-    TaskDialog.h
-    TaskDialog.cpp
+    TaskLeftControlWidget.h
+    TaskLeftControlWidget.cpp
+    CreateTaskDialog.h
+    CreateTaskDialog.cpp
     PlanDialog.h
     PlanDialog.cpp
     RegionDetailWidget.h

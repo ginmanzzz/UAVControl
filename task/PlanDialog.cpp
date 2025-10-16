@@ -1,4 +1,5 @@
 #include "PlanDialog.h"
+#include "CreateTaskDialog.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QHeaderView>
@@ -9,8 +10,8 @@
 #include <QPalette>
 #include <QGraphicsDropShadowEffect>
 
-PlanDialog::PlanDialog(QWidget *parent)
-    : QWidget(parent)
+PlanDialog::PlanDialog(TaskManager *taskManager, QWidget *parent)
+    : QWidget(parent), m_taskManager(taskManager)
 {
     setupUI();
 
@@ -133,19 +134,21 @@ void PlanDialog::setupUI()
     mainLayout->addWidget(newTaskWidget);
 
     // ============ 任务表格 ============
-    m_taskTable = new QTableWidget(0, 6, this);
-    m_taskTable->setHorizontalHeaderLabels({"任务编号", "任务类型", "任务区域", "目标类型及特征", "预留20%能力", "操作"});
+    m_taskTable = new QTableWidget(0, 8, this);
+    m_taskTable->setHorizontalHeaderLabels({"任务ID", "任务名称", "任务种类", "任务区域", "目标类型", "特征", "预留20%", "操作"});
     m_taskTable->verticalHeader()->setVisible(false);
     m_taskTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_taskTable->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
+    m_taskTable->setEditTriggers(QAbstractItemView::NoEditTriggers);  // 不可编辑
 
-    // 设置列宽（总宽度约570px，适应600px窗口）
-    m_taskTable->setColumnWidth(0, 60);   // 任务编号
-    m_taskTable->setColumnWidth(1, 90);   // 任务类型
-    m_taskTable->setColumnWidth(2, 100);  // 任务区域
-    m_taskTable->setColumnWidth(3, 180);  // 目标类型及特征
-    m_taskTable->setColumnWidth(4, 80);   // 预留20%能力
-    m_taskTable->setColumnWidth(5, 60);   // 操作
+    // 设置列宽
+    m_taskTable->setColumnWidth(0, 60);   // 任务ID
+    m_taskTable->setColumnWidth(1, 100);  // 任务名称
+    m_taskTable->setColumnWidth(2, 80);   // 任务种类
+    m_taskTable->setColumnWidth(3, 80);   // 任务区域
+    m_taskTable->setColumnWidth(4, 70);   // 目标类型
+    m_taskTable->setColumnWidth(5, 50);   // 特征
+    m_taskTable->setColumnWidth(6, 70);   // 预留20%
+    m_taskTable->setColumnWidth(7, 60);   // 操作
 
     mainLayout->addWidget(m_taskTable, 1);
 
@@ -296,17 +299,133 @@ void PlanDialog::savePlanData()
 
 void PlanDialog::onNewTask()
 {
+    qDebug() << "打开任务创建对话框";
+    openTaskDialog();
+}
+
+void PlanDialog::onDeleteTask()
+{
+    int currentRow = m_taskTable->currentRow();
+    if (currentRow >= 0) {
+        m_taskTable->removeRow(currentRow);
+        qDebug() << "删除任务，行：" << currentRow;
+    }
+}
+
+void PlanDialog::onConfirm()
+{
+    // 确认：保留所有暂存的任务
+    qDebug() << "确认方案，保留" << m_tempTaskIds.size() << "个任务";
+
+    // 清空暂存列表（任务已经在 TaskManager 中）
+    m_tempTaskIds.clear();
+
+    // 清空表格
+    m_taskTable->setRowCount(0);
+
+    savePlanData();
+    if (m_plan) {
+        emit planUpdated(m_plan);
+    }
+
+    hide();
+}
+
+void PlanDialog::onCancel()
+{
+    qDebug() << "取消方案编辑，删除" << m_tempTaskIds.size() << "个暂存任务";
+
+    // 取消：删除所有暂存的任务
+    for (int taskId : m_tempTaskIds) {
+        m_taskManager->removeTask(taskId);
+        qDebug() << "删除暂存任务 ID=" << taskId;
+    }
+
+    // 清空暂存列表
+    m_tempTaskIds.clear();
+
+    // 清空表格
+    m_taskTable->setRowCount(0);
+
+    hide();
+}
+
+void PlanDialog::openTaskDialog()
+{
+    qDebug() << "openTaskDialog 被调用";
+
+    if (!m_taskManager) {
+        qDebug() << "TaskManager 未设置";
+        return;
+    }
+
+    qDebug() << "TaskManager 已设置，准备创建/显示 CreateTaskDialog";
+
+    // 每次都创建新的对话框
+    CreateTaskDialog *dialog = new CreateTaskDialog(m_taskManager, parentWidget());
+    dialog->setFixedSize(width(), height());
+
+    // 计算全局坐标位置
+    QPoint globalPos = mapToGlobal(QPoint(0, 0));
+    int x = globalPos.x() + this->width() + 10;
+    int y = globalPos.y();
+    dialog->move(x, y);
+
+    // 显示对话框并等待用户操作
+    if (dialog->exec() == QDialog::Accepted) {
+        // 用户点击了创建，将任务添加到表格
+        int taskId = dialog->getTaskId();
+        QString taskName = dialog->getTaskName();
+        QString taskType = dialog->getTaskType();
+        QString taskRegion = dialog->getTaskRegion();
+        QString targetType = dialog->getTargetType();
+        QString targetFeature = dialog->getTargetFeature();
+        bool reserveCapacity = dialog->getReserveCapacity();
+
+        // 创建任务并暂存到 TaskManager
+        Task *task = m_taskManager->createTask(taskId, taskName, dialog->getTaskDescription());
+        task->setTaskType(taskType);
+        task->setTaskRegion(taskRegion);
+        task->setTargetType(targetType);
+        task->setTargetFeature(targetFeature);
+        task->setReserveCapacity(reserveCapacity);
+
+        // 添加到表格
+        addTaskToTable(task);
+
+        qDebug() << "任务已添加到表格: ID=" << taskId << ", 名称=" << taskName;
+    }
+
+    dialog->deleteLater();
+}
+
+void PlanDialog::addTaskToTable(Task *task)
+{
+    if (!task) return;
+
     int row = m_taskTable->rowCount();
     m_taskTable->insertRow(row);
 
-    // 默认任务编号
-    m_taskTable->setItem(row, 0, new QTableWidgetItem(QString::number(row + 1)));
+    // 任务ID
+    m_taskTable->setItem(row, 0, new QTableWidgetItem(QString::number(task->id())));
 
-    // 默认空值
-    m_taskTable->setItem(row, 1, new QTableWidgetItem(""));
-    m_taskTable->setItem(row, 2, new QTableWidgetItem(""));
-    m_taskTable->setItem(row, 3, new QTableWidgetItem(""));
-    m_taskTable->setItem(row, 4, new QTableWidgetItem(""));  // 预留20%能力（可编辑文本）
+    // 任务名称
+    m_taskTable->setItem(row, 1, new QTableWidgetItem(task->name()));
+
+    // 任务种类
+    m_taskTable->setItem(row, 2, new QTableWidgetItem(task->taskType()));
+
+    // 任务区域
+    m_taskTable->setItem(row, 3, new QTableWidgetItem(task->taskRegion()));
+
+    // 目标类型
+    m_taskTable->setItem(row, 4, new QTableWidgetItem(task->targetType()));
+
+    // 特征
+    m_taskTable->setItem(row, 5, new QTableWidgetItem(task->targetFeature()));
+
+    // 预留20%能力 - 显示勾或叉符号
+    m_taskTable->setItem(row, 6, new QTableWidgetItem(task->reserveCapacity() ? "✓" : "✗"));
 
     // 删除按钮
     auto *deleteButton = new QPushButton("删除");
@@ -323,37 +442,23 @@ void PlanDialog::onNewTask()
         "  background-color: rgba(244, 67, 54, 220);"
         "}"
     );
-    connect(deleteButton, &QPushButton::clicked, this, [this, row]() {
-        m_taskTable->removeRow(row);
+    connect(deleteButton, &QPushButton::clicked, this, [this, task]() {
+        // 从表格中删除
+        for (int i = 0; i < m_taskTable->rowCount(); ++i) {
+            if (m_taskTable->item(i, 0)->text().toInt() == task->id()) {
+                m_taskTable->removeRow(i);
+                break;
+            }
+        }
+        // 从暂存列表中删除
+        m_tempTaskIds.removeOne(task->id());
+        // 从 TaskManager 中删除
+        m_taskManager->removeTask(task->id());
     });
-    m_taskTable->setCellWidget(row, 5, deleteButton);
+    m_taskTable->setCellWidget(row, 7, deleteButton);
 
-    qDebug() << "新建任务，当前行数：" << m_taskTable->rowCount();
-}
+    // 添加到暂存列表
+    m_tempTaskIds.append(task->id());
 
-void PlanDialog::onDeleteTask()
-{
-    int currentRow = m_taskTable->currentRow();
-    if (currentRow >= 0) {
-        m_taskTable->removeRow(currentRow);
-        qDebug() << "删除任务，行：" << currentRow;
-    }
-}
-
-void PlanDialog::onConfirm()
-{
-    savePlanData();
-    qDebug() << "确认方案，任务数：" << (m_plan ? m_plan->taskCount() : 0);
-
-    if (m_plan) {
-        emit planUpdated(m_plan);
-    }
-
-    hide();
-}
-
-void PlanDialog::onCancel()
-{
-    qDebug() << "取消方案编辑";
-    hide();
+    qDebug() << "任务添加到表格，行=" << row << "，ID=" << task->id();
 }

@@ -1,8 +1,8 @@
 // Copyright (C) 2023 MapLibre contributors
 // SPDX-License-Identifier: MIT
 
-#ifndef TASKLISTWIDGET_H
-#define TASKLISTWIDGET_H
+#ifndef TASKLEFTCONTROLWIDGET_H
+#define TASKLEFTCONTROLWIDGET_H
 
 #include "TaskManager.h"
 #include <QWidget>
@@ -47,14 +47,14 @@ private:
 };
 
 /**
- * @brief 任务列表 Widget - 显示所有任务并提供控制
+ * @brief 任务左侧控制 Widget - 显示所有任务并提供控制
  * 支持自动收缩/展开的侧边栏模式
  */
-class TaskListWidget : public QWidget {
+class TaskLeftControlWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit TaskListWidget(TaskManager *taskManager, QWidget *parent = nullptr);
+    explicit TaskLeftControlWidget(TaskManager *taskManager, QWidget *parent = nullptr);
 
     void setCollapsible(bool collapsible);
     bool isCollapsed() const { return m_collapsed; }
@@ -72,7 +72,6 @@ signals:
     void expandStateChanged(bool expanded);
 
 private slots:
-    void onCreateTask();
     void onTaskVisibilityToggled(int taskId, bool visible);
     void onTaskSelected(int taskId);
     void onTaskDeleteRequested(int taskId);
@@ -80,7 +79,6 @@ private slots:
     void onExportTasks();
     void onImportTasks();
     void onRegionButtonClicked();    // 【任务区域】按钮点击
-    void onTaskPlanButtonClicked();  // 【任务方案】按钮点击
     void onActionButtonClicked();    // 【行动方案】按钮点击
     void onRegionListChanged();      // 区域列表变化（创建/删除）
 
@@ -99,7 +97,6 @@ private:
 private:
     TaskManager *m_taskManager;
     QVBoxLayout *m_taskListLayout;
-    QPushButton *m_createButton;
     QPushButton *m_exportButton;
     QPushButton *m_importButton;
     QPushButton *m_regionButton;    // 【任务区域】按钮
@@ -119,4 +116,4 @@ private:
     int m_collapsedWidth = 40;    // 常驻小列宽度
 };
 
-#endif // TASKLISTWIDGET_H
+#endif // TASKLEFTCONTROLWIDGET_H

@@ -10,7 +10,7 @@
 #include "RegionDetailWidget.h"
 #include "map_region/RegionManager.h"
 #include "TaskManager.h"
-#include "TaskListWidget.h"
+#include "TaskLeftControlWidget.h"
 #include "RegionFeatureDialog.h"
 #include <QMapLibre/Map>
 #include <QMapLibre/Settings>
@@ -111,7 +111,7 @@ private:
     MapPainter *m_painter = nullptr;
     RegionManager *m_regionManager = nullptr;
     TaskManager *m_taskManager = nullptr;
-    TaskListWidget *m_taskListWidget = nullptr;
+    TaskLeftControlWidget *m_taskListWidget = nullptr;
     RegionDetailWidget *m_detailWidget = nullptr;
     QWidget *m_buttonContainer = nullptr;
     class PlanDialog *m_planDialog = nullptr;

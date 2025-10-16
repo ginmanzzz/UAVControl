@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include "Plan.h"
+#include "TaskManager.h"
 
 /**
  * @brief 方案规划对话框
@@ -15,7 +16,7 @@ class PlanDialog : public QWidget {
     Q_OBJECT
 
 public:
-    explicit PlanDialog(QWidget *parent = nullptr);
+    explicit PlanDialog(TaskManager *taskManager, QWidget *parent = nullptr);
     ~PlanDialog() = default;
 
     void setPlan(Plan *plan);
@@ -35,12 +36,18 @@ private:
     void setupUI();
     void loadPlanData();
     void savePlanData();
+    void openTaskDialog();
+    void addTaskToTable(Task *task);
 
+    QList<int> m_tempTaskIds;  // 暂存的任务ID列表
+
+    TaskManager *m_taskManager = nullptr;
     Plan *m_plan = nullptr;
     QTableWidget *m_taskTable;
     QPushButton *m_newTaskButton;
     QPushButton *m_confirmButton;
     QPushButton *m_cancelButton;
+    class CreateTaskDialog *m_taskDialog = nullptr;
 };
 
 #endif // PLANDIALOG_H

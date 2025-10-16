@@ -1,8 +1,7 @@
 // Copyright (C) 2023 MapLibre contributors
 // SPDX-License-Identifier: MIT
 
-#include "TaskListWidget.h"
-#include "TaskDialog.h"
+#include "TaskLeftControlWidget.h"
 #include "map_region/Region.h"
 #include <QDebug>
 #include <QApplication>
@@ -132,7 +131,7 @@ bool TaskItemWidget::isTaskVisible() const
 
 // ============ TaskListWidget 实现 ============
 
-TaskListWidget::TaskListWidget(TaskManager *taskManager, QWidget *parent)
+TaskLeftControlWidget::TaskLeftControlWidget(TaskManager *taskManager, QWidget *parent)
     : QWidget(parent)
     , m_taskManager(taskManager)
     , m_currentTaskId(-1)
@@ -141,23 +140,23 @@ TaskListWidget::TaskListWidget(TaskManager *taskManager, QWidget *parent)
 
     // 连接信号
     connect(m_taskManager, &TaskManager::taskCreated,
-            this, &TaskListWidget::onTaskCreated);
+            this, &TaskLeftControlWidget::onTaskCreated);
     connect(m_taskManager, &TaskManager::taskRemoved,
-            this, &TaskListWidget::onTaskRemoved);
+            this, &TaskLeftControlWidget::onTaskRemoved);
     connect(m_taskManager, &TaskManager::currentTaskChanged,
-            this, &TaskListWidget::onCurrentTaskChanged);
+            this, &TaskLeftControlWidget::onCurrentTaskChanged);
 
     // 连接区域管理器信号，自动刷新区域列表
     connect(m_taskManager->regionManager(), &RegionManager::regionCreated,
-            this, &TaskListWidget::onRegionListChanged);
+            this, &TaskLeftControlWidget::onRegionListChanged);
     connect(m_taskManager->regionManager(), &RegionManager::regionRemoved,
-            this, &TaskListWidget::onRegionListChanged);
+            this, &TaskLeftControlWidget::onRegionListChanged);
 
     // 设置默认宽度（展开状态：主内容 + 收缩条）
     setFixedWidth(m_expandedWidth + m_collapsedWidth);
 }
 
-void TaskListWidget::setupUI()
+void TaskLeftControlWidget::setupUI()
 {
     auto *mainLayout = new QHBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -198,25 +197,25 @@ void TaskListWidget::setupUI()
     m_regionButton->setStyleSheet(buttonStyle);
     m_regionButton->setToolTip("查看任务区域");
     m_regionButton->setCursor(Qt::PointingHandCursor);
-    connect(m_regionButton, &QPushButton::clicked, this, &TaskListWidget::onRegionButtonClicked);
+    connect(m_regionButton, &QPushButton::clicked, this, &TaskLeftControlWidget::onRegionButtonClicked);
     collapsedLayout->addWidget(m_regionButton, 0, Qt::AlignCenter);
 
-    // 【任务方案】按钮
+    // 【任务方案】按钮（保留但无功能）
     m_taskPlanButton = new QPushButton("任务\n方案", m_collapsedBar);
     m_taskPlanButton->setFixedSize(m_collapsedWidth - 4, 50);
     m_taskPlanButton->setStyleSheet(buttonStyle);
-    m_taskPlanButton->setToolTip("查看任务方案");
+    m_taskPlanButton->setToolTip("任务方案");
     m_taskPlanButton->setCursor(Qt::PointingHandCursor);
-    connect(m_taskPlanButton, &QPushButton::clicked, this, &TaskListWidget::onTaskPlanButtonClicked);
+    // 不连接任何槽函数
     collapsedLayout->addWidget(m_taskPlanButton, 0, Qt::AlignCenter);
 
-    // 【行动方案】按钮
+    // 【行动方案】按钮（保留但无功能）
     m_actionButton = new QPushButton("行动\n方案", m_collapsedBar);
     m_actionButton->setFixedSize(m_collapsedWidth - 4, 50);
     m_actionButton->setStyleSheet(buttonStyle);
-    m_actionButton->setToolTip("查看行动方案");
+    m_actionButton->setToolTip("行动方案");
     m_actionButton->setCursor(Qt::PointingHandCursor);
-    connect(m_actionButton, &QPushButton::clicked, this, &TaskListWidget::onActionButtonClicked);
+    connect(m_actionButton, &QPushButton::clicked, this, &TaskLeftControlWidget::onActionButtonClicked);
     collapsedLayout->addWidget(m_actionButton, 0, Qt::AlignCenter);
 
     // 剩余空间填充
@@ -277,7 +276,7 @@ void TaskListWidget::setupUI()
     );
     m_closeButton->setToolTip("收起任务列表");
     m_closeButton->setCursor(Qt::PointingHandCursor);
-    connect(m_closeButton, &QPushButton::clicked, this, &TaskListWidget::collapse);
+    connect(m_closeButton, &QPushButton::clicked, this, &TaskLeftControlWidget::collapse);
 
     headerLayout->addWidget(titleLabel, 1);
     headerLayout->addWidget(m_closeButton);
@@ -291,25 +290,7 @@ void TaskListWidget::setupUI()
     contentLayout->setContentsMargins(12, 12, 12, 12);
     contentLayout->setSpacing(8);
 
-    // 创建任务按钮
-    m_createButton = new QPushButton("+ 创建新任务", contentWidget);
-    m_createButton->setStyleSheet(
-        "QPushButton {"
-        "  background-color: #4CAF50;"
-        "  color: white;"
-        "  border: none;"
-        "  border-radius: 4px;"
-        "  padding: 10px;"
-        "  font-size: 13px;"
-        "  font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "  background-color: #45a049;"
-        "}"
-    );
-    connect(m_createButton, &QPushButton::clicked, this, &TaskListWidget::onCreateTask);
-
-    contentLayout->addWidget(m_createButton);
+    // 移除创建任务按钮
 
     // 导入导出按钮容器
     auto *ioButtonContainer = new QWidget(contentWidget);
@@ -333,11 +314,11 @@ void TaskListWidget::setupUI()
 
     m_exportButton = new QPushButton("导出任务", ioButtonContainer);
     m_exportButton->setStyleSheet(ioButtonStyle);
-    connect(m_exportButton, &QPushButton::clicked, this, &TaskListWidget::onExportTasks);
+    connect(m_exportButton, &QPushButton::clicked, this, &TaskLeftControlWidget::onExportTasks);
 
     m_importButton = new QPushButton("导入任务", ioButtonContainer);
     m_importButton->setStyleSheet(ioButtonStyle);
-    connect(m_importButton, &QPushButton::clicked, this, &TaskListWidget::onImportTasks);
+    connect(m_importButton, &QPushButton::clicked, this, &TaskLeftControlWidget::onImportTasks);
 
     ioButtonLayout->addWidget(m_exportButton);
     ioButtonLayout->addWidget(m_importButton);
@@ -492,7 +473,7 @@ void TaskListWidget::setupUI()
     regionLayout->addWidget(regionScrollArea, 1);
 }
 
-void TaskListWidget::refreshTaskList()
+void TaskLeftControlWidget::refreshTaskList()
 {
     // 清空现有列表
     for (auto *widget : m_taskWidgets.values()) {
@@ -506,7 +487,7 @@ void TaskListWidget::refreshTaskList()
     }
 }
 
-void TaskListWidget::onTaskCreated(int taskId)
+void TaskLeftControlWidget::onTaskCreated(int taskId)
 {
     Task *task = m_taskManager->getTask(taskId);
     if (task) {
@@ -514,110 +495,58 @@ void TaskListWidget::onTaskCreated(int taskId)
     }
 }
 
-void TaskListWidget::onTaskRemoved(int taskId)
+void TaskLeftControlWidget::onTaskRemoved(int taskId)
 {
     removeTaskItem(taskId);
 }
 
-void TaskListWidget::onCurrentTaskChanged(int taskId)
+void TaskLeftControlWidget::onCurrentTaskChanged(int taskId)
 {
     highlightCurrentTask(taskId);
 }
 
-void TaskListWidget::onCreateTask()
-{
-    // 打开创建任务对话框
-    TaskDialog dialog(m_taskManager, this);
+// onCreateTask 函数已删除
 
-    if (dialog.exec() == QDialog::Accepted) {
-        // 用户点击了创建按钮
-        int taskId = dialog.getTaskId();
-        QString taskName = dialog.getTaskName();
-        QString taskDescription = dialog.getTaskDescription();
-
-        // 创建任务
-        Task *task = m_taskManager->createTask(taskId, taskName, taskDescription);
-
-        if (task) {
-            // 自动设为当前任务
-            m_taskManager->setCurrentTask(task->id());
-            qDebug() << QString("创建新任务: #%1 - %2").arg(task->id()).arg(taskName);
-        } else {
-            qWarning() << "创建任务失败";
-        }
-    }
-}
-
-void TaskListWidget::onTaskVisibilityToggled(int taskId, bool visible)
+void TaskLeftControlWidget::onTaskVisibilityToggled(int taskId, bool visible)
 {
     m_taskManager->setTaskVisible(taskId, visible);
 }
 
-void TaskListWidget::onTaskSelected(int taskId)
+void TaskLeftControlWidget::onTaskSelected(int taskId)
 {
     m_taskManager->setCurrentTask(taskId);
 }
 
-void TaskListWidget::onTaskDeleteRequested(int taskId)
+void TaskLeftControlWidget::onTaskDeleteRequested(int taskId)
 {
     m_taskManager->removeTask(taskId);
 }
 
-void TaskListWidget::onTaskEditRequested(int taskId)
+void TaskLeftControlWidget::onTaskEditRequested(int taskId)
 {
-    Task *task = m_taskManager->getTask(taskId);
-    if (!task) {
-        qWarning() << QString("任务 #%1 不存在").arg(taskId);
-        return;
-    }
-
-    // 打开编辑对话框
-    TaskDialog dialog(m_taskManager, task, this);
-
-    if (dialog.exec() == QDialog::Accepted) {
-        // 用户点击了保存按钮，更新任务信息
-        QString newName = dialog.getTaskName();
-        QString newDescription = dialog.getTaskDescription();
-
-        task->setName(newName);
-        task->setDescription(newDescription);
-
-        // 更新UI显示
-        if (m_taskWidgets.contains(taskId)) {
-            TaskItemWidget *widget = m_taskWidgets[taskId];
-            // 刷新任务项的显示
-            removeTaskItem(taskId);
-            addTaskItem(task);
-
-            // 如果是当前任务，重新高亮
-            if (m_taskManager->currentTaskId() == taskId) {
-                highlightCurrentTask(taskId);
-            }
-        }
-
-        qDebug() << QString("任务 #%1 已更新: %2").arg(taskId).arg(newName);
-    }
+    // 编辑功能已禁用
+    qDebug() << QString("任务 #%1 编辑功能已禁用").arg(taskId);
 }
 
-void TaskListWidget::addTaskItem(Task *task)
+void TaskLeftControlWidget::addTaskItem(Task *task)
 {
     auto *taskWidget = new TaskItemWidget(task, this);
 
     connect(taskWidget, &TaskItemWidget::visibilityToggled,
-            this, &TaskListWidget::onTaskVisibilityToggled);
+            this, &TaskLeftControlWidget::onTaskVisibilityToggled);
     connect(taskWidget, &TaskItemWidget::selected,
-            this, &TaskListWidget::onTaskSelected);
+            this, &TaskLeftControlWidget::onTaskSelected);
     connect(taskWidget, &TaskItemWidget::deleteRequested,
-            this, &TaskListWidget::onTaskDeleteRequested);
+            this, &TaskLeftControlWidget::onTaskDeleteRequested);
     connect(taskWidget, &TaskItemWidget::editRequested,
-            this, &TaskListWidget::onTaskEditRequested);
+            this, &TaskLeftControlWidget::onTaskEditRequested);
 
     // 插入到列表末尾（stretch 之前）
     m_taskListLayout->insertWidget(m_taskListLayout->count() - 1, taskWidget);
     m_taskWidgets[task->id()] = taskWidget;
 }
 
-void TaskListWidget::removeTaskItem(int taskId)
+void TaskLeftControlWidget::removeTaskItem(int taskId)
 {
     if (m_taskWidgets.contains(taskId)) {
         auto *widget = m_taskWidgets.take(taskId);
@@ -626,7 +555,7 @@ void TaskListWidget::removeTaskItem(int taskId)
     }
 }
 
-void TaskListWidget::highlightCurrentTask(int taskId)
+void TaskLeftControlWidget::highlightCurrentTask(int taskId)
 {
     m_currentTaskId = taskId;
 
@@ -657,7 +586,7 @@ void TaskListWidget::highlightCurrentTask(int taskId)
     }
 }
 
-void TaskListWidget::setCollapsible(bool collapsible)
+void TaskLeftControlWidget::setCollapsible(bool collapsible)
 {
     m_collapsible = collapsible;
 
@@ -677,14 +606,14 @@ void TaskListWidget::setCollapsible(bool collapsible)
     }
 }
 
-void TaskListWidget::expand()
+void TaskLeftControlWidget::expand()
 {
     if (!m_collapsed) {
-        qDebug() << "TaskListWidget::expand() - 已经是展开状态";
+        qDebug() << "TaskLeftControlWidget::expand() - 已经是展开状态";
         return;
     }
 
-    qDebug() << "TaskListWidget::expand() - 立即展开";
+    qDebug() << "TaskLeftControlWidget::expand() - 立即展开";
     m_collapsed = false;
 
     // 立即显示主内容，保持收缩条可见
@@ -694,13 +623,13 @@ void TaskListWidget::expand()
     emit expandStateChanged(true);
 }
 
-void TaskListWidget::collapse()
+void TaskLeftControlWidget::collapse()
 {
     if (m_collapsed || !m_collapsible) {
         return;
     }
 
-    qDebug() << "TaskListWidget::collapse() - 立即收缩";
+    qDebug() << "TaskLeftControlWidget::collapse() - 立即收缩";
     m_collapsed = true;
 
     // 立即隐藏主内容，只保留收缩条
@@ -710,19 +639,19 @@ void TaskListWidget::collapse()
     emit expandStateChanged(false);
 }
 
-void TaskListWidget::enterEvent(QEnterEvent *event)
+void TaskLeftControlWidget::enterEvent(QEnterEvent *event)
 {
     QWidget::enterEvent(event);
     // 移除自动展开行为，现在需要点击按钮才能展开
 }
 
-void TaskListWidget::leaveEvent(QEvent *event)
+void TaskLeftControlWidget::leaveEvent(QEvent *event)
 {
     QWidget::leaveEvent(event);
     // 移除自动收缩行为，现在需要点击关闭按钮才能收缩
 }
 
-void TaskListWidget::onRegionButtonClicked()
+void TaskLeftControlWidget::onRegionButtonClicked()
 {
     qDebug() << "【任务区域】按钮被点击";
 
@@ -740,29 +669,13 @@ void TaskListWidget::onRegionButtonClicked()
     m_regionListWidget->move(m_collapsedWidth + 10, 10);
 }
 
-void TaskListWidget::onTaskPlanButtonClicked()
+void TaskLeftControlWidget::onActionButtonClicked()
 {
-    qDebug() << "【任务方案】按钮被点击";
-
-    // 关闭区域列表窗口
-    m_regionListWidget->hide();
-
-    // 显示任务列表（原来的展开功能）
-    expand();
+    qDebug() << "【行动方案】按钮被点击（暂无功能）";
+    // 保留按钮但暂无功能
 }
 
-void TaskListWidget::onActionButtonClicked()
-{
-    qDebug() << "【行动方案】按钮被点击";
-
-    // 关闭其他窗口
-    collapse();
-    m_regionListWidget->hide();
-
-    // TODO: 显示行动方案窗口
-}
-
-void TaskListWidget::onRegionListChanged()
+void TaskLeftControlWidget::onRegionListChanged()
 {
     // 只有当区域列表窗口可见时才刷新
     if (m_regionListWidget && m_regionListWidget->isVisible()) {
@@ -770,7 +683,7 @@ void TaskListWidget::onRegionListChanged()
     }
 }
 
-void TaskListWidget::onExportTasks()
+void TaskLeftControlWidget::onExportTasks()
 {
     // 获取所有任务
     QList<Task*> allTasks = m_taskManager->getAllTasks();
@@ -878,7 +791,7 @@ void TaskListWidget::onExportTasks()
     qDebug() << QString("导出 %1 个任务到: %2").arg(allTasks.size()).arg(fileName);
 }
 
-void TaskListWidget::onImportTasks()
+void TaskLeftControlWidget::onImportTasks()
 {
     // 打开文件选择对话框
     QString fileName = QFileDialog::getOpenFileName(
@@ -1113,7 +1026,7 @@ void TaskListWidget::onImportTasks()
     qDebug() << resultMsg;
 }
 
-void TaskListWidget::refreshRegionList()
+void TaskLeftControlWidget::refreshRegionList()
 {
     // 清空现有列表
     QLayoutItem *item;
@@ -1183,7 +1096,7 @@ void TaskListWidget::refreshRegionList()
     m_regionContentLayout->addStretch();
 }
 
-double TaskListWidget::calculateTaskRegionArea(const QMapLibre::Coordinates &coords)
+double TaskLeftControlWidget::calculateTaskRegionArea(const QMapLibre::Coordinates &coords)
 {
     if (coords.size() < 3) {
         return 0.0;

@@ -345,7 +345,7 @@ void TaskUI::setupMap() {
     m_regionManager = new RegionManager(m_painter, this);
     m_taskManager = new TaskManager(m_regionManager, this);
 
-    m_taskListWidget = new TaskListWidget(m_taskManager, m_mapWidget);
+    m_taskListWidget = new TaskLeftControlWidget(m_taskManager, m_mapWidget);
     m_taskListWidget->setCollapsible(true);
     m_taskListWidget->show();
 
@@ -913,7 +913,7 @@ void TaskUI::openPlanDialog() {
 
     // 延迟创建 PlanDialog
     if (!m_planDialog) {
-        m_planDialog = new PlanDialog(this);  // TaskUI作为父窗口，随TaskUI显示/隐藏
+        m_planDialog = new PlanDialog(m_taskManager, this);  // 传入 TaskManager，TaskUI作为父窗口
 
         // 创建一个示例方案
         static Plan *samplePlan = new Plan(1, "示例方案");
