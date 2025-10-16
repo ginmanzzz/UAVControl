@@ -74,6 +74,14 @@ void CreateTaskDialog::setupUI()
     // 任务名称输入
     m_taskNameInput = new QLineEdit(this);
     m_taskNameInput->setPlaceholderText("输入任务名称");
+
+    // 为新任务设置默认名称
+    if (!m_isEditMode && m_taskId != -1) {
+        QString defaultName = QString("任务%1").arg(m_taskId);
+        m_taskNameInput->setText(defaultName);
+        m_taskNameInput->selectAll();  // 自动选中文本，方便用户直接输入
+    }
+
     connect(m_taskNameInput, &QLineEdit::textChanged, this, &CreateTaskDialog::onTaskNameChanged);
 
     m_taskNameErrorLabel = new QLabel(this);
