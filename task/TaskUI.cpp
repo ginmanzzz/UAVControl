@@ -895,19 +895,37 @@ void TaskUI::handleNoFlyZoneClick(double lat, double lon) {
 
         m_painter->clearPreview();
 
-        RegionPropertyDialog featureDialog("临时禁飞区", static_cast<RegionPropertyDialog::TerrainType>(0), this);
-        if (featureDialog.exec() == QDialog::Accepted) {
-            auto terrainType = featureDialog.getSelectedTerrain();
-            auto id = m_taskManager->addNoFlyZone(m_noFlyZoneCenter.first, m_noFlyZoneCenter.second, radius);
+        // 生成默认名称
+        int nextId = m_regionManager->getAllRegions().size() + 1;
+        QString defaultName = QString("禁飞区%1").arg(nextId);
 
-            if (id > 0) {
-                m_regionManager->updateRegionTerrainType(id, static_cast<Region::TerrainType>(terrainType));
+        RegionPropertyDialog featureDialog(defaultName, static_cast<RegionPropertyDialog::TerrainType>(0), this);
+        if (featureDialog.exec() == QDialog::Accepted) {
+            QString regionName = featureDialog.getRegionName();
+            auto terrainType = featureDialog.getSelectedTerrain();
+
+            // 传递名称给创建方法，避免再次弹出对话框
+            Region *region = m_regionManager->createNoFlyZone(
+                m_noFlyZoneCenter.first,
+                m_noFlyZoneCenter.second,
+                radius,
+                regionName
+            );
+
+            if (region) {
+                int regionId = region->id();
+                m_regionManager->updateRegionTerrainType(regionId, static_cast<Region::TerrainType>(terrainType));
+
+                // 如果有当前任务，关联到任务
+                if (m_taskManager->currentTask()) {
+                    m_taskManager->addRegionToTask(m_taskManager->currentTaskId(), regionId);
+                }
             }
 
             qDebug() << QString("创建禁飞区: 中心(%1, %2), 半径 %3m, 地形 %4, 任务 #%5, ID: %6")
                         .arg(m_noFlyZoneCenter.first).arg(m_noFlyZoneCenter.second)
                         .arg(radius).arg(featureDialog.getTerrainName())
-                        .arg(m_taskManager->currentTaskId()).arg(id);
+                        .arg(m_taskManager->currentTaskId()).arg(region ? region->id() : 0);
         }
 
         returnToNormalMode();
@@ -1112,37 +1130,45 @@ void TaskUI::finishTaskRegion() {
         return;
     }
 
-    RegionPropertyDialog featureDialog("临时任务区域", static_cast<RegionPropertyDialog::TerrainType>(0), this);
+    // 生成默认名称
+    int nextId = m_regionManager->getAllRegions().size() + 1;
+    QString defaultName = QString("任务区域%1").arg(nextId);
+
+    RegionPropertyDialog featureDialog(defaultName, static_cast<RegionPropertyDialog::TerrainType>(0), this);
     if (featureDialog.exec() == QDialog::Accepted) {
+        QString regionName = featureDialog.getRegionName();
         auto terrainType = featureDialog.getSelectedTerrain();
-        QMapLibre::AnnotationID id = 0;
+        Region *region = nullptr;
 
         // 根据绘制模式选择不同的创建方法
         if (m_taskRegionDrawMode == DRAW_MODE_CIRCLE && m_circleRadius > 0) {
             // 圆形任务区域：传入圆心和半径
-            id = m_taskManager->addCircularTaskRegion(m_circleCenter, m_circleRadius, m_taskRegionPoints);
-            qDebug() << QString("圆形任务区域绘制完成，圆心: (%1, %2), 半径: %3m, 地形: %4, 任务 #%5, ID: %6")
+            region = m_regionManager->createCircularTaskRegion(m_circleCenter, m_circleRadius, m_taskRegionPoints, regionName);
+            qDebug() << QString("圆形任务区域绘制完成，圆心: (%1, %2), 半径: %3m, 地形: %4")
                         .arg(m_circleCenter.first, 0, 'f', 5)
                         .arg(m_circleCenter.second, 0, 'f', 5)
                         .arg(m_circleRadius)
-                        .arg(featureDialog.getTerrainName())
-                        .arg(m_taskManager->currentTaskId()).arg(id);
+                        .arg(featureDialog.getTerrainName());
         } else if (m_taskRegionDrawMode == DRAW_MODE_RECTANGLE && m_taskRegionPoints.size() == 4) {
             // 矩形任务区域
-            id = m_taskManager->addRectangularTaskRegion(m_taskRegionPoints);
-            qDebug() << QString("矩形任务区域绘制完成，地形 %1, 任务 #%2, ID: %3")
-                        .arg(featureDialog.getTerrainName())
-                        .arg(m_taskManager->currentTaskId()).arg(id);
+            region = m_regionManager->createRectangularTaskRegion(m_taskRegionPoints, regionName);
+            qDebug() << QString("矩形任务区域绘制完成，地形 %1")
+                        .arg(featureDialog.getTerrainName());
         } else {
             // 多边形任务区域（手绘）
-            id = m_taskManager->addTaskRegion(m_taskRegionPoints);
-            qDebug() << QString("多边形绘制完成，地形 %1, 任务 #%2, ID: %3")
-                        .arg(featureDialog.getTerrainName())
-                        .arg(m_taskManager->currentTaskId()).arg(id);
+            region = m_regionManager->createTaskRegion(m_taskRegionPoints, regionName);
+            qDebug() << QString("多边形绘制完成，地形 %1")
+                        .arg(featureDialog.getTerrainName());
         }
 
-        if (id > 0) {
-            m_regionManager->updateRegionTerrainType(id, static_cast<Region::TerrainType>(terrainType));
+        if (region) {
+            int regionId = region->id();
+            m_regionManager->updateRegionTerrainType(regionId, static_cast<Region::TerrainType>(terrainType));
+
+            // 如果有当前任务，关联到任务
+            if (m_taskManager->currentTask()) {
+                m_taskManager->addRegionToTask(m_taskManager->currentTaskId(), regionId);
+            }
         }
     }
 
