@@ -106,7 +106,7 @@ private:
     bool m_visible;
 
     // 新增字段
-    QString m_taskType;        // 任务种类：区域收缩、区域掩护、电子侦察、协同攻击、目标侦察
+    QString m_taskType;        // 任务种类：区域搜索、区域掩护、电子侦察、协同攻击、目标侦察
     QString m_taskRegion;      // 任务区域
     QString m_targetType;      // 目标类型：车辆、雷达、区域等
     QString m_targetFeature;   // 特征：大、中、小

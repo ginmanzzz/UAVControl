@@ -58,11 +58,13 @@ public:
      * @param coordinates 任务区域顶点坐标列表
      * @param center 圆心坐标（仅圆形任务区域需要）
      * @param radius 半径（仅圆形任务区域需要）
+     * @param shape 任务区域形状类型
      * @return 区域标注 ID
      */
     QMapLibre::AnnotationID drawTaskRegionArea(const QMapLibre::Coordinates &coordinates,
                                                const QMapLibre::Coordinate &center = QMapLibre::Coordinate(),
-                                               double radius = 0.0);
+                                               double radius = 0.0,
+                                               TaskRegionShape shape = TaskRegionShape::Polygon);
 
     /**
      * @brief 删除指定标注

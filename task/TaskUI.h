@@ -78,7 +78,7 @@ private slots:
     void startPlaceUAV();
     void startDrawTaskRegion();
     void clearAll();
-    void openPlanDialog();
+    void openTaskPlanDialog();
 
     // 绘制处理
     void addLoiterPointAt(double lat, double lon);
@@ -120,7 +120,7 @@ private:
     TaskLeftControlWidget *m_taskListWidget = nullptr;
     RegionDetailWidget *m_detailWidget = nullptr;
     QWidget *m_buttonContainer = nullptr;
-    class PlanDialog *m_planDialog = nullptr;
+    class CreateTaskPlanDialog *m_taskPlanDialog = nullptr;
 
     InteractionMode m_currentMode = MODE_NORMAL;
     bool m_mapInitialized = false;
@@ -130,7 +130,7 @@ private:
     QMapLibre::Coordinate m_noFlyZoneCenter;
 
     // 任务区域绘制状态
-    TaskRegionDrawMode m_taskRegionDrawMode = DRAW_MODE_POLYGON;
+    TaskRegionDrawMode m_taskRegionDrawMode = DRAW_MODE_RECTANGLE;
     QMapLibre::Coordinates m_taskRegionPoints;
     QMapLibre::Coordinate m_rectangleFirstPoint;      // 矩形模式：第一个点
     bool m_rectangleFirstPointSet = false;

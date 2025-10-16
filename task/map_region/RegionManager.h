@@ -77,6 +77,14 @@ public:
     Region* createCircularTaskRegion(const QMapLibre::Coordinate &center, double radius,
                                      const QMapLibre::Coordinates &vertices, const QString &name = QString());
 
+    /**
+     * @brief 创建任务区域（矩形）
+     * @param vertices 矩形的4个顶点
+     * @param name 区域名称（可选）
+     * @return 创建的区域指针
+     */
+    Region* createRectangularTaskRegion(const QMapLibre::Coordinates &vertices, const QString &name = QString());
+
     // ==================== 删除区域 ====================
 
     /**

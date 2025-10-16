@@ -447,6 +447,26 @@ QMapLibre::AnnotationID TaskManager::addCircularTaskRegion(const QMapLibre::Coor
     return region->annotationId();
 }
 
+QMapLibre::AnnotationID TaskManager::addRectangularTaskRegion(const QMapLibre::Coordinates &vertices)
+{
+    // 创建矩形任务区域
+    Region *region = m_regionMgr->createRectangularTaskRegion(vertices);
+    if (!region) {
+        return 0;
+    }
+
+    // 如果有当前任务，自动关联
+    if (m_currentTask) {
+        addRegionToTask(m_currentTask->id(), region->id());
+        qDebug() << QString("添加矩形任务区域 #%1 到任务 #%2")
+                    .arg(region->id()).arg(m_currentTask->id());
+    } else {
+        qDebug() << QString("添加独立矩形任务区域 #%1（未关联任务）").arg(region->id());
+    }
+
+    return region->annotationId();
+}
+
 QMapLibre::AnnotationID TaskManager::addLoiterPointToTask(int taskId, double lat, double lon)
 {
     Task *task = getTask(taskId);

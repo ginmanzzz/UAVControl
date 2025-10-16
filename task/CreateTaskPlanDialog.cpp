@@ -1,4 +1,4 @@
-#include "PlanDialog.h"
+#include "CreateTaskPlanDialog.h"
 #include "CreateTaskDialog.h"
 #include <QHBoxLayout>
 #include <QLabel>
@@ -11,7 +11,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QMessageBox>
 
-PlanDialog::PlanDialog(TaskManager *taskManager, QWidget *parent)
+CreateTaskPlanDialog::CreateTaskPlanDialog(TaskManager *taskManager, QWidget *parent)
     : QWidget(parent), m_taskManager(taskManager)
 {
     setupUI();
@@ -23,13 +23,13 @@ PlanDialog::PlanDialog(TaskManager *taskManager, QWidget *parent)
     setPalette(pal);
 }
 
-void PlanDialog::setupUI()
+void CreateTaskPlanDialog::setupUI()
 {
     setFixedSize(600, 400);
 
     // 统一的样式表 - 所有元素完全不透明
     setStyleSheet(
-        "PlanDialog {"
+        "CreateTaskPlanDialog {"
         "  background-color: white;"
         "  border: 2px solid #2196F3;"
         "  border-radius: 6px;"
@@ -128,7 +128,7 @@ void PlanDialog::setupUI()
     newTaskShadow->setColor(QColor(0, 0, 0, 60));
     newTaskShadow->setOffset(2, 2);
     m_newTaskButton->setGraphicsEffect(newTaskShadow);
-    connect(m_newTaskButton, &QPushButton::clicked, this, &PlanDialog::onNewTask);
+    connect(m_newTaskButton, &QPushButton::clicked, this, &CreateTaskPlanDialog::onNewTask);
 
     newTaskLayout->addWidget(m_newTaskButton);
     newTaskLayout->addStretch();
@@ -176,7 +176,7 @@ void PlanDialog::setupUI()
     confirmShadow->setColor(QColor(0, 0, 0, 60));
     confirmShadow->setOffset(2, 2);
     m_confirmButton->setGraphicsEffect(confirmShadow);
-    connect(m_confirmButton, &QPushButton::clicked, this, &PlanDialog::onConfirm);
+    connect(m_confirmButton, &QPushButton::clicked, this, &CreateTaskPlanDialog::onConfirm);
 
     m_cancelButton = new QPushButton("取消", buttonWidget);
     m_cancelButton->setFixedSize(80, 28);
@@ -194,7 +194,7 @@ void PlanDialog::setupUI()
     cancelShadow->setColor(QColor(0, 0, 0, 60));
     cancelShadow->setOffset(2, 2);
     m_cancelButton->setGraphicsEffect(cancelShadow);
-    connect(m_cancelButton, &QPushButton::clicked, this, &PlanDialog::onCancel);
+    connect(m_cancelButton, &QPushButton::clicked, this, &CreateTaskPlanDialog::onCancel);
 
     buttonLayout->addWidget(m_confirmButton);
     buttonLayout->addSpacing(8);
@@ -203,22 +203,22 @@ void PlanDialog::setupUI()
     mainLayout->addWidget(buttonWidget);
 }
 
-void PlanDialog::setPlan(Plan *plan)
+void CreateTaskPlanDialog::setTaskPlan(TaskPlan *taskPlan)
 {
-    m_plan = plan;
-    loadPlanData();
+    m_taskPlan = taskPlan;
+    loadTaskPlanData();
 }
 
-void PlanDialog::loadPlanData()
+void CreateTaskPlanDialog::loadTaskPlanData()
 {
     m_taskTable->setRowCount(0);
 
-    if (!m_plan) {
+    if (!m_taskPlan) {
         return;
     }
 
-    const QVector<PlanTask> &tasks = m_plan->tasks();
-    for (const PlanTask &task : tasks) {
+    const QVector<TaskPlanTask> &tasks = m_taskPlan->tasks();
+    for (const TaskPlanTask &task : tasks) {
         int row = m_taskTable->rowCount();
         m_taskTable->insertRow(row);
 
@@ -259,20 +259,20 @@ void PlanDialog::loadPlanData()
     }
 }
 
-void PlanDialog::savePlanData()
+void CreateTaskPlanDialog::saveTaskPlanData()
 {
-    if (!m_plan) {
+    if (!m_taskPlan) {
         return;
     }
 
     // 清空现有任务
-    while (m_plan->taskCount() > 0) {
-        m_plan->removeTask(0);
+    while (m_taskPlan->taskCount() > 0) {
+        m_taskPlan->removeTask(0);
     }
 
     // 从表格读取任务
     for (int row = 0; row < m_taskTable->rowCount(); ++row) {
-        PlanTask task;
+        TaskPlanTask task;
 
         // 任务编号
         QTableWidgetItem *numberItem = m_taskTable->item(row, 0);
@@ -294,11 +294,11 @@ void PlanDialog::savePlanData()
         QTableWidgetItem *capacityItem = m_taskTable->item(row, 4);
         task.reserveCapacity = capacityItem ? capacityItem->text() : "";
 
-        m_plan->addTask(task);
+        m_taskPlan->addTask(task);
     }
 }
 
-void PlanDialog::onNewTask()
+void CreateTaskPlanDialog::onNewTask()
 {
     // 检查地图上是否有任务区域
     if (!m_taskManager) {
@@ -334,7 +334,7 @@ void PlanDialog::onNewTask()
     openTaskDialog();
 }
 
-void PlanDialog::onDeleteTask()
+void CreateTaskPlanDialog::onDeleteTask()
 {
     int currentRow = m_taskTable->currentRow();
     if (currentRow >= 0) {
@@ -343,7 +343,7 @@ void PlanDialog::onDeleteTask()
     }
 }
 
-void PlanDialog::onConfirm()
+void CreateTaskPlanDialog::onConfirm()
 {
     // 确认：保留所有暂存的任务
     qDebug() << "确认方案，保留" << m_tempTaskIds.size() << "个任务";
@@ -354,15 +354,15 @@ void PlanDialog::onConfirm()
     // 清空表格
     m_taskTable->setRowCount(0);
 
-    savePlanData();
-    if (m_plan) {
-        emit planUpdated(m_plan);
+    saveTaskPlanData();
+    if (m_taskPlan) {
+        emit taskPlanUpdated(m_taskPlan);
     }
 
     hide();
 }
 
-void PlanDialog::onCancel()
+void CreateTaskPlanDialog::onCancel()
 {
     qDebug() << "取消方案编辑，删除" << m_tempTaskIds.size() << "个暂存任务";
 
@@ -381,7 +381,7 @@ void PlanDialog::onCancel()
     hide();
 }
 
-void PlanDialog::openTaskDialog()
+void CreateTaskPlanDialog::openTaskDialog()
 {
     qDebug() << "openTaskDialog 被调用";
 
@@ -430,7 +430,7 @@ void PlanDialog::openTaskDialog()
     dialog->deleteLater();
 }
 
-void PlanDialog::addTaskToTable(Task *task)
+void CreateTaskPlanDialog::addTaskToTable(Task *task)
 {
     if (!task) return;
 

@@ -28,6 +28,15 @@ enum class TerrainType {
 };
 
 /**
+ * @brief 任务区域形状类型枚举
+ */
+enum class TaskRegionShape {
+    Polygon = 0,   // 手绘多边形
+    Rectangle = 1, // 矩形
+    Circle = 2     // 圆形
+};
+
+/**
  * @brief 区域信息结构（用于地图交互）
  */
 struct RegionInfo {
@@ -38,6 +47,7 @@ struct RegionInfo {
     QString color;                     // 对于 UAV：颜色
     QMapLibre::AnnotationID annotationId;  // 标注ID
     TerrainType terrainType;           // 地形类型
+    TaskRegionShape taskRegionShape;   // 任务区域形状类型（仅TaskRegion类型使用）
     int regionId;                      // 区域ID（来自RegionManager）
     int taskId;                        // 所属任务ID
     QString taskName;                  // 所属任务名称

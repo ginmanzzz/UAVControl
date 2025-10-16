@@ -285,7 +285,8 @@ QMapLibre::Coordinates MapPainter::generateCircleCoordinates(
 
 QMapLibre::AnnotationID MapPainter::drawTaskRegionArea(const QMapLibre::Coordinates &coordinates,
                                                        const QMapLibre::Coordinate &center,
-                                                       double radius)
+                                                       double radius,
+                                                       TaskRegionShape shape)
 {
     if (coordinates.size() < 3) {
         qWarning() << "多边形至少需要3个点";
@@ -322,6 +323,7 @@ QMapLibre::AnnotationID MapPainter::drawTaskRegionArea(const QMapLibre::Coordina
     info.vertices = coordinates;
     info.coordinate = center;  // 保存圆心（圆形区域）或几何中心（多边形）
     info.radius = radius;      // 保存半径（圆形区域才有）
+    info.taskRegionShape = shape;  // 保存任务区域形状类型
     info.annotationId = id;
     m_regionInfo[id] = info;
 

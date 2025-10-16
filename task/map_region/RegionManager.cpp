@@ -110,6 +110,7 @@ Region* RegionManager::createTaskRegion(const QMapLibre::Coordinates &vertices, 
     region->setName(name.isEmpty() ? QString("任务区域 %1").arg(regionId) : name);
     region->setVertices(vertices);
     region->setTerrainType(TerrainType::Plain);  // 默认平原
+    region->setTaskRegionShape(TaskRegionShape::Polygon);  // 默认多边形
 
     // 计算中心点
     double sumLat = 0.0, sumLon = 0.0;
@@ -153,6 +154,7 @@ Region* RegionManager::createCircularTaskRegion(const QMapLibre::Coordinate &cen
     region->setCoordinate(center);  // 使用传入的圆心
     region->setRadius(radius);      // 保存半径信息
     region->setTerrainType(TerrainType::Plain);  // 默认平原
+    region->setTaskRegionShape(TaskRegionShape::Circle);  // 圆形
 
     // 在地图上绘制
     drawRegion(region);
@@ -162,6 +164,47 @@ Region* RegionManager::createCircularTaskRegion(const QMapLibre::Coordinate &cen
 
     emit regionCreated(regionId);
     qDebug() << "创建圆形任务区域: ID =" << regionId << ", 半径 =" << radius << "米, 顶点数 =" << vertices.size();
+
+    return region;
+}
+
+Region* RegionManager::createRectangularTaskRegion(const QMapLibre::Coordinates &vertices, const QString &name) {
+    if (!m_painter) {
+        qWarning() << "RegionManager::createRectangularTaskRegion: painter is null!";
+        return nullptr;
+    }
+
+    if (vertices.size() != 4) {
+        qWarning() << "RegionManager::createRectangularTaskRegion: 矩形必须有4个顶点";
+        return nullptr;
+    }
+
+    int regionId = generateNextId();
+    Region *region = new Region(regionId, RegionType::TaskRegion);
+    region->setName(name.isEmpty() ? QString("任务区域 %1").arg(regionId) : name);
+    region->setVertices(vertices);
+    region->setTerrainType(TerrainType::Plain);  // 默认平原
+    region->setTaskRegionShape(TaskRegionShape::Rectangle);  // 矩形
+
+    // 计算中心点
+    double sumLat = 0.0, sumLon = 0.0;
+    for (const auto &coord : vertices) {
+        sumLat += coord.first;
+        sumLon += coord.second;
+    }
+    region->setCoordinate(QMapLibre::Coordinate(
+        sumLat / vertices.size(),
+        sumLon / vertices.size()
+    ));
+
+    // 在地图上绘制
+    drawRegion(region);
+
+    // 存储
+    m_regions.insert(regionId, region);
+
+    emit regionCreated(regionId);
+    qDebug() << "创建矩形任务区域: ID =" << regionId << ", 顶点数 =" << vertices.size();
 
     return region;
 }
@@ -373,7 +416,7 @@ void RegionManager::drawRegion(Region *region) {
             break;
 
         case RegionType::TaskRegion:
-            annotationId = m_painter->drawTaskRegionArea(region->vertices(), region->coordinate(), region->radius());
+            annotationId = m_painter->drawTaskRegionArea(region->vertices(), region->coordinate(), region->radius(), region->taskRegionShape());
             break;
     }
 

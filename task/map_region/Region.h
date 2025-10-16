@@ -63,10 +63,16 @@ public:
     void setColor(const QString &color) { m_color = color; }
 
     /**
-     * @brief 获取地形类型（用于 NoFlyZone 和 Polygon）
+     * @brief 获取地形类型（用于 NoFlyZone 和 TaskRegion）
      */
     TerrainType terrainType() const { return m_terrainType; }
     void setTerrainType(TerrainType type) { m_terrainType = type; }
+
+    /**
+     * @brief 获取任务区域形状类型（仅用于 TaskRegion 类型）
+     */
+    TaskRegionShape taskRegionShape() const { return m_taskRegionShape; }
+    void setTaskRegionShape(TaskRegionShape shape) { m_taskRegionShape = shape; }
 
     // ==================== 辅助方法 ====================
 
@@ -88,6 +94,7 @@ private:
     // 属性
     QString m_color;                       // UAV颜色
     TerrainType m_terrainType;             // 地形类型
+    TaskRegionShape m_taskRegionShape;     // 任务区域形状类型（仅TaskRegion使用）
 };
 
 #endif // REGION_H

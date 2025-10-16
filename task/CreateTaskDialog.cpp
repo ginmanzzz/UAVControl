@@ -100,7 +100,7 @@ void CreateTaskDialog::setupUI()
 
     // 任务种类下拉框
     m_taskTypeCombo = new QComboBox(this);
-    m_taskTypeCombo->addItems({"区域收缩", "区域掩护", "电子侦察", "协同攻击", "目标侦察"});
+    m_taskTypeCombo->addItems({"区域搜索", "区域掩护", "电子侦察", "协同攻击", "目标侦察"});
     formLayout->addRow("任务种类:", m_taskTypeCombo);
 
     // 任务区域下拉框

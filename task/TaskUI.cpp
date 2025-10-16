@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "TaskUI.h"
-#include "PlanDialog.h"
-#include "Plan.h"
+#include "CreateTaskPlanDialog.h"
+#include "TaskPlan.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -226,9 +226,9 @@ void TaskUI::setupUI() {
         "}"
     );
 
-    QAction *polygonAction = drawModeMenu->addAction("手绘多边形");
     QAction *rectangleAction = drawModeMenu->addAction("矩形");
     QAction *circleAction = drawModeMenu->addAction("圆形");
+    QAction *polygonAction = drawModeMenu->addAction("手绘多边形");
 
     connect(polygonAction, &QAction::triggered, this, [this, taskRegionModeBtn]() {
         m_taskRegionDrawMode = DRAW_MODE_POLYGON;
@@ -247,6 +247,8 @@ void TaskUI::setupUI() {
     });
 
     taskRegionModeBtn->setMenu(drawModeMenu);
+    // 设置初始提示为矩形（因为默认模式是矩形）
+    taskRegionModeBtn->setTooltipText("当前模式: 矩形");
 
     taskRegionLayout->addWidget(taskRegionBtn);
     taskRegionLayout->addWidget(taskRegionModeBtn);
@@ -378,7 +380,7 @@ void TaskUI::setupUI() {
     connect(taskRegionBtn, &QPushButton::clicked, this, &TaskUI::startDrawTaskRegion);
     connect(uavBtn, &QPushButton::clicked, this, &TaskUI::startPlaceUAV);
     connect(clearBtn, &QPushButton::clicked, this, &TaskUI::clearAll);
-    connect(planBtn, &QPushButton::clicked, this, &TaskUI::openPlanDialog);
+    connect(planBtn, &QPushButton::clicked, this, &TaskUI::openTaskPlanDialog);
 
     buttonLayout->addWidget(loiterBtn);
     buttonLayout->addWidget(noFlyBtn);
@@ -1120,8 +1122,14 @@ void TaskUI::finishTaskRegion() {
                         .arg(m_circleRadius)
                         .arg(featureDialog.getTerrainName())
                         .arg(m_taskManager->currentTaskId()).arg(id);
+        } else if (m_taskRegionDrawMode == DRAW_MODE_RECTANGLE && m_taskRegionPoints.size() == 4) {
+            // 矩形任务区域
+            id = m_taskManager->addRectangularTaskRegion(m_taskRegionPoints);
+            qDebug() << QString("矩形任务区域绘制完成，地形 %1, 任务 #%2, ID: %3")
+                        .arg(featureDialog.getTerrainName())
+                        .arg(m_taskManager->currentTaskId()).arg(id);
         } else {
-            // 多边形任务区域（包括矩形和手绘）
+            // 多边形任务区域（手绘）
             id = m_taskManager->addTaskRegion(m_taskRegionPoints);
             qDebug() << QString("多边形绘制完成，地形 %1, 任务 #%2, ID: %3")
                         .arg(featureDialog.getTerrainName())
@@ -1207,24 +1215,24 @@ QString TaskUI::getColorName(const QString &colorValue) {
     return colorNames.value(colorValue, "黑色");
 }
 
-void TaskUI::openPlanDialog() {
+void TaskUI::openTaskPlanDialog() {
     qDebug() << "打开方案规划窗口";
 
-    // 延迟创建 PlanDialog
-    if (!m_planDialog) {
-        m_planDialog = new PlanDialog(m_taskManager, this);  // 传入 TaskManager，TaskUI作为父窗口
+    // 延迟创建 CreateTaskPlanDialog
+    if (!m_taskPlanDialog) {
+        m_taskPlanDialog = new CreateTaskPlanDialog(m_taskManager, this);  // 传入 TaskManager，TaskUI作为父窗口
 
         // 创建一个示例方案
-        static Plan *samplePlan = new Plan(1, "示例方案");
-        m_planDialog->setPlan(samplePlan);
+        static TaskPlan *sampleTaskPlan = new TaskPlan(1, "示例方案");
+        m_taskPlanDialog->setTaskPlan(sampleTaskPlan);
     }
 
     // 显示窗口并定位到左上角
-    m_planDialog->show();
-    m_planDialog->raise();
+    m_taskPlanDialog->show();
+    m_taskPlanDialog->raise();
 
     // 定位到左上角（带10px边距）
-    m_planDialog->setGeometry(50, 50, m_planDialog->width(), m_planDialog->height());
+    m_taskPlanDialog->setGeometry(50, 50, m_taskPlanDialog->width(), m_taskPlanDialog->height());
 
     qDebug() << "方案窗口定位到左上角: (50, 50)";
 }

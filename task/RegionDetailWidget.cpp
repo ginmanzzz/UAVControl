@@ -107,27 +107,52 @@ void RegionDetailWidget::showRegion(const RegionInfo *info, const QPoint &screen
         }
 
         case RegionType::TaskRegion: {
-            // 检测是否为圆形任务区域（有半径信息）
-            if (info->radius > 0) {
-                // 圆形任务区域：显示圆心和半径
-                addInfoLine("类型", "圆形");
-                addInfoLine("中心经度", QString("%1°").arg(info->coordinate.second, 0, 'f', 6));
-                addInfoLine("中心纬度", QString("%1°").arg(info->coordinate.first, 0, 'f', 6));
-                addInfoLine("半径", QString("%1 米").arg(info->radius, 0, 'f', 1));
-                double areaKm2 = M_PI * info->radius * info->radius / 1000000.0;
-                addInfoLine("区域面积", QString("%1 km²").arg(areaKm2, 0, 'f', 3));
-            } else {
-                // 多边形任务区域：显示所有顶点
-                addInfoLine("类型", "多边形");
-                addInfoLine("顶点数量", QString("%1").arg(info->vertices.size()));
-                for (int i = 0; i < info->vertices.size(); ++i) {
-                    addInfoLine(QString("顶点%1").arg(i + 1),
-                        QString("(%1°, %2°)")
-                        .arg(info->vertices[i].first, 0, 'f', 5)
-                        .arg(info->vertices[i].second, 0, 'f', 5));
-                }
-                double areaKm2 = calculateTaskRegionArea(info->vertices) / 1000000.0;
-                addInfoLine("区域面积", QString("%1 km²").arg(areaKm2, 0, 'f', 3));
+            // 根据 taskRegionShape 显示不同类型
+            switch (info->taskRegionShape) {
+                case TaskRegionShape::Circle:
+                    // 圆形任务区域：显示圆心和半径
+                    addInfoLine("类型", "圆形");
+                    addInfoLine("中心经度", QString("%1°").arg(info->coordinate.second, 0, 'f', 6));
+                    addInfoLine("中心纬度", QString("%1°").arg(info->coordinate.first, 0, 'f', 6));
+                    addInfoLine("半径", QString("%1 米").arg(info->radius, 0, 'f', 1));
+                    {
+                        double areaKm2 = M_PI * info->radius * info->radius / 1000000.0;
+                        addInfoLine("区域面积", QString("%1 km²").arg(areaKm2, 0, 'f', 3));
+                    }
+                    break;
+
+                case TaskRegionShape::Rectangle:
+                    // 矩形任务区域：显示4个顶点
+                    addInfoLine("类型", "矩形");
+                    addInfoLine("顶点数量", QString("%1").arg(info->vertices.size()));
+                    for (int i = 0; i < info->vertices.size(); ++i) {
+                        addInfoLine(QString("顶点%1").arg(i + 1),
+                            QString("(%1°, %2°)")
+                            .arg(info->vertices[i].first, 0, 'f', 5)
+                            .arg(info->vertices[i].second, 0, 'f', 5));
+                    }
+                    {
+                        double areaKm2 = calculateTaskRegionArea(info->vertices) / 1000000.0;
+                        addInfoLine("区域面积", QString("%1 km²").arg(areaKm2, 0, 'f', 3));
+                    }
+                    break;
+
+                case TaskRegionShape::Polygon:
+                default:
+                    // 多边形任务区域：显示所有顶点
+                    addInfoLine("类型", "多边形");
+                    addInfoLine("顶点数量", QString("%1").arg(info->vertices.size()));
+                    for (int i = 0; i < info->vertices.size(); ++i) {
+                        addInfoLine(QString("顶点%1").arg(i + 1),
+                            QString("(%1°, %2°)")
+                            .arg(info->vertices[i].first, 0, 'f', 5)
+                            .arg(info->vertices[i].second, 0, 'f', 5));
+                    }
+                    {
+                        double areaKm2 = calculateTaskRegionArea(info->vertices) / 1000000.0;
+                        addInfoLine("区域面积", QString("%1 km²").arg(areaKm2, 0, 'f', 3));
+                    }
+                    break;
             }
             // 地形特征下拉选择
             addTerrainLine("地形特征", info->terrainType);
