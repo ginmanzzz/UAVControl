@@ -373,7 +373,7 @@ void RegionManager::drawRegion(Region *region) {
             break;
 
         case RegionType::TaskRegion:
-            annotationId = m_painter->drawTaskRegionArea(region->vertices());
+            annotationId = m_painter->drawTaskRegionArea(region->vertices(), region->coordinate(), region->radius());
             break;
     }
 

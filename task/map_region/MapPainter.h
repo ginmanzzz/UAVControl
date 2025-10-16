@@ -56,9 +56,13 @@ public:
     /**
      * @brief 绘制任务区域（蓝色半透明）
      * @param coordinates 任务区域顶点坐标列表
+     * @param center 圆心坐标（仅圆形任务区域需要）
+     * @param radius 半径（仅圆形任务区域需要）
      * @return 区域标注 ID
      */
-    QMapLibre::AnnotationID drawTaskRegionArea(const QMapLibre::Coordinates &coordinates);
+    QMapLibre::AnnotationID drawTaskRegionArea(const QMapLibre::Coordinates &coordinates,
+                                               const QMapLibre::Coordinate &center = QMapLibre::Coordinate(),
+                                               double radius = 0.0);
 
     /**
      * @brief 删除指定标注

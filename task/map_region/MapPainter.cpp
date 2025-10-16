@@ -283,7 +283,9 @@ QMapLibre::Coordinates MapPainter::generateCircleCoordinates(
     return coords;
 }
 
-QMapLibre::AnnotationID MapPainter::drawTaskRegionArea(const QMapLibre::Coordinates &coordinates)
+QMapLibre::AnnotationID MapPainter::drawTaskRegionArea(const QMapLibre::Coordinates &coordinates,
+                                                       const QMapLibre::Coordinate &center,
+                                                       double radius)
 {
     if (coordinates.size() < 3) {
         qWarning() << "多边形至少需要3个点";
@@ -318,11 +320,21 @@ QMapLibre::AnnotationID MapPainter::drawTaskRegionArea(const QMapLibre::Coordina
     RegionInfo info;
     info.type = RegionType::TaskRegion;
     info.vertices = coordinates;
+    info.coordinate = center;  // 保存圆心（圆形区域）或几何中心（多边形）
+    info.radius = radius;      // 保存半径（圆形区域才有）
     info.annotationId = id;
     m_regionInfo[id] = info;
 
-    qDebug() << QString("添加多边形区域: %1个顶点, ID: %2")
-                    .arg(coordinates.size()).arg(id);
+    if (radius > 0) {
+        qDebug() << QString("添加圆形任务区域: 圆心(%1, %2), 半径 %3m, 顶点数 %4, ID: %5")
+                        .arg(center.first, 0, 'f', 5)
+                        .arg(center.second, 0, 'f', 5)
+                        .arg(radius)
+                        .arg(coordinates.size()).arg(id);
+    } else {
+        qDebug() << QString("添加多边形区域: %1个顶点, ID: %2")
+                        .arg(coordinates.size()).arg(id);
+    }
     return id;
 }
 
