@@ -165,8 +165,13 @@ void TaskUI::setupUI() {
         noFlyBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
     }
 
-    // 创建任务区域按钮
-    auto *taskRegionBtn = new TooltipButton("绘制任务区域", buttonContainer);
+    // 创建任务区域按钮组（按钮 + 模式选择）
+    auto *taskRegionContainer = new QWidget(buttonContainer);
+    auto *taskRegionLayout = new QHBoxLayout(taskRegionContainer);
+    taskRegionLayout->setContentsMargins(0, 0, 0, 0);
+    taskRegionLayout->setSpacing(4);
+
+    auto *taskRegionBtn = new TooltipButton("绘制任务区域", taskRegionContainer);
     taskRegionBtn->setStyleSheet(iconButtonStyle);
     QIcon taskRegionIcon("image/polygon.png");
     if (!taskRegionIcon.isNull()) {
@@ -176,6 +181,75 @@ void TaskUI::setupUI() {
         taskRegionBtn->setText("⬡");
         taskRegionBtn->setStyleSheet(iconButtonStyle + "QPushButton { font-size: 24px; }");
     }
+
+    // 任务区域绘制模式选择小按钮
+    auto *taskRegionModeBtn = new TooltipButton("选择绘制模式", taskRegionContainer);
+    taskRegionModeBtn->setText("▼");
+    taskRegionModeBtn->setStyleSheet(
+        "QPushButton {"
+        "  background-color: rgba(255, 255, 255, 230);"
+        "  border: 2px solid #ccc;"
+        "  border-radius: 8px;"
+        "  padding: 0px;"
+        "  min-width: 28px;"
+        "  max-width: 28px;"
+        "  min-height: 50px;"
+        "  max-height: 50px;"
+        "  font-size: 12px;"
+        "}"
+        "QPushButton:hover {"
+        "  background-color: rgba(240, 240, 240, 240);"
+        "}"
+        "QPushButton:pressed {"
+        "  background-color: rgba(220, 220, 220, 240);"
+        "}"
+    );
+
+    // 创建绘制模式选择菜单
+    auto *drawModeMenu = new QMenu(taskRegionModeBtn);
+    drawModeMenu->setStyleSheet(
+        "QMenu {"
+        "  background-color: rgb(255, 255, 255);"
+        "  border: 1px solid rgb(200, 200, 200);"
+        "  border-radius: 4px;"
+        "  padding: 4px;"
+        "}"
+        "QMenu::item {"
+        "  background-color: transparent;"
+        "  color: rgb(0, 0, 0);"
+        "  padding: 6px 20px;"
+        "  border-radius: 2px;"
+        "}"
+        "QMenu::item:selected {"
+        "  background-color: rgb(33, 150, 243);"
+        "  color: white;"
+        "}"
+    );
+
+    QAction *polygonAction = drawModeMenu->addAction("手绘多边形");
+    QAction *rectangleAction = drawModeMenu->addAction("矩形");
+    QAction *circleAction = drawModeMenu->addAction("圆形");
+
+    connect(polygonAction, &QAction::triggered, this, [this, taskRegionModeBtn]() {
+        m_taskRegionDrawMode = DRAW_MODE_POLYGON;
+        taskRegionModeBtn->setTooltipText("当前模式: 手绘多边形");
+        qDebug() << "切换到手绘多边形模式";
+    });
+    connect(rectangleAction, &QAction::triggered, this, [this, taskRegionModeBtn]() {
+        m_taskRegionDrawMode = DRAW_MODE_RECTANGLE;
+        taskRegionModeBtn->setTooltipText("当前模式: 矩形");
+        qDebug() << "切换到矩形模式";
+    });
+    connect(circleAction, &QAction::triggered, this, [this, taskRegionModeBtn]() {
+        m_taskRegionDrawMode = DRAW_MODE_CIRCLE;
+        taskRegionModeBtn->setTooltipText("当前模式: 圆形");
+        qDebug() << "切换到圆形模式";
+    });
+
+    taskRegionModeBtn->setMenu(drawModeMenu);
+
+    taskRegionLayout->addWidget(taskRegionBtn);
+    taskRegionLayout->addWidget(taskRegionModeBtn);
 
     // 创建无人机按钮组（按钮 + 颜色选择）
     auto *uavContainer = new QWidget(buttonContainer);
@@ -308,7 +382,7 @@ void TaskUI::setupUI() {
 
     buttonLayout->addWidget(loiterBtn);
     buttonLayout->addWidget(noFlyBtn);
-    buttonLayout->addWidget(taskRegionBtn);
+    buttonLayout->addWidget(taskRegionContainer);
     buttonLayout->addWidget(uavContainer);
     buttonLayout->addStretch();
     buttonLayout->addWidget(clearBtn);
@@ -534,8 +608,63 @@ void TaskUI::onMapMouseMoved(const QMapLibre::Coordinate &coord) {
                                    .arg(radius, 0, 'f', 1),
                                    "rgba(255, 243, 205, 220)");
     }
-    else if (m_currentMode == MODE_TASK_REGION && !m_taskRegionPoints.isEmpty()) {
-        m_painter->updateDynamicLine(m_taskRegionPoints.last(), coord);
+    else if (m_currentMode == MODE_TASK_REGION) {
+        // 任务区域绘制的鼠标跟随动画
+        switch (m_taskRegionDrawMode) {
+        case DRAW_MODE_RECTANGLE:
+            if (m_rectangleFirstPointSet) {
+                // 矩形模式：显示动态矩形预览
+                double lat1 = m_rectangleFirstPoint.first;
+                double lon1 = m_rectangleFirstPoint.second;
+                double lat2 = coord.first;
+                double lon2 = coord.second;
+
+                QMapLibre::Coordinates rectPoints;
+                rectPoints.append(QMapLibre::Coordinate(lat1, lon1));  // 左上
+                rectPoints.append(QMapLibre::Coordinate(lat1, lon2));  // 右上
+                rectPoints.append(QMapLibre::Coordinate(lat2, lon2));  // 右下
+                rectPoints.append(QMapLibre::Coordinate(lat2, lon1));  // 左下
+
+                m_painter->drawPreviewLines(rectPoints);
+
+                double width = calculateDistance(lat1, lon1, lat1, lon2);
+                double height = calculateDistance(lat1, lon1, lat2, lon1);
+                m_mapWidget->setStatusText(
+                    QString("矩形预览 - 宽: %1m, 高: %2m (点击确定/右键取消)")
+                        .arg(width, 0, 'f', 1).arg(height, 0, 'f', 1),
+                    "rgba(255, 243, 205, 220)"
+                );
+            }
+            break;
+
+        case DRAW_MODE_CIRCLE:
+            if (m_circleCenterSet) {
+                // 圆形模式：显示动态圆形预览
+                double radius = calculateDistance(
+                    m_circleCenter.first, m_circleCenter.second,
+                    coord.first, coord.second
+                );
+
+                m_painter->drawPreviewNoFlyZone(m_circleCenter.first, m_circleCenter.second, radius);
+
+                m_mapWidget->setStatusText(
+                    QString("圆形预览 - 中心: (%1, %2), 半径: %3m (点击确定/右键取消)")
+                        .arg(m_circleCenter.first, 0, 'f', 5)
+                        .arg(m_circleCenter.second, 0, 'f', 5)
+                        .arg(radius, 0, 'f', 1),
+                    "rgba(255, 243, 205, 220)"
+                );
+            }
+            break;
+
+        case DRAW_MODE_POLYGON:
+        default:
+            // 手绘多边形模式：显示动态连线
+            if (!m_taskRegionPoints.isEmpty()) {
+                m_painter->updateDynamicLine(m_taskRegionPoints.last(), coord);
+            }
+            break;
+        }
     }
 }
 
@@ -606,13 +735,41 @@ void TaskUI::startDrawTaskRegion() {
     m_mapWidget->setClickEnabled(true);
     resetTaskRegionDrawing();
 
+    QString modeText;
+    QString statusHint;
+
+    // 根据绘制模式显示不同的提示
+    switch (m_taskRegionDrawMode) {
+    case DRAW_MODE_RECTANGLE:
+        modeText = "矩形";
+        statusHint = "点击设置左上角和右下角（右键取消）";
+        break;
+    case DRAW_MODE_CIRCLE:
+        modeText = "圆形";
+        statusHint = "点击设置圆心，移动鼠标确定半径（右键取消）";
+        break;
+    case DRAW_MODE_POLYGON:
+    default:
+        modeText = "手绘多边形";
+        statusHint = "点击添加顶点，点击起点闭合，右键回退，ESC取消";
+        break;
+    }
+
     if (m_taskManager->currentTask()) {
-        m_mapWidget->setStatusText(QString("绘制任务区域到任务 #%1 - 点击添加顶点，点击起点闭合，右键回退，ESC取消")
-                                   .arg(m_taskManager->currentTaskId()), "rgba(255, 243, 205, 220)");
-        qDebug() << QString("开始绘制任务区域到任务 #%1").arg(m_taskManager->currentTaskId());
+        m_mapWidget->setStatusText(
+            QString("绘制任务区域（%1）到任务 #%2 - %3")
+                .arg(modeText)
+                .arg(m_taskManager->currentTaskId())
+                .arg(statusHint),
+            "rgba(255, 243, 205, 220)"
+        );
+        qDebug() << QString("开始绘制任务区域（%1）到任务 #%2").arg(modeText).arg(m_taskManager->currentTaskId());
     } else {
-        m_mapWidget->setStatusText("绘制独立任务区域 - 点击添加顶点，点击起点闭合，右键回退，ESC取消", "rgba(255, 243, 205, 220)");
-        qDebug() << "开始绘制独立任务区域";
+        m_mapWidget->setStatusText(
+            QString("绘制独立任务区域（%1） - %2").arg(modeText).arg(statusHint),
+            "rgba(255, 243, 205, 220)"
+        );
+        qDebug() << QString("开始绘制独立任务区域（%1）").arg(modeText);
     }
 }
 
@@ -752,71 +909,192 @@ void TaskUI::handleNoFlyZoneClick(double lat, double lon) {
 void TaskUI::handleTaskRegionClick(double lat, double lon) {
     QMapLibre::Coordinate clickedPoint(lat, lon);
 
-    if (m_taskRegionPoints.size() >= 3) {
-        double distanceToStart = calculateDistance(
-            clickedPoint.first, clickedPoint.second,
-            m_taskRegionPoints.first().first, m_taskRegionPoints.first().second
-        );
+    // 根据不同模式处理点击
+    switch (m_taskRegionDrawMode) {
+    case DRAW_MODE_RECTANGLE:
+        // 矩形模式：两次点击
+        if (!m_rectangleFirstPointSet) {
+            // 第一次点击：设置左上角
+            m_rectangleFirstPoint = clickedPoint;
+            m_rectangleFirstPointSet = true;
+            qDebug() << QString("矩形第一点（左上角）: (%1, %2)").arg(lat).arg(lon);
+            m_mapWidget->setStatusText(
+                QString("矩形左上角已设置: (%1, %2) - 点击设置右下角（右键取消）")
+                    .arg(lat, 0, 'f', 5).arg(lon, 0, 'f', 5),
+                "rgba(255, 243, 205, 220)"
+            );
+        } else {
+            // 第二次点击：设置右下角并完成矩形
+            double lat1 = m_rectangleFirstPoint.first;
+            double lon1 = m_rectangleFirstPoint.second;
+            double lat2 = clickedPoint.first;
+            double lon2 = clickedPoint.second;
 
-        double threshold = getZoomDependentThreshold(50.0);
+            // 构建矩形的四个顶点
+            m_taskRegionPoints.clear();
+            m_taskRegionPoints.append(QMapLibre::Coordinate(lat1, lon1));  // 左上
+            m_taskRegionPoints.append(QMapLibre::Coordinate(lat1, lon2));  // 右上
+            m_taskRegionPoints.append(QMapLibre::Coordinate(lat2, lon2));  // 右下
+            m_taskRegionPoints.append(QMapLibre::Coordinate(lat2, lon1));  // 左下
 
-        qDebug() << QString("多边形闭合检测: 距离起点 %1 米, 阈值 %2 米 (缩放级别 %3)")
-                    .arg(distanceToStart, 0, 'f', 2)
-                    .arg(threshold, 0, 'f', 2)
-                    .arg(m_mapWidget->map()->zoom(), 0, 'f', 2);
-
-        if (distanceToStart < threshold) {
-            qDebug() << "点击起点，闭合多边形";
+            qDebug() << QString("矩形第二点（右下角）: (%1, %2)，矩形绘制完成").arg(lat).arg(lon);
             finishTaskRegion();
-            return;
         }
+        break;
+
+    case DRAW_MODE_CIRCLE:
+        // 圆形模式：两次点击
+        if (!m_circleCenterSet) {
+            // 第一次点击：设置圆心
+            m_circleCenter = clickedPoint;
+            m_circleCenterSet = true;
+            qDebug() << QString("圆形中心点: (%1, %2)").arg(lat).arg(lon);
+            m_mapWidget->setStatusText(
+                QString("圆心已设置: (%1, %2) - 移动鼠标确定半径（右键取消）")
+                    .arg(lat, 0, 'f', 5).arg(lon, 0, 'f', 5),
+                "rgba(255, 243, 205, 220)"
+            );
+        } else {
+            // 第二次点击：设置半径并完成圆形
+            double radius = calculateDistance(
+                m_circleCenter.first, m_circleCenter.second,
+                clickedPoint.first, clickedPoint.second
+            );
+
+            // 用多边形近似圆形（32个顶点）
+            int segments = 32;
+            m_taskRegionPoints.clear();
+            const double EARTH_RADIUS = 6378137.0;
+
+            for (int i = 0; i < segments; ++i) {
+                double angle = 2.0 * M_PI * i / segments;
+                double dx = radius * std::cos(angle);
+                double dy = radius * std::sin(angle);
+
+                double lat_rad = m_circleCenter.first * M_PI / 180.0;
+                double lon_rad = m_circleCenter.second * M_PI / 180.0;
+
+                double new_lat = lat_rad + (dy / EARTH_RADIUS);
+                double new_lon = lon_rad + (dx / (EARTH_RADIUS * std::cos(lat_rad)));
+
+                m_taskRegionPoints.append(QMapLibre::Coordinate(
+                    new_lat * 180.0 / M_PI,
+                    new_lon * 180.0 / M_PI
+                ));
+            }
+
+            qDebug() << QString("圆形半径点: (%1, %2)，半径 %3m，圆形绘制完成")
+                        .arg(lat).arg(lon).arg(radius);
+            finishTaskRegion();
+        }
+        break;
+
+    case DRAW_MODE_POLYGON:
+    default:
+        // 手绘多边形模式：多次点击
+        if (m_taskRegionPoints.size() >= 3) {
+            double distanceToStart = calculateDistance(
+                clickedPoint.first, clickedPoint.second,
+                m_taskRegionPoints.first().first, m_taskRegionPoints.first().second
+            );
+
+            double threshold = getZoomDependentThreshold(50.0);
+
+            qDebug() << QString("多边形闭合检测: 距离起点 %1 米, 阈值 %2 米 (缩放级别 %3)")
+                        .arg(distanceToStart, 0, 'f', 2)
+                        .arg(threshold, 0, 'f', 2)
+                        .arg(m_mapWidget->map()->zoom(), 0, 'f', 2);
+
+            if (distanceToStart < threshold) {
+                qDebug() << "点击起点，闭合多边形";
+                finishTaskRegion();
+                return;
+            }
+        }
+
+        m_taskRegionPoints.append(clickedPoint);
+        qDebug() << QString("添加多边形顶点 #%1: (%2, %3)")
+                        .arg(m_taskRegionPoints.size())
+                        .arg(lat).arg(lon);
+
+        m_painter->clearDynamicLine();
+
+        if (m_taskRegionPoints.size() >= 2) {
+            m_painter->drawPreviewLines(m_taskRegionPoints);
+        }
+
+        m_mapWidget->setStatusText(
+            QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
+                .arg(m_taskRegionPoints.size()),
+            "rgba(255, 243, 205, 220)"
+        );
+        break;
     }
-
-    m_taskRegionPoints.append(clickedPoint);
-    qDebug() << QString("添加多边形顶点 #%1: (%2, %3)")
-                    .arg(m_taskRegionPoints.size())
-                    .arg(lat).arg(lon);
-
-    m_painter->clearDynamicLine();
-
-    if (m_taskRegionPoints.size() >= 2) {
-        m_painter->drawPreviewLines(m_taskRegionPoints);
-    }
-
-    m_mapWidget->setStatusText(
-        QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
-            .arg(m_taskRegionPoints.size()),
-        "rgba(255, 243, 205, 220)"
-    );
 }
 
 void TaskUI::handleTaskRegionUndo() {
-    if (m_taskRegionPoints.isEmpty()) {
-        qDebug() << "没有顶点，取消多边形绘制";
-        returnToNormalMode();
-        return;
-    }
+    // 根据不同模式处理撤销
+    switch (m_taskRegionDrawMode) {
+    case DRAW_MODE_RECTANGLE:
+        if (m_rectangleFirstPointSet) {
+            // 撤销矩形的第一个点
+            m_rectangleFirstPointSet = false;
+            m_rectangleFirstPoint = QMapLibre::Coordinate(0, 0);
+            m_painter->clearPreview();
+            m_painter->clearTaskRegionPreview();
+            qDebug() << "撤销矩形第一点";
+            m_mapWidget->setStatusText("绘制矩形 - 点击设置左上角（右键取消）", "rgba(255, 243, 205, 220)");
+        } else {
+            qDebug() << "没有矩形顶点，取消矩形绘制";
+            returnToNormalMode();
+        }
+        break;
 
-    m_taskRegionPoints.removeLast();
-    qDebug() << QString("回退一个顶点，剩余 %1 个").arg(m_taskRegionPoints.size());
+    case DRAW_MODE_CIRCLE:
+        if (m_circleCenterSet) {
+            // 撤销圆形的圆心
+            m_circleCenterSet = false;
+            m_circleCenter = QMapLibre::Coordinate(0, 0);
+            m_painter->clearPreview();
+            m_painter->clearTaskRegionPreview();
+            qDebug() << "撤销圆形中心点";
+            m_mapWidget->setStatusText("绘制圆形 - 点击设置圆心（右键取消）", "rgba(255, 243, 205, 220)");
+        } else {
+            qDebug() << "没有圆心，取消圆形绘制";
+            returnToNormalMode();
+        }
+        break;
 
-    if (m_taskRegionPoints.isEmpty()) {
-        m_painter->clearTaskRegionPreview();
-        returnToNormalMode();
-    } else if (m_taskRegionPoints.size() == 1) {
-        m_painter->clearTaskRegionPreview();
-        m_mapWidget->setStatusText(
-            QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
-                .arg(m_taskRegionPoints.size()),
-            "rgba(255, 243, 205, 220)"
-        );
-    } else {
-        m_painter->drawPreviewLines(m_taskRegionPoints);
-        m_mapWidget->setStatusText(
-            QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
-                .arg(m_taskRegionPoints.size()),
-            "rgba(255, 243, 205, 220)"
-        );
+    case DRAW_MODE_POLYGON:
+    default:
+        if (m_taskRegionPoints.isEmpty()) {
+            qDebug() << "没有顶点，取消多边形绘制";
+            returnToNormalMode();
+            return;
+        }
+
+        m_taskRegionPoints.removeLast();
+        qDebug() << QString("回退一个顶点，剩余 %1 个").arg(m_taskRegionPoints.size());
+
+        if (m_taskRegionPoints.isEmpty()) {
+            m_painter->clearTaskRegionPreview();
+            returnToNormalMode();
+        } else if (m_taskRegionPoints.size() == 1) {
+            m_painter->clearTaskRegionPreview();
+            m_mapWidget->setStatusText(
+                QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
+                    .arg(m_taskRegionPoints.size()),
+                "rgba(255, 243, 205, 220)"
+            );
+        } else {
+            m_painter->drawPreviewLines(m_taskRegionPoints);
+            m_mapWidget->setStatusText(
+                QString("绘制任务区域 - 已添加 %1 个顶点（点击起点闭合，右键回退，ESC取消）")
+                    .arg(m_taskRegionPoints.size()),
+                "rgba(255, 243, 205, 220)"
+            );
+        }
+        break;
     }
 }
 
@@ -865,9 +1143,14 @@ void TaskUI::resetNoFlyZoneDrawing() {
 
 void TaskUI::resetTaskRegionDrawing() {
     m_taskRegionPoints.clear();
+    m_rectangleFirstPointSet = false;
+    m_rectangleFirstPoint = QMapLibre::Coordinate(0, 0);
+    m_circleCenterSet = false;
+    m_circleCenter = QMapLibre::Coordinate(0, 0);
     if (m_painter) {
         m_painter->clearTaskRegionPreview();
         m_painter->clearDynamicLine();
+        m_painter->clearPreview();  // 清除圆形/矩形预览
     }
 }
 

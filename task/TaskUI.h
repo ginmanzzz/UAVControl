@@ -106,6 +106,12 @@ private:
         MODE_UAV = 4
     };
 
+    enum TaskRegionDrawMode {
+        DRAW_MODE_POLYGON = 0,   // 手绘多边形（默认）
+        DRAW_MODE_RECTANGLE = 1, // 矩形（两次点击）
+        DRAW_MODE_CIRCLE = 2     // 圆形（两次点击）
+    };
+
     // UI 组件
     InteractiveMapWidget *m_mapWidget = nullptr;
     MapPainter *m_painter = nullptr;
@@ -124,7 +130,12 @@ private:
     QMapLibre::Coordinate m_noFlyZoneCenter;
 
     // 任务区域绘制状态
+    TaskRegionDrawMode m_taskRegionDrawMode = DRAW_MODE_POLYGON;
     QMapLibre::Coordinates m_taskRegionPoints;
+    QMapLibre::Coordinate m_rectangleFirstPoint;      // 矩形模式：第一个点
+    bool m_rectangleFirstPointSet = false;
+    QMapLibre::Coordinate m_circleCenter;             // 圆形模式：圆心
+    bool m_circleCenterSet = false;
 
     // 无人机模式状态
     bool m_isInNoFlyZone = false;
