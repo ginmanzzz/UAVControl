@@ -31,20 +31,30 @@ Region* RegionManager::createLoiterPoint(double lat, double lon, const QString &
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::LoiterPoint);
+    region->setCoordinate(QMapLibre::Coordinate(lat, lon));
+
+    // 先在地图上绘制（让用户看到位置）
+    drawRegion(region);
 
     // 如果没有指定名称，生成默认名称并弹出对话框
     QString regionName;
     if (name.isEmpty()) {
         QString defaultName = generateDefaultName(RegionType::LoiterPoint, regionId);
         regionName = promptForName(defaultName);
+
+        // 用户取消了命名，撤销创建（删除已绘制的标注）
+        if (regionName.isEmpty()) {
+            if (region->annotationId() != 0) {
+                m_painter->removeAnnotation(region->annotationId());
+            }
+            delete region;
+            qDebug() << "用户取消创建盘旋点";
+            return nullptr;
+        }
     } else {
         regionName = name;
     }
     region->setName(regionName);
-    region->setCoordinate(QMapLibre::Coordinate(lat, lon));
-
-    // 在地图上绘制
-    drawRegion(region);
 
     // 存储
     m_regions.insert(regionId, region);
@@ -87,22 +97,32 @@ Region* RegionManager::createNoFlyZone(double lat, double lon, double radius, co
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::NoFlyZone);
+    region->setCoordinate(QMapLibre::Coordinate(lat, lon));
+    region->setRadius(radius);
+    region->setTerrainType(TerrainType::Plain);  // 默认平原
+
+    // 先在地图上绘制（让用户看到位置）
+    drawRegion(region);
 
     // 如果没有指定名称，生成默认名称并弹出对话框
     QString regionName;
     if (name.isEmpty()) {
         QString defaultName = generateDefaultName(RegionType::NoFlyZone, regionId);
         regionName = promptForName(defaultName);
+
+        // 用户取消了命名，撤销创建（删除已绘制的标注）
+        if (regionName.isEmpty()) {
+            if (region->annotationId() != 0) {
+                m_painter->removeAnnotation(region->annotationId());
+            }
+            delete region;
+            qDebug() << "用户取消创建禁飞区";
+            return nullptr;
+        }
     } else {
         regionName = name;
     }
     region->setName(regionName);
-    region->setCoordinate(QMapLibre::Coordinate(lat, lon));
-    region->setRadius(radius);
-    region->setTerrainType(TerrainType::Plain);  // 默认平原
-
-    // 在地图上绘制
-    drawRegion(region);
 
     // 存储
     m_regions.insert(regionId, region);
@@ -126,16 +146,6 @@ Region* RegionManager::createTaskRegion(const QMapLibre::Coordinates &vertices, 
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::TaskRegion);
-
-    // 如果没有指定名称，生成默认名称并弹出对话框
-    QString regionName;
-    if (name.isEmpty()) {
-        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
-        regionName = promptForName(defaultName);
-    } else {
-        regionName = name;
-    }
-    region->setName(regionName);
     region->setVertices(vertices);
     region->setTerrainType(TerrainType::Plain);  // 默认平原
     region->setTaskRegionShape(TaskRegionShape::Polygon);  // 默认多边形
@@ -151,8 +161,28 @@ Region* RegionManager::createTaskRegion(const QMapLibre::Coordinates &vertices, 
         sumLon / vertices.size()
     ));
 
-    // 在地图上绘制
+    // 先在地图上绘制（让用户看到位置）
     drawRegion(region);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
+        regionName = promptForName(defaultName);
+
+        // 用户取消了命名，撤销创建（删除已绘制的标注）
+        if (regionName.isEmpty()) {
+            if (region->annotationId() != 0) {
+                m_painter->removeAnnotation(region->annotationId());
+            }
+            delete region;
+            qDebug() << "用户取消创建任务区域";
+            return nullptr;
+        }
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
 
     // 存储
     m_regions.insert(regionId, region);
@@ -177,24 +207,34 @@ Region* RegionManager::createCircularTaskRegion(const QMapLibre::Coordinate &cen
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::TaskRegion);
-
-    // 如果没有指定名称，生成默认名称并弹出对话框
-    QString regionName;
-    if (name.isEmpty()) {
-        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
-        regionName = promptForName(defaultName);
-    } else {
-        regionName = name;
-    }
-    region->setName(regionName);
     region->setVertices(vertices);
     region->setCoordinate(center);  // 使用传入的圆心
     region->setRadius(radius);      // 保存半径信息
     region->setTerrainType(TerrainType::Plain);  // 默认平原
     region->setTaskRegionShape(TaskRegionShape::Circle);  // 圆形
 
-    // 在地图上绘制
+    // 先在地图上绘制（让用户看到位置）
     drawRegion(region);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
+        regionName = promptForName(defaultName);
+
+        // 用户取消了命名，撤销创建（删除已绘制的标注）
+        if (regionName.isEmpty()) {
+            if (region->annotationId() != 0) {
+                m_painter->removeAnnotation(region->annotationId());
+            }
+            delete region;
+            qDebug() << "用户取消创建圆形任务区域";
+            return nullptr;
+        }
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
 
     // 存储
     m_regions.insert(regionId, region);
@@ -218,16 +258,6 @@ Region* RegionManager::createRectangularTaskRegion(const QMapLibre::Coordinates 
 
     int regionId = generateNextId();
     Region *region = new Region(regionId, RegionType::TaskRegion);
-
-    // 如果没有指定名称，生成默认名称并弹出对话框
-    QString regionName;
-    if (name.isEmpty()) {
-        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
-        regionName = promptForName(defaultName);
-    } else {
-        regionName = name;
-    }
-    region->setName(regionName);
     region->setVertices(vertices);
     region->setTerrainType(TerrainType::Plain);  // 默认平原
     region->setTaskRegionShape(TaskRegionShape::Rectangle);  // 矩形
@@ -243,8 +273,28 @@ Region* RegionManager::createRectangularTaskRegion(const QMapLibre::Coordinates 
         sumLon / vertices.size()
     ));
 
-    // 在地图上绘制
+    // 先在地图上绘制（让用户看到位置）
     drawRegion(region);
+
+    // 如果没有指定名称，生成默认名称并弹出对话框
+    QString regionName;
+    if (name.isEmpty()) {
+        QString defaultName = generateDefaultName(RegionType::TaskRegion, regionId);
+        regionName = promptForName(defaultName);
+
+        // 用户取消了命名，撤销创建（删除已绘制的标注）
+        if (regionName.isEmpty()) {
+            if (region->annotationId() != 0) {
+                m_painter->removeAnnotation(region->annotationId());
+            }
+            delete region;
+            qDebug() << "用户取消创建矩形任务区域";
+            return nullptr;
+        }
+    } else {
+        regionName = name;
+    }
+    region->setName(regionName);
 
     // 存储
     m_regions.insert(regionId, region);
@@ -495,6 +545,6 @@ QString RegionManager::promptForName(const QString &defaultName)
         QString name = dialog.getRegionName().trimmed();
         return name.isEmpty() ? defaultName : name;
     }
-    // 用户取消，返回默认名称
-    return defaultName;
+    // 用户取消，返回空字符串表示取消操作
+    return QString();
 }

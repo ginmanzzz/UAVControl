@@ -21,6 +21,8 @@ public:
     explicit InteractiveMapWidget(const QMapLibre::Settings &settings, QWidget *parent = nullptr)
         : QWidget(parent)
         , m_clickEnabled(false)
+        , m_minZoom(3.5)
+        , m_maxZoom(17.5)
     {
         auto *layout = new QVBoxLayout(this);
         layout->setContentsMargins(0, 0, 0, 0);
@@ -162,6 +164,29 @@ protected:
             return QWidget::eventFilter(obj, event);
         }
 
+        // 拦截滚轮事件以限制缩放范围
+        if (event->type() == QEvent::Wheel) {
+            QWheelEvent *wheelEvent = static_cast<QWheelEvent*>(event);
+            double currentZoom = m_glWidget->map()->zoom();
+
+            // 使用更大的容差值，提前阻止接近边界的缩放
+            const double tolerance = 0.3;
+
+            // 检查是否缩小（delta < 0）且已接近或达到最小缩放
+            if (wheelEvent->angleDelta().y() < 0 && currentZoom <= m_minZoom + tolerance) {
+                // qDebug() << "阻止缩小: currentZoom =" << currentZoom << ", minZoom =" << m_minZoom;
+                event->accept();  // 标记事件已处理
+                return true;  // 阻止事件传递，不允许继续缩小
+            }
+            // 检查是否放大（delta > 0）且已接近或达到最大缩放
+            if (wheelEvent->angleDelta().y() > 0 && currentZoom >= m_maxZoom - tolerance) {
+                // qDebug() << "阻止放大: currentZoom =" << currentZoom << ", maxZoom =" << m_maxZoom;
+                event->accept();  // 标记事件已处理
+                return true;  // 阻止事件传递，不允许继续放大
+            }
+            // 允许事件继续传递到 GLWidget
+        }
+
         if (event->type() == QEvent::MouseButtonPress) {
             QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
             m_mousePressed = true;
@@ -243,6 +268,8 @@ private:
     bool m_clickEnabled;
     bool m_mousePressed = false;
     QPoint m_mousePressPos;
+    double m_minZoom;  // 最小缩放级别
+    double m_maxZoom;  // 最大缩放级别
 };
 
 #endif // INTERACTIVEMAPWIDGET_H

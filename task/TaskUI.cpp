@@ -14,6 +14,8 @@
 #include <QtMath>
 #include <QMenu>
 #include <QIcon>
+#include <QCoreApplication>
+#include <QDir>
 #include <cmath>
 
 // ==================== CustomTooltip Implementation ====================
@@ -396,24 +398,32 @@ void TaskUI::setupUI() {
 }
 
 void TaskUI::setupMap() {
-    // 设置高德地图样式
-    QString amapStyle = R"({
+    // 设置高德地图样式（在线模式）
+    // 注意：MapLibre 不支持在线/离线自动回退
+    // 如需离线地图，需要完整下载覆盖区域并手动切换到离线瓦片源
+    QString onlineSource = "https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}";
+    qDebug() << "地图模式：在线";
+
+    QString amapStyle = QString(R"({
         "version": 8,
         "name": "AMap",
         "sources": {
             "amap": {
                 "type": "raster",
-                "tiles": ["https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"],
+                "tiles": ["%1"],
                 "tileSize": 256,
+                "minzoom": 3,
                 "maxzoom": 18
             }
         },
         "layers": [{
             "id": "amap",
             "type": "raster",
-            "source": "amap"
+            "source": "amap",
+            "minzoom": 3,
+            "maxzoom": 18
         }]
-    })";
+    })").arg(onlineSource);
 
     m_mapWidget->map()->setStyleJson(amapStyle);
 
